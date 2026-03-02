@@ -232,10 +232,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | HSKP-04 | Phase 8 | Pending |
 
 **Coverage:**
-- v1 requirements: 62 total
-- Mapped to phases: 62
-- Unmapped: 0 ✓
+- v1 requirements: 69 total
+- Mapped to phases: 69
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after initial definition*
+*Last updated: 2026-03-02 after roadmap creation*
