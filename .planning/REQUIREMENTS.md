@@ -10,7 +10,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Foundation
 
 - [x] **FOUND-01**: Multi-tenant Supabase schema with RLS — every table has `hotel_id` and row-level security policy
-- [ ] **FOUND-02**: User can sign up and create a hotel account with email/password via Supabase Auth
+- [x] **FOUND-02**: User can sign up and create a hotel account with email/password via Supabase Auth
 - [x] **FOUND-03**: All timestamps stored as UTC (`timestamptz`), displayed in hotel-local timezone
 - [ ] **FOUND-04**: Hotel owner can configure hotel basic info (name, address, timezone, contact)
 
@@ -162,7 +162,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Complete |
-| FOUND-02 | Phase 1 | Pending |
+| FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
 | FOUND-04 | Phase 1 | Pending |
 | AGENT-01 | Phase 2 | Pending |

@@ -35,8 +35,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Schema, RLS, Supabase clients, and timezone utility (Wave 1)
-- [ ] 01-02-PLAN.md — Auth flow: signup, login, session, route protection (Wave 2)
+- [x] 01-01-PLAN.md — Schema, RLS, Supabase clients, and timezone utility (Wave 1)
+- [x] 01-02-PLAN.md — Auth flow: signup, login, session, route protection (Wave 2)
 - [ ] 01-03-PLAN.md — Hotel configuration UI with timezone picker (Wave 3)
 
 ### Phase 2: Agent Core
@@ -164,7 +164,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/3 | In Progress|  |
+| 1. Foundation | 2/3 | In Progress|  |
 | 2. Agent Core | 0/5 | Not started | - |
 | 3. Knowledge Base and Onboarding | 0/3 | Not started | - |
 | 4. Guest-Facing Layer | 0/5 | Not started | - |

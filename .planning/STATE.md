@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 1 of 8 (Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-03-02 — Completed 01-01-PLAN.md (project init, Supabase schema, client utilities)
+Last activity: 2026-03-02 — Completed 01-02-PLAN.md (auth flow: signup/login forms, dashboard layout, route protection)
 
-Progress: [█░░░░░░░░░] 4%
+Progress: [██░░░░░░░░] 8%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 16 min
-- Total execution time: 16 min
+- Total plans completed: 2
+- Average duration: 11.5 min
+- Total execution time: 23 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation | 1 | 16 min | 16 min |
+| 01-foundation | 2 | 23 min | 11.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 16 min
-- Trend: -
+- Last 5 plans: 16 min, 7 min
+- Trend: Faster
 
 *Updated after each plan completion*
 
@@ -50,6 +50,9 @@ Recent decisions affecting current work:
 - NEXT_PUBLIC_SUPABASE_ANON_KEY (not publishable key) — project created before new Supabase key format
 - Turbopack CSS workaround — used direct node_modules paths for CSS packages that use 'style' export condition
 - Explicit TZDate type narrowing — TypeScript strict mode requires if/else narrowing for string|Date union with TZDate overloads
+- refreshSession() required post-signup — initial JWT at signUp time does not contain hotel_id (trigger runs after token issuance); forced refresh triggers Custom Access Token Hook to embed hotel_id
+- (auth)/(dashboard) route groups — Next.js parenthesis groups for layout segregation without URL path impact; src/app/page.tsx must be removed when (dashboard)/page.tsx claims the same / route
+- SignOutButton extracted to client component — dashboard layout is Server Component; signOut() + useRouter require browser-side Supabase client
 
 ### Pending Todos
 
@@ -64,5 +67,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Completed 01-01-PLAN.md — Next.js init, Supabase schema, client utilities, timezone helper
+Stopped at: Completed 01-02-PLAN.md — Auth flow (signup/login forms, dashboard layout, route protection)
 Resume file: None
