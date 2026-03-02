@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 1 of 8 (Foundation)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-03-02 — Roadmap created, ready to begin Phase 1 planning
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-03-02 — Completed 01-01-PLAN.md (project init, Supabase schema, client utilities)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 4%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: -
+- Total plans completed: 1
+- Average duration: 16 min
+- Total execution time: 16 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-foundation | 1 | 16 min | 16 min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 16 min
 - Trend: -
 
 *Updated after each plan completion*
@@ -47,6 +47,9 @@ Recent decisions affecting current work:
 - Stateless agent invocation — no persistent agent processes; context assembled from DB on every call (Vercel serverless constraint)
 - claude-opus-4-6 for guest-facing, claude-sonnet-4-6 for internal/background tasks
 - Tool-first policy enforced — agents cannot state availability or prices without a successful tool call
+- NEXT_PUBLIC_SUPABASE_ANON_KEY (not publishable key) — project created before new Supabase key format
+- Turbopack CSS workaround — used direct node_modules paths for CSS packages that use 'style' export condition
+- Explicit TZDate type narrowing — TypeScript strict mode requires if/else narrowing for string|Date union with TZDate overloads
 
 ### Pending Todos
 
@@ -61,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-02
-Stopped at: Roadmap and STATE.md created. No plans yet.
+Stopped at: Completed 01-01-PLAN.md — Next.js init, Supabase schema, client utilities, timezone helper
 Resume file: None
