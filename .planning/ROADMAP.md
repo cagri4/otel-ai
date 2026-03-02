@@ -32,12 +32,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Hotel owner can set hotel name, address, timezone, and contact information and save changes
   3. Two separate hotels cannot see each other's data under any operation (RLS enforced at DB layer)
   4. All timestamps display in the hotel's configured local timezone, not UTC
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Supabase schema design — multi-tenant tables with hotel_id, RLS policies, timestamptz strategy
-- [ ] 01-02: Auth flow — signup, login, session management with @supabase/ssr and tenant middleware
-- [ ] 01-03: Hotel configuration UI — basic info form, timezone picker, settings persistence
+- [ ] 01-01-PLAN.md — Schema, RLS, Supabase clients, and timezone utility (Wave 1)
+- [ ] 01-02-PLAN.md — Auth flow: signup, login, session, route protection (Wave 2)
+- [ ] 01-03-PLAN.md — Hotel configuration UI with timezone picker (Wave 3)
 
 ### Phase 2: Agent Core
 **Goal**: Hotel owner can have a real conversation with the Front Desk AI from their dashboard, with responses backed by the Claude API and tool-first policy enforced
