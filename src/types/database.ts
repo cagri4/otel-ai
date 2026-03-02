@@ -49,6 +49,14 @@ export interface Profile {
 // Replace with generated types (`supabase gen types typescript`) in a later phase.
 // =============================================================================
 
+type Relationship = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne?: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -60,6 +68,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<Hotel, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
       };
       profiles: {
         Row: Profile;
@@ -67,10 +76,20 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
       };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 };

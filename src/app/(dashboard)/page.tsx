@@ -10,6 +10,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatInHotelTz } from '@/lib/timezone'
 import type { Hotel } from '@/types/database'
 
 export default async function DashboardPage() {
@@ -47,6 +48,13 @@ export default async function DashboardPage() {
             <a href="/settings" className="text-primary hover:underline">
               configure in settings
             </a>
+          </p>
+        )}
+        {/* Last updated timestamp in hotel-local timezone */}
+        {hotel?.updated_at && hotel?.timezone && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Last updated:{' '}
+            {formatInHotelTz(hotel.updated_at, hotel.timezone)}
           </p>
         )}
       </div>

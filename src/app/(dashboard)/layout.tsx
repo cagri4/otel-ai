@@ -66,11 +66,28 @@ export default async function DashboardLayout({
       {/* Top header */}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <div>
-            <span className="font-semibold text-sm">OtelAI</span>
-            <span className="text-muted-foreground text-sm ml-2">
-              — {(hotel as Hotel).name}
-            </span>
+          <div className="flex items-center gap-6">
+            <div>
+              <span className="font-semibold text-sm">OtelAI</span>
+              <span className="text-muted-foreground text-sm ml-2">
+                — {(hotel as Hotel).name}
+              </span>
+            </div>
+            {/* Navigation links */}
+            <nav className="flex items-center gap-4">
+              <a
+                href="/"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Dashboard
+              </a>
+              <a
+                href="/settings"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Settings
+              </a>
+            </nav>
           </div>
           <SignOutButton />
         </div>
