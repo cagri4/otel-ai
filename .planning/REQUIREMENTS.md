@@ -19,7 +19,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **AGENT-01**: Stateless agent orchestrator (`invokeAgent()`) that assembles context from DB and calls Claude API
 - [ ] **AGENT-02**: Layered system prompt assembly (role identity → hotel context → agent memory → behavioral instructions)
 - [ ] **AGENT-03**: Agent Factory with Role Registry — central registry maps role enum to prompt template, allowed tools, memory scope
-- [ ] **AGENT-04**: Three-tier memory system (semantic hotel facts, episodic guest history, working conversation turns)
+- [x] **AGENT-04**: Three-tier memory system (semantic hotel facts, episodic guest history, working conversation turns)
 - [ ] **AGENT-05**: Tool-first policy enforced — agents cannot answer availability/price questions without successful tool call
 - [ ] **AGENT-06**: Streaming response (SSE) for all chat interactions — typing indicator on message send
 - [ ] **AGENT-07**: Agent-to-agent coordination via async tasks table (no synchronous inter-agent calls)
@@ -168,7 +168,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | AGENT-01 | Phase 2 | Pending |
 | AGENT-02 | Phase 2 | Pending |
 | AGENT-03 | Phase 2 | Pending |
-| AGENT-04 | Phase 2 | Pending |
+| AGENT-04 | Phase 2 | Complete |
 | AGENT-05 | Phase 2 | Pending |
 | AGENT-06 | Phase 2 | Pending |
 | AGENT-07 | Phase 2 | Pending |

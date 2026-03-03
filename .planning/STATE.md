@@ -5,33 +5,34 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 2 — Agent Core
 
 ## Current Position
 
-Phase: 1 of 8 (Foundation)
-Plan: 2 of 3 in current phase
+Phase: 2 of 8 (Agent Core)
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-03-02 — Completed 01-02-PLAN.md (auth flow: signup/login forms, dashboard layout, route protection)
+Last activity: 2026-03-03 — Completed 02-01-PLAN.md (DB schema + TypeScript types + memory helpers for three-tier agent memory)
 
-Progress: [██░░░░░░░░] 8%
+Progress: [███░░░░░░░] 12%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 11.5 min
-- Total execution time: 23 min
+- Total plans completed: 3
+- Average duration: 13 min
+- Total execution time: 42 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
+| 02-agent-core | 1 | 19 min | 19 min |
 
 **Recent Trend:**
-- Last 5 plans: 16 min, 7 min
-- Trend: Faster
+- Last 5 plans: 16 min, 7 min, 19 min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -53,6 +54,9 @@ Recent decisions affecting current work:
 - refreshSession() required post-signup — initial JWT at signUp time does not contain hotel_id (trigger runs after token issuance); forced refresh triggers Custom Access Token Hook to embed hotel_id
 - (auth)/(dashboard) route groups — Next.js parenthesis groups for layout segregation without URL path impact; src/app/page.tsx must be removed when (dashboard)/page.tsx claims the same / route
 - SignOutButton extracted to client component — dashboard layout is Server Component; signOut() + useRouter require browser-side Supabase client
+- Conversation turns limited to 20 per invocation — prevents context rot per research recommendation (Phase 2 Plan 1)
+- .returns<T>() required for Supabase SELECT with manual Database types — postgrest-js v12 type inference requires this workaround until generated types are used (Phase 2 Plan 1)
+- No service_role client in memory helpers — all queries respect RLS via anon key + session cookie (Phase 2 Plan 1)
 
 ### Pending Todos
 
@@ -60,12 +64,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 2: Claude tool_use API syntax and streaming patterns should be verified at docs.anthropic.com before implementation
 - Phase 4: WhatsApp Business API gateway selection (Twilio vs MessageBird vs others) needs current pricing/SLA research
 - Phase 7: PostgreSQL atomic booking transactions and calendar sync options for boutique hotels without PMS need research
 
 ## Session Continuity
 
-Last session: 2026-03-02
-Stopped at: Completed 01-02-PLAN.md — Auth flow (signup/login forms, dashboard layout, route protection)
+Last session: 2026-03-03
+Stopped at: Completed 02-01-PLAN.md — Agent core foundation (SQL migration, TypeScript types, memory helpers)
 Resume file: None
