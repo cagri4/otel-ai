@@ -4,20 +4,21 @@
  * These are the tool schemas passed to the Claude API — not the implementations.
  * They define the JSON Schema format for each tool's input parameters.
  *
- * Three tools are defined for Phase 2:
+ * Four tools are defined for Phase 2:
  * - get_room_availability: Forces agents to call the tool before stating availability
  * - get_room_pricing: Forces agents to call the tool before stating prices
  * - lookup_guest_reservation: Looks up an existing guest reservation
+ * - delegate_task: Delegates work to another AI employee via the async tasks table
  *
  * Tool-first policy: Tool descriptions include "MUST be called" directives.
  * This structurally prevents agents from hallucinating data — they must
  * call the tool to get data before they can respond.
  *
- * Source: .planning/phases/02-agent-core/02-02-PLAN.md
+ * Source: .planning/phases/02-agent-core/02-02-PLAN.md, 02-03-PLAN.md
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
-import type { AgentRole } from '../types';
+import { AgentRole } from '../types';
 
 // =============================================================================
 // Tool Definitions (Anthropic JSON Schema format)
@@ -96,6 +97,34 @@ const lookupGuestReservationTool: Anthropic.Messages.Tool = {
   },
 };
 
+/**
+ * Delegates a task to another AI employee via the async tasks queue.
+ * Used by FRONT_DESK to hand off work to other departments without blocking.
+ */
+const delegateTaskTool: Anthropic.Messages.Tool = {
+  name: 'delegate_task',
+  description:
+    'Delegate a task to another AI employee. Use this when a guest request requires a different department (e.g., housekeeping, concierge). The task will be queued for the other employee.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      to_role: {
+        type: 'string',
+        description: "Target employee role, e.g. 'housekeeping', 'concierge'",
+      },
+      task_type: {
+        type: 'string',
+        description: "Type of task, e.g. 'check_room_status', 'arrange_transfer'",
+      },
+      details: {
+        type: 'string',
+        description: 'Description of what needs to be done',
+      },
+    },
+    required: ['to_role', 'task_type', 'details'],
+  },
+};
+
 // =============================================================================
 // Tools Registry
 // =============================================================================
@@ -108,19 +137,30 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
   get_room_availability: getAvailabilityTool,
   get_room_pricing: getRoomPricingTool,
   lookup_guest_reservation: lookupGuestReservationTool,
+  delegate_task: delegateTaskTool,
 };
 
 /**
  * Returns the tool definitions for a given agent role.
  *
- * Currently returns all three tools for every role (Phase 2 only has FRONT_DESK).
+ * FRONT_DESK gets all four tools including delegate_task for cross-department delegation.
  * Future roles may have restricted tool sets (e.g., HOUSEKEEPER doesn't need pricing).
  *
  * @param role - The agent role requesting tools
  * @returns Array of Anthropic.Messages.Tool definitions for the role
  */
 export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
-  // All current roles get all tools — specialized per-role tool sets in Phase 5+
-  void role;
-  return [getAvailabilityTool, getRoomPricingTool, lookupGuestReservationTool];
+  switch (role) {
+    case AgentRole.FRONT_DESK:
+      return [
+        getAvailabilityTool,
+        getRoomPricingTool,
+        lookupGuestReservationTool,
+        delegateTaskTool,
+      ];
+    default:
+      // Non-FRONT_DESK roles get the three core tools but not delegate_task
+      // (prevents housekeeping/concierge from creating circular delegations)
+      return [getAvailabilityTool, getRoomPricingTool, lookupGuestReservationTool];
+  }
 }

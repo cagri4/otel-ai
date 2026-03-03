@@ -216,6 +216,7 @@ async function handleToolUse(
       const resultContent = await executeTool(
         toolUseBlock.name,
         toolUseBlock.input as Record<string, unknown>,
+        { hotelId: params.hotelId, fromRole: params.role },
       );
 
       // Persist each tool result with its correlation ID

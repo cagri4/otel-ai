@@ -11,10 +11,30 @@
  * rather than re-throwing. This allows Claude to handle tool failures gracefully
  * by informing the guest, rather than crashing the invocation.
  *
- * Source: .planning/phases/02-agent-core/02-02-PLAN.md
+ * Context parameter: executeTool() accepts a context object with hotelId and
+ * fromRole. This is required by delegate_task to INSERT into agent_tasks with
+ * the correct hotel isolation and originating role. Other tools ignore context.
+ *
+ * Source: .planning/phases/02-agent-core/02-02-PLAN.md, 02-03-PLAN.md
  */
 
 import { getAvailability, getRoomPricing, lookupGuestReservation } from './stubs';
+import { delegateTask } from '../coordination';
+
+// =============================================================================
+// Tool Context
+// =============================================================================
+
+/**
+ * Execution context passed to every tool invocation.
+ * Required for tools that need hotel isolation or role information.
+ */
+export interface ToolContext {
+  /** UUID of the hotel — required for RLS-scoped DB operations */
+  hotelId: string;
+  /** Role of the invoking agent (e.g. 'FRONT_DESK') */
+  fromRole: string;
+}
 
 // =============================================================================
 // Tool Dispatch Map
@@ -26,11 +46,26 @@ import { getAvailability, getRoomPricing, lookupGuestReservation } from './stubs
  */
 const TOOL_DISPATCH: Record<
   string,
-  (input: Record<string, unknown>) => Promise<Record<string, unknown>>
+  (input: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>
 > = {
-  get_room_availability: getAvailability,
-  get_room_pricing: getRoomPricing,
-  lookup_guest_reservation: lookupGuestReservation,
+  get_room_availability: (input) => getAvailability(input),
+  get_room_pricing: (input) => getRoomPricing(input),
+  lookup_guest_reservation: (input) => lookupGuestReservation(input),
+  delegate_task: async (input, context) => {
+    await delegateTask({
+      hotelId: context.hotelId,
+      fromRole: context.fromRole,
+      toRole: input.to_role as string,
+      taskType: input.task_type as string,
+      payload: { details: input.details },
+    });
+    return {
+      delegated: true,
+      task_type: input.task_type,
+      to_role: input.to_role,
+      message: 'Task has been delegated. The other employee will handle it.',
+    };
+  },
 };
 
 // =============================================================================
@@ -38,7 +73,7 @@ const TOOL_DISPATCH: Record<
 // =============================================================================
 
 /**
- * Executes a tool by name with the given input.
+ * Executes a tool by name with the given input and execution context.
  *
  * Returns the tool result as a JSON string for inclusion in Anthropic's
  * tool_result content block.
@@ -46,14 +81,16 @@ const TOOL_DISPATCH: Record<
  * If the tool throws, returns a JSON error object rather than re-throwing,
  * allowing Claude to report the failure to the guest gracefully.
  *
- * @param name - Tool name (must match a key in TOOL_DISPATCH)
- * @param input - Tool input parameters from the Claude tool_use block
+ * @param name    - Tool name (must match a key in TOOL_DISPATCH)
+ * @param input   - Tool input parameters from the Claude tool_use block
+ * @param context - Execution context with hotelId and fromRole
  * @returns JSON string of the tool result
  * @throws Error if the tool name is not registered (programming error)
  */
 export async function executeTool(
   name: string,
   input: Record<string, unknown>,
+  context: ToolContext,
 ): Promise<string> {
   const handler = TOOL_DISPATCH[name];
 
@@ -65,7 +102,7 @@ export async function executeTool(
   }
 
   try {
-    const result = await handler(input);
+    const result = await handler(input, context);
     return JSON.stringify(result);
   } catch (error) {
     // Return an error result to Claude rather than crashing invokeAgent()
