@@ -51,9 +51,9 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Schema migration (memory tables + agent_tasks), TypeScript types, memory helpers (Wave 1)
-- [ ] 02-02-PLAN.md — Agent Factory, context assembly, invokeAgent() orchestrator, tool system (Wave 2)
-- [ ] 02-03-PLAN.md — Agent-to-agent coordination via async tasks helpers + delegate_task tool (Wave 2)
+- [x] 02-01-PLAN.md — Schema migration (memory tables + agent_tasks), TypeScript types, memory helpers (Wave 1)
+- [x] 02-02-PLAN.md — Agent Factory, context assembly, invokeAgent() orchestrator, tool system (Wave 2)
+- [x] 02-03-PLAN.md — Agent-to-agent coordination via async tasks helpers + delegate_task tool (Wave 2)
 - [ ] 02-04-PLAN.md — SSE streaming route, Front Desk AI chat UI at /desk (Wave 3)
 
 ### Phase 3: Knowledge Base and Onboarding
@@ -164,7 +164,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete    | 2026-03-03 |
-| 2. Agent Core | 0/4 | Not started | - |
+| 2. Agent Core | 3/4 | In progress | - |
 | 3. Knowledge Base and Onboarding | 0/3 | Not started | - |
 | 4. Guest-Facing Layer | 0/5 | Not started | - |
 | 5. Guest Experience AI and Owner Dashboard | 0/4 | Not started | - |

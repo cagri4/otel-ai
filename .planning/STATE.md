@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 2 of 8 (Agent Core)
-Plan: 3 of 4 in current phase
+Plan: 4 of 4 in current phase
 Status: In progress
-Last activity: 2026-03-03 — Completed 02-02-PLAN.md (Agent orchestration stack: invokeAgent(), agentFactory, assembleContext, tool registry/executor/stubs)
+Last activity: 2026-03-03 — Completed 02-03-PLAN.md (Agent coordination: coordination.ts with 5 lifecycle functions, delegate_task tool wired to FRONT_DESK)
 
-Progress: [████░░░░░░] 19%
+Progress: [█████░░░░░] 25%
 
 ## Performance Metrics
 
@@ -28,10 +28,10 @@ Progress: [████░░░░░░] 19%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
-| 02-agent-core | 2 | 30 min | 15 min |
+| 02-agent-core | 3 | 41 min | 13.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 16 min, 7 min, 19 min, 11 min
+- Last 5 plans: 16 min, 7 min, 19 min, 11 min, 11 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -61,6 +61,9 @@ Recent decisions affecting current work:
 - MessageStream imported from @anthropic-ai/sdk/lib/MessageStream — not re-exported from main SDK module (Phase 2 Plan 2)
 - isToolRequired() errs on false positives — better to over-call tools than allow Claude to answer availability/pricing from training data (Phase 2 Plan 2)
 - invokeAgentRecursive() uses tool_choice=auto — tools already called once, forcing again would be circular (Phase 2 Plan 2)
+- AgentRole enum imported as value (not type) in registry.ts — TypeScript enum used in switch case must be imported as runtime value (Phase 2 Plan 3)
+- delegate_task tool FRONT_DESK only — prevents circular delegation chains from non-front-desk roles (Phase 2 Plan 3)
+- ToolContext always threaded through executeTool — future-proofs executor for hotel-scoped tools without signature changes (Phase 2 Plan 3)
 
 ### Pending Todos
 
@@ -74,5 +77,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 02-02-PLAN.md — Agent orchestration stack (invokeAgent, agentFactory, assembleContext, tool system)
+Stopped at: Completed 02-03-PLAN.md — Agent coordination helpers (coordination.ts, delegate_task tool, ToolContext threading)
 Resume file: None

@@ -22,7 +22,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AGENT-04**: Three-tier memory system (semantic hotel facts, episodic guest history, working conversation turns)
 - [x] **AGENT-05**: Tool-first policy enforced — agents cannot answer availability/price questions without successful tool call
 - [ ] **AGENT-06**: Streaming response (SSE) for all chat interactions — typing indicator on message send
-- [ ] **AGENT-07**: Agent-to-agent coordination via async tasks table (no synchronous inter-agent calls)
+- [x] **AGENT-07**: Agent-to-agent coordination via async tasks table (no synchronous inter-agent calls)
 
 ### Front Desk AI (Role 1)
 
@@ -171,7 +171,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | AGENT-04 | Phase 2 | Complete |
 | AGENT-05 | Phase 2 | Complete |
 | AGENT-06 | Phase 2 | Pending |
-| AGENT-07 | Phase 2 | Pending |
+| AGENT-07 | Phase 2 | Complete |
 | DESK-01 | Phase 2 | Pending |
 | KNOW-01 | Phase 3 | Pending |
 | KNOW-02 | Phase 3 | Pending |
