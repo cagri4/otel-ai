@@ -13,6 +13,8 @@
  * Source: .planning/phases/02-agent-core/02-RESEARCH.md
  */
 
+import type Anthropic from '@anthropic-ai/sdk';
+
 // =============================================================================
 // Agent Roles
 // =============================================================================
@@ -37,37 +39,24 @@ export enum AgentRole {
 }
 
 // =============================================================================
-// Inline content block types
-// TODO: Replace with Anthropic.Messages.* types after @anthropic-ai/sdk install (Plan 02-02)
+// Anthropic SDK type re-exports
+// Using SDK types directly now that @anthropic-ai/sdk is installed.
 // =============================================================================
 
 /**
- * Text content block matching Anthropic MessageParam content structure.
- * Used in loadConversationTurns() return type.
+ * Text content block — re-exported from Anthropic SDK.
  */
-export type TextBlock = {
-  type: "text";
-  text: string;
-};
+export type TextBlock = Anthropic.Messages.TextBlock;
 
 /**
- * Tool use content block matching Anthropic tool_use structure.
+ * Tool use content block — re-exported from Anthropic SDK.
  */
-export type ToolUseBlock = {
-  type: "tool_use";
-  id: string;
-  name: string;
-  input: Record<string, unknown>;
-};
+export type ToolUseBlock = Anthropic.Messages.ToolUseBlock;
 
 /**
- * Tool result content block matching Anthropic tool_result structure.
+ * Tool result content block — re-exported from Anthropic SDK.
  */
-export type ToolResultBlock = {
-  type: "tool_result";
-  tool_use_id: string;
-  content: string | TextBlock[];
-};
+export type ToolResultBlock = Anthropic.Messages.ToolResultBlockParam;
 
 /**
  * Content block union type for message content arrays.
@@ -76,31 +65,18 @@ export type ContentBlock = TextBlock | ToolUseBlock | ToolResultBlock;
 
 /**
  * Message parameter matching Anthropic MessageParam shape.
- * TODO: Replace with import type { MessageParam } from '@anthropic-ai/sdk'
+ * Uses SDK type directly for full compatibility.
  */
-export type MessageParam = {
-  role: "user" | "assistant";
-  content: string | ContentBlock[];
-};
+export type MessageParam = Anthropic.Messages.MessageParam;
 
 // =============================================================================
-// Tool type placeholder
-// TODO: Replace with Anthropic.Tool after SDK install
+// Tool type
 // =============================================================================
 
 /**
- * Minimal tool descriptor matching Anthropic's tool definition schema.
- * TODO: Replace with import type { Tool } from '@anthropic-ai/sdk'
+ * Tool descriptor using Anthropic SDK type for full compatibility.
  */
-export type Tool = {
-  name: string;
-  description: string;
-  input_schema: {
-    type: "object";
-    properties: Record<string, unknown>;
-    required?: string[];
-  };
-};
+export type Tool = Anthropic.Messages.Tool;
 
 // =============================================================================
 // Agent Configuration
