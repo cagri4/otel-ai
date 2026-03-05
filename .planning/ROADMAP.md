@@ -167,7 +167,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Agent Core | 4/4 | Complete    | 2026-03-05 |
 | 3. Knowledge Base and Onboarding | 3/3 | Complete    | 2026-03-05 |
 | 4. Guest-Facing Layer | 5/5 | Complete    | 2026-03-05 |
-| 5. Guest Experience AI and Owner Dashboard | 1/4 | In Progress|  |
+| 5. Guest Experience AI and Owner Dashboard | 3/4 | In Progress|  |
 | 6. Billing | 0/3 | Not started | - |
 | 7. Booking AI | 0/3 | Not started | - |
 | 8. Housekeeping Coordinator | 0/2 | Not started | - |

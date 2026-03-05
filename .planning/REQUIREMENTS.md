@@ -36,11 +36,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Guest Experience AI (Role 3)
 
-- [ ] **GEXP-01**: Guest Experience AI sends pre-arrival info package (D-1 before check-in)
-- [ ] **GEXP-02**: Guest Experience AI sends checkout reminder (morning of checkout day)
-- [ ] **GEXP-03**: Guest Experience AI sends post-stay review request (24h after checkout)
+- [x] **GEXP-01**: Guest Experience AI sends pre-arrival info package (D-1 before check-in)
+- [x] **GEXP-02**: Guest Experience AI sends checkout reminder (morning of checkout day)
+- [x] **GEXP-03**: Guest Experience AI sends post-stay review request (24h after checkout)
 - [x] **GEXP-04**: Guest Experience AI messages are milestone-triggered (automated based on booking dates)
-- [ ] **GEXP-05**: Hotel owner can customize message templates for each milestone
+- [x] **GEXP-05**: Hotel owner can customize message templates for each milestone
 
 ### Booking AI (Role 2)
 
@@ -202,11 +202,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | I18N-04 | Phase 4 | Complete |
 | SAFE-04 | Phase 4 | Complete |
 | SAFE-05 | Phase 4 | Complete |
-| GEXP-01 | Phase 5 | Pending |
-| GEXP-02 | Phase 5 | Pending |
-| GEXP-03 | Phase 5 | Pending |
+| GEXP-01 | Phase 5 | Complete |
+| GEXP-02 | Phase 5 | Complete |
+| GEXP-03 | Phase 5 | Complete |
 | GEXP-04 | Phase 5 | Complete |
-| GEXP-05 | Phase 5 | Pending |
+| GEXP-05 | Phase 5 | Complete |
 | SAFE-01 | Phase 5 | Complete |
 | SAFE-02 | Phase 5 | Complete |
 | SAFE-03 | Phase 5 | Complete |

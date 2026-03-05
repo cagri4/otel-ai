@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 5 of 8 (Guest Experience AI and Owner Dashboard) — IN PROGRESS
-Plan: 1 of 4 completed
-Status: In Progress — Completed 05-01-PLAN.md
-Last activity: 2026-03-05 — Completed 05-01-PLAN.md (Phase 5 foundation: bookings, message_templates, agents, agent_audit_log tables; GUEST_EXPERIENCE role; audit module; is_enabled guard)
+Plan: 3 of 4 completed
+Status: In Progress — Completed 05-03-PLAN.md
+Last activity: 2026-03-05 — Completed 05-03-PLAN.md (Owner dashboard: /employees toggle+config, /conversations browser+drill-down, /audit log with OBSERVE/INFORM/ACT badges; nav links updated)
 
-Progress: [████████████████] 70%
+Progress: [████████████████] 74%
 
 ## Performance Metrics
 
@@ -31,7 +31,7 @@ Progress: [████████████████] 70%
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
-| 05-guest-experience | 1 of 4 | 15 min | 15 min |
+| 05-guest-experience | 2 of 4 | 30 min | 15 min |
 
 **Recent Trend:**
 - Last 5 plans: 23 min, 19 min, 21 min, 12 min, 15 min
@@ -102,6 +102,9 @@ Recent decisions affecting current work:
 - [Phase 05-guest-experience]: Conservative ACT default in classifyAction — unknown/future tools default to ACT to prevent false permission assumptions; owner confirmation gate deferred until first ACT tool exists (Phase 5 Plan 1)
 - [Phase 05-guest-experience]: is_enabled guard uses .maybeSingle() not .single() — graceful fallback for hotels created before Phase 5 migration (no agents row = treat as enabled) (Phase 5 Plan 1)
 - [Phase 05-guest-experience]: seed_hotel_defaults extended via CREATE OR REPLACE FUNCTION in 0005 migration — inserts front_desk and guest_experience agent rows atomically on hotel creation (Phase 5 Plan 1)
+- [Phase 05-guest-experience]: SupabaseClient cast applied to hotels partial select in cron — Pick<Hotel,...> type annotation on for-loop variable resolves never inference for column subset queries (Phase 5 Plan 2)
+- [Phase 05-guest-experience]: Cron route returns 200 on fatal error — consistent with Twilio webhook pattern; Vercel cron single-attempt behavior; errors logged for debugging (Phase 5 Plan 2)
+- [Phase 05-guest-experience]: WhatsApp review_request falls back to email when TWILIO_TEMPLATE_SID_REVIEW_REQUEST unset — post-stay messages outside 24h free-form window; graceful degradation without silent failure (Phase 5 Plan 2)
 
 ### Pending Todos
 
@@ -114,5 +117,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 05-01-PLAN.md — Phase 5 foundation: 4 new tables (bookings, message_templates, agents, agent_audit_log), GUEST_EXPERIENCE role, audit module (classifyAction/writeAuditLog), is_enabled guard in invokeAgent. 1 of 4 Phase 5 plans complete.
+Stopped at: Completed 05-02-PLAN.md — Milestone trigger engine: vercel.json cron (06:00 UTC daily), CRON_SECRET-secured route at /api/cron/milestone-dispatch, milestoneDispatch.ts with per-hotel timezone-aware date matching, WhatsApp/email dispatch, custom template loading, sent flag guards. 2 of 4 Phase 5 plans complete.
 Resume file: None
