@@ -118,7 +118,54 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SAFE-04**: Rate limiting per hotel and per guest IP
 - [x] **SAFE-05**: Prompt injection protection on all guest-facing inputs
 
-## v2 Requirements
+## v2.0 Requirements
+
+Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
+
+### Telegram Infrastructure
+
+- [ ] **TGIF-01**: Telegram Bot API webhook handler (`/api/telegram/[botToken]`) — per-bot endpoint with dynamic routing
+- [ ] **TGIF-02**: `X-Telegram-Bot-Api-Secret-Token` validation on every webhook request
+- [ ] **TGIF-03**: Webhook handler returns 200 immediately — agent invocation runs async (no Telegram retry storms)
+- [ ] **TGIF-04**: Bot tokens encrypted at rest via Supabase Vault
+- [ ] **TGIF-05**: `hotel_bots` table (hotel_id, role, bot_token, bot_username, is_active) with RLS
+
+### Super Admin
+
+- [ ] **SADM-01**: Super admin panel — hotel list with status, create new hotel
+- [ ] **SADM-02**: Bot token entry per hotel (pasted from BotFather)
+- [ ] **SADM-03**: Automatic `setWebhook` registration when bot token is saved
+- [ ] **SADM-04**: Telegram deep link generation (`t.me/SetupWizardBot?start={hotelId}`)
+
+### Telegram Onboarding
+
+- [ ] **ONBT-01**: Setup Wizard as separate Telegram bot — activates via deep link
+- [ ] **ONBT-02**: Conversational info collection (hotel name, address, rooms, check-in/out times)
+- [ ] **ONBT-03**: Team introduction — presents each employee bot with direct link
+- [ ] **ONBT-04**: Setup completion activates all employee bots with 14-day trial
+
+### Employee Bots
+
+- [ ] **EBOT-01**: Front Desk AI as separate Telegram bot for hotel owner
+- [ ] **EBOT-02**: Booking AI as separate Telegram bot for hotel owner
+- [ ] **EBOT-03**: Housekeeping Coordinator as separate Telegram bot for hotel owner
+- [ ] **EBOT-04**: Guest Experience AI as separate Telegram bot for hotel owner
+- [ ] **EBOT-05**: Existing `invokeAgent()` pipeline handles Telegram channel (non-streaming)
+- [ ] **EBOT-06**: MarkdownV2 formatted responses (Telegram-compatible output)
+
+### Pricing & Trial
+
+- [ ] **PRIC-01**: Per-employee pricing — each agent role has its own monthly price
+- [ ] **PRIC-02**: 14-day trial with all employees active
+- [ ] **PRIC-03**: Trial-end notification via Telegram with employee selection prompt
+- [ ] **PRIC-04**: Selected employees' prices sum to monthly subscription amount
+- [ ] **PRIC-05**: Payment via existing iyzico (TR) / Mollie (EU) web checkout link
+
+### Web Dashboard
+
+- [ ] **WDSH-01**: Existing dashboard remains accessible as readonly optional view
+
+## v3 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
 
@@ -152,10 +199,14 @@ Deferred to future release. Tracked but not in current roadmap.
 | Automated public review responses posted by AI | One bad response goes viral — reputation risk too high |
 | Automated OTA rate changes without approval | Revenue loss risk — requires explicit owner confirmation |
 | Generic catch-all AI assistant | Kills the employee metaphor that is the core differentiator |
-| Video/voice-based AI communication | Text-first approach — complexity too high for v1 |
+| Video/voice-based AI communication | Text-first approach — complexity too high |
 | IoT/smart device integration | Not core to virtual employee value proposition |
-| Mobile native app | Web-first, mobile later |
+| Mobile native app | Telegram zaten mobil çalışıyor |
 | Enterprise features for large hotel chains | Butik otel odağı — farklı segment |
+| Telegram Payments API | Mevcut iyzico+Mollie web ödeme yeterli; Telegram Payments recurring desteklemiyor |
+| Birden fazla süper admin | Şimdilik tek kişi yeterli |
+| Per-hotel dedicated bot usernames | Shared bot pool kullanılıyor; hotel-specific bot names v3+ |
+| Programmatic bot creation (BotFather bypass) | Telegram API buna izin vermiyor — hard constraint |
 
 ## Traceability
 
@@ -238,4 +289,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-02 after roadmap creation*
+*Last updated: 2026-03-06 after v2.0 milestone requirements*
