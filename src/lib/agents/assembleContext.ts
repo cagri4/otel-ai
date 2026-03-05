@@ -18,7 +18,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { loadSemanticFacts, loadEpisodicHistory } from './memory';
+import { loadSemanticFacts, loadEpisodicHistory, loadRoomContext } from './memory';
 import type { AgentRole, AgentConfig } from './types';
 import type { Hotel } from '@/types/database';
 
@@ -57,9 +57,10 @@ export async function assembleSystemPrompt(
 
   // Fetch hotel data and memory in parallel for performance.
   // IMPORTANT: No caching — fresh data every invocation.
-  const [hotel, semanticFacts, episodicHistory] = await Promise.all([
+  const [hotel, semanticFacts, roomContext, episodicHistory] = await Promise.all([
     fetchHotel(hotelId),
     loadSemanticFacts(hotelId),
+    loadRoomContext(hotelId),
     loadEpisodicHistory(hotelId, config.memoryScope),
   ]);
 
@@ -84,6 +85,10 @@ ${formatHotelContext(hotel)}
 
   if (semanticFacts.trim()) {
     memoryParts.push(`Hotel Knowledge Base:\n${semanticFacts}`);
+  }
+
+  if (roomContext.trim()) {
+    memoryParts.push(`Room Information:\n${roomContext}`);
   }
 
   if (episodicHistory.trim()) {

@@ -27,7 +27,7 @@
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ContentBlock, MessageParam } from '@/lib/agents/types';
-import type { ConversationTurn, HotelFact, GuestInteraction } from '@/types/database';
+import type { ConversationTurn, HotelFact, GuestInteraction, Room } from '@/types/database';
 
 // TODO: Replace ContentBlock and MessageParam with Anthropic.Messages types after SDK install (Plan 02-02)
 
@@ -218,6 +218,52 @@ export async function loadSemanticFacts(hotelId: string): Promise<string> {
   }
 
   return sections.join('\n\n');
+}
+
+// =============================================================================
+// Room Context — Structured room inventory for agent system prompt
+// Extends Tier 1: room data injected alongside semantic facts (KNOW-04)
+// =============================================================================
+
+/**
+ * Loads all rooms for a hotel and formats them as a readable string
+ * for injection into the agent system prompt memory layer.
+ *
+ * Each room is formatted as a single line with key details (type, bed, occupancy,
+ * price note) as a header, and description + amenities as a body when available.
+ *
+ * Example output:
+ *   ROOM: Deluxe Ocean View (deluxe) — king bed — max 2 guests — from $180/night. Ocean views, private balcony. Mini-bar, espresso machine, walk-in shower.
+ *   ROOM: Standard Room (standard). Two twin beds available.
+ *
+ * Returns empty string if no rooms exist (agent falls back to general knowledge).
+ *
+ * @param hotelId - UUID for the hotel (RLS enforced server-side)
+ * @returns Formatted multi-line string of room details, or empty string
+ */
+export async function loadRoomContext(hotelId: string): Promise<string> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('hotel_id', hotelId)
+    .order('sort_order')
+    .returns<Room[]>();
+
+  if (error || !data || data.length === 0) return '';
+
+  const lines = data.map((room) => {
+    const parts = [`ROOM: ${room.name} (${room.room_type})`];
+    if (room.bed_type) parts.push(`${room.bed_type} bed`);
+    if (room.max_occupancy) parts.push(`max ${room.max_occupancy} guests`);
+    if (room.base_price_note) parts.push(room.base_price_note);
+    const header = parts.join(' — ');
+    const details = [room.description, room.amenities?.join(', ')].filter(Boolean).join('. ');
+    return details ? `${header}. ${details}` : header;
+  });
+
+  return lines.join('\n');
 }
 
 // =============================================================================
