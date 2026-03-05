@@ -6,6 +6,7 @@
  *   supabase/migrations/0002_agent_core.sql
  *   supabase/migrations/0003_knowledge_base.sql
  *   supabase/migrations/0004_guest_facing.sql
+ *   supabase/migrations/0005_guest_experience.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -188,6 +189,92 @@ export interface HotelWhatsAppNumber {
 }
 
 // =============================================================================
+// Booking — Guest stay records for milestone messaging (added in 0005_guest_experience.sql)
+// Corresponds to: public.bookings table
+// Used by cron jobs to send pre-arrival, checkout reminder, and review request messages.
+// =============================================================================
+
+export type BookingChannel = 'email' | 'whatsapp';
+
+export interface Booking {
+  id: string;                        // UUID primary key
+  hotel_id: string;                  // UUID — references public.hotels.id (NOT NULL)
+  guest_name: string;                // Guest display name (NOT NULL)
+  guest_email: string | null;        // Guest email address
+  guest_phone: string | null;        // WhatsApp-formatted phone e.g. "+31612345678"
+  channel: BookingChannel;           // Delivery channel (NOT NULL, default 'email')
+  check_in_date: string;             // ISO 8601 date string (DATE type, NOT NULL)
+  check_out_date: string;            // ISO 8601 date string (DATE type, NOT NULL)
+  pre_arrival_sent: boolean;         // Whether pre-arrival message was sent (NOT NULL, default false)
+  checkout_reminder_sent: boolean;   // Whether checkout reminder was sent (NOT NULL, default false)
+  review_request_sent: boolean;      // Whether review request was sent (NOT NULL, default false)
+  created_at: string;                // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
+// MessageTemplate — Per-hotel per-milestone per-channel message templates
+// Corresponds to: public.message_templates table
+// Hotel owner configures these; cron uses them to send milestone messages.
+// =============================================================================
+
+export type MessageMilestone = 'pre_arrival' | 'checkout_reminder' | 'review_request';
+
+export interface MessageTemplate {
+  id: string;           // UUID primary key
+  hotel_id: string;     // UUID — references public.hotels.id (NOT NULL)
+  milestone: MessageMilestone; // Which milestone this template covers (NOT NULL)
+  channel: BookingChannel;     // Delivery channel (NOT NULL)
+  subject: string | null;      // Email subject line (NULL for WhatsApp)
+  body: string;                // Message body (NOT NULL)
+  created_at: string;          // ISO 8601 UTC timestamp (timestamptz)
+  updated_at: string;          // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
+}
+
+// =============================================================================
+// Agent — Per-hotel AI agent configuration (added in 0005_guest_experience.sql)
+// Corresponds to: public.agents table
+// Controls is_enabled (on/off toggle) and behavior_config per role.
+// =============================================================================
+
+export interface Agent {
+  id: string;                           // UUID primary key
+  hotel_id: string;                     // UUID — references public.hotels.id (NOT NULL)
+  role: string;                         // Agent role identifier e.g. 'front_desk', 'guest_experience'
+  is_enabled: boolean;                  // Whether this agent is active (NOT NULL, default true)
+  behavior_config: Record<string, unknown>; // Role-specific tuning config (JSONB, default '{}')
+  created_at: string;                   // ISO 8601 UTC timestamp (timestamptz)
+  updated_at: string;                   // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
+}
+
+// =============================================================================
+// ActionClass — Audit classification for tool calls (used in audit.ts and agent_audit_log)
+// OBSERVE: read-only data queries (no side effects)
+// INFORM:  notifications and informational writes
+// ACT:     writes, modifications, or state changes (require owner confirmation gate in future)
+// =============================================================================
+
+export type ActionClass = 'OBSERVE' | 'INFORM' | 'ACT';
+
+// =============================================================================
+// AgentAuditLog — Append-only tool call audit trail (added in 0005_guest_experience.sql)
+// Corresponds to: public.agent_audit_log table
+// Every tool execution by any agent writes one row here (fire-and-forget).
+// No UPDATE or DELETE policies — audit log is immutable.
+// =============================================================================
+
+export interface AgentAuditLog {
+  id: string;               // UUID primary key
+  hotel_id: string;         // UUID — references public.hotels.id (NOT NULL)
+  agent_role: string;       // Role of the agent that made the tool call (NOT NULL)
+  conversation_id: string;  // Conversation identifier (NOT NULL)
+  tool_name: string;        // Name of the tool called (NOT NULL)
+  action_class: ActionClass; // Classification of the action (NOT NULL, CHECK constraint)
+  input_json: Record<string, unknown>;  // Tool input parameters (JSONB, NOT NULL)
+  result_json: Record<string, unknown>; // Tool result (JSONB, NOT NULL)
+  created_at: string;       // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
 // Database wrapper type
 // Provides basic structure for Supabase client typing.
 // Replace with generated types (`supabase gen types typescript`) in a later phase.
@@ -289,6 +376,44 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Omit<HotelWhatsAppNumber, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      bookings: {
+        Row: Booking;
+        Insert: Omit<Booking, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<Booking, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      message_templates: {
+        Row: MessageTemplate;
+        Insert: Omit<MessageTemplate, 'id' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<MessageTemplate, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      agents: {
+        Row: Agent;
+        Insert: Omit<Agent, 'id' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<Agent, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      agent_audit_log: {
+        Row: AgentAuditLog;
+        Insert: Omit<AgentAuditLog, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<AgentAuditLog, 'id' | 'created_at'>>;
         Relationships: Relationship[];
       };
     };
