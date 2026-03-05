@@ -102,13 +102,13 @@ Plans:
   3. Hotel owner can view the full conversation history for each AI employee from the dashboard
   4. Hotel owner receives an in-app and email notification when the AI escalates a guest request
   5. Every agent action is written to an audit log — hotel owner can see what each AI employee did and when
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01: Guest Experience AI role — pre-arrival, checkout reminder, post-stay review request triggers
-- [ ] 05-02: Milestone trigger engine — cron-based booking date evaluation, message dispatch
-- [ ] 05-03: Owner dashboard — per-employee chat, conversation history view, employee on/off toggle, behavior config
-- [ ] 05-04: Safety and audit layer — OBSERVE/INFORM/ACT classification, ACT confirmation requirement, audit trail
+- [ ] 05-01-PLAN.md — DB migration (bookings, message_templates, agents, agent_audit_log), TypeScript types, GUEST_EXPERIENCE role, audit module, is_enabled guard (Wave 1)
+- [ ] 05-02-PLAN.md — Milestone trigger engine: Vercel cron, timezone-aware booking queries, WhatsApp/email dispatch, template loading (Wave 2)
+- [ ] 05-03-PLAN.md — Owner dashboard: employee on/off toggle, behavior config, conversation browser, audit log viewer (Wave 2)
+- [ ] 05-04-PLAN.md — Employee chat (Guest Experience AI page), in-app escalation notifications via Supabase Realtime + sonner (Wave 2)
 
 ### Phase 6: Billing
 **Goal**: Hotel owners pay for OtelAI via a subscription plan, with plan tier enforced on agent count, and free trial available for new hotels
@@ -167,7 +167,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Agent Core | 4/4 | Complete    | 2026-03-05 |
 | 3. Knowledge Base and Onboarding | 3/3 | Complete    | 2026-03-05 |
 | 4. Guest-Facing Layer | 5/5 | Complete    | 2026-03-05 |
-| 5. Guest Experience AI and Owner Dashboard | 0/4 | Not started | - |
+| 5. Guest Experience AI and Owner Dashboard | 0/4 | Planned | - |
 | 6. Billing | 0/3 | Not started | - |
 | 7. Booking AI | 0/3 | Not started | - |
 | 8. Housekeeping Coordinator | 0/2 | Not started | - |
