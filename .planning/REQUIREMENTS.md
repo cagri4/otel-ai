@@ -96,12 +96,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Billing
 
-- [ ] **BILL-01**: Subscription billing with tiered plans (Starter: 2 agents, Pro: 4, Enterprise: 6)
+- [x] **BILL-01**: Subscription billing with tiered plans (Starter: 2 agents, Pro: 4, Enterprise: 6)
 - [ ] **BILL-02**: iyzico integration for TR market payments
 - [ ] **BILL-03**: Mollie integration for EU market payments
-- [ ] **BILL-04**: Plan enforcement — agent count limited by subscription tier
+- [x] **BILL-04**: Plan enforcement — agent count limited by subscription tier
 - [ ] **BILL-05**: Hotel owner can upgrade/downgrade plan
-- [ ] **BILL-06**: Free trial period for new hotels
+- [x] **BILL-06**: Free trial period for new hotels
 
 ### Internationalization
 
@@ -215,12 +215,12 @@ Deferred to future release. Tracked but not in current roadmap.
 | DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
-| BILL-01 | Phase 6 | Pending |
+| BILL-01 | Phase 6 | Complete |
 | BILL-02 | Phase 6 | Pending |
 | BILL-03 | Phase 6 | Pending |
-| BILL-04 | Phase 6 | Pending |
+| BILL-04 | Phase 6 | Complete |
 | BILL-05 | Phase 6 | Pending |
-| BILL-06 | Phase 6 | Pending |
+| BILL-06 | Phase 6 | Complete |
 | BOOK-01 | Phase 7 | Pending |
 | BOOK-02 | Phase 7 | Pending |
 | BOOK-03 | Phase 7 | Pending |

@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 6 — Booking Engine
+**Current focus:** Phase 6 — Billing
 
 ## Current Position
 
-Phase: 5 of 8 (Guest Experience AI and Owner Dashboard) — COMPLETE
-Plan: 4 of 4 completed
-Status: Complete — Completed 05-04-PLAN.md
-Last activity: 2026-03-05 — Completed 05-04-PLAN.md (Guest Experience AI chat page, EscalationNotificationProvider with Supabase Realtime toasts, sonner Toaster in dashboard layout, Guest Experience nav link; Phase 5 complete)
+Phase: 6 of 8 (Billing) — IN PROGRESS
+Plan: 1 of 4 completed
+Status: In Progress — Completed 06-01-PLAN.md
+Last activity: 2026-03-05 — Completed 06-01-PLAN.md (subscriptions table migration, TypeScript types, PLAN_LIMITS, enforceAgentLimit, getSubscriptionStatus)
 
-Progress: [████████████████████] 80%
+Progress: [█████████████████████] 84%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: 12.9 min
-- Total execution time: 206 min
+- Total plans completed: 17
+- Average duration: 12.4 min
+- Total execution time: 210 min
 
 **By Phase:**
 
@@ -31,14 +31,16 @@ Progress: [████████████████████] 80%
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
-| 05-guest-experience | 2 of 4 | 30 min | 15 min |
+| 05-guest-experience | 4 of 4 | 54 min | 13.5 min |
+| 06-billing | 1 of 4 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 23 min, 19 min, 21 min, 12 min, 15 min
-- Trend: Stable
+- Last 5 plans: 19 min, 21 min, 12 min, 15 min, 4 min
+- Trend: Stable (4 min unusually fast — foundation/types plan)
 
 *Updated after each plan completion*
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
+| Phase 06-billing P01 | 4 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -114,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 05-guest-experience]: useChatStream accepts optional {conversationId, role} options — backward compatible; existing /desk page unchanged
 - [Phase 05-guest-experience]: API route role resolution: roleStr from body maps guest_experience -> GUEST_EXPERIENCE, anything else -> FRONT_DESK (safe default)
 - [Phase 05-guest-experience]: EscalationNotificationProvider: Supabase Realtime client-side postgres_changes subscription as provider component with 15s toast duration
+- [Phase 06-billing]: SubscriptionInfo named instead of SubscriptionStatus in trialStatus.ts to avoid clash with DB type
+- [Phase 06-billing]: enforceAgentLimit uses service_role client — hotel_id already validated by session in calling server action
+- [Phase 06-billing]: getProviderForHotel uses toUpperCase() for case-insensitive TR comparison
 
 ### Pending Todos
 
@@ -126,5 +131,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 05-04-PLAN.md — Guest Experience AI chat page, EscalationNotificationProvider with Supabase Realtime toasts, sonner Toaster in dashboard layout, Guest Experience nav link. Phase 5 complete (4 of 4 plans).
+Stopped at: Completed 06-01-PLAN.md — subscriptions table migration (0006_billing.sql), TypeScript Subscription types, plans.ts (PLAN_LIMITS/getProviderForHotel), enforcement.ts (enforceAgentLimit), trialStatus.ts (getSubscriptionStatus). Phase 6 plan 1 of 4 complete.
 Resume file: None
