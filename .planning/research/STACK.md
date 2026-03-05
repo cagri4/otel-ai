@@ -1,157 +1,167 @@
 # Stack Research
 
-**Domain:** AI-powered SaaS for boutique hotel virtual staff management
-**Researched:** 2026-03-01
-**Confidence:** MEDIUM-HIGH (core framework HIGH via official docs, AI/billing MEDIUM from training data + context)
+**Domain:** AI-powered SaaS — Telegram-first multi-bot hotel staff platform
+**Researched:** 2026-03-06
+**Confidence:** HIGH for grammY/Telegram mechanics, MEDIUM for billing per-seat model, HIGH for admin panel
 
 ---
 
-## Executive Decision: Supabase over Firebase
+## Scope
 
-**Recommendation: Supabase — no contest for this use case.**
+This document covers only **net-new additions** for the Telegram milestone. The existing validated stack (Next.js 16, Supabase, Claude API, Twilio, iyzico, Mollie, shadcn/ui, react-hook-form, next-intl, Upstash, Resend) is NOT re-researched.
 
-Firebase (Firestore) uses a NoSQL document model. OtelAI is fundamentally relational: hotels have employees, employees have roles, conversations belong to employees and guests, billing ties to hotels. Trying to model this in Firestore means either duplication, N+1 fetches, or complex subcollection queries that become maintenance nightmares.
-
-Supabase gives you:
-- PostgreSQL with full JOIN support — essential for multi-tenant hotel + staff + conversation queries
-- Row-Level Security (RLS) built into Postgres — tenant isolation at the DB layer, not application layer
-- Realtime via WebSocket (postgres changes) — needed for live guest chat and internal agent status
-- Auth that integrates with RLS policies — `auth.uid()` directly in policy definitions
-- The user already has a working Supabase project (`spplymarkt`) — team familiarity exists
-- `@supabase/ssr` package is explicitly listed in Next.js official auth docs
-
-Firebase is appropriate for: simple document stores, mobile-first with offline sync, Google ecosystem integration. None of those apply here.
+Current `package.json` already includes: `@anthropic-ai/sdk`, `@supabase/ssr`, `@supabase/supabase-js`, `iyzipay`, `@mollie/api-client`, `twilio`, `shadcn`, `next-intl`, `@upstash/ratelimit`, `zod`, `react-hook-form`, `resend`, `lucide-react`, `date-fns`.
 
 ---
 
-## Recommended Stack
+## New Stack Additions
 
-### Core Technologies
+### Telegram Bot Framework
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Next.js | 16.1.6 | Full-stack framework | App Router is mature, Vercel-native deployment, Server Components reduce Claude API call latency, already decided |
-| React | 19.x | UI runtime | Ships with Next.js 16, concurrent features improve streaming chat UX |
-| TypeScript | 5.x | Type safety | Zod schema generation, Claude API response typing, RLS policy mismatches caught at compile time |
-| Supabase | latest | Database + Auth + Realtime | PostgreSQL for relational hotel data, RLS for tenant isolation, Realtime for live chat — see decision above |
-| Claude API (`claude-opus-4-6`) | current | AI agent engine | Already decided; Opus 4.6 for guest-facing chat (highest quality), Sonnet 4.6 for background/internal agent tasks (cost-efficient) |
-| Tailwind CSS | v4 | Styling | Default in Next.js 16 (v3 requires a special guide); CSS-first config, faster builds with Turbopack |
-| Stripe | latest | Subscription billing | Industry standard for SaaS; Webhooks via Next.js Route Handler; supports per-seat or per-hotel pricing |
+| `grammy` | `^1.41.1` | Telegram Bot API client | TypeScript-first framework, active maintenance (v1.41.1 published March 5 2026), native `webhookCallback` for Next.js App Router, `secretToken` validation built-in, Vercel Serverless Function compatible |
+| `@grammyjs/conversations` | `^2.1.1` | Multi-step onboarding flows | Enables wizard-like conversation sequences (ask name, assign role, confirm) without manual state machines; uses replay engine — no SSE, no polling |
+| `@grammyjs/storage-supabase` | `^2.5.0` | Persist conversation/session state | Stores grammY session data in existing Supabase tables; same DB, no new infrastructure |
+| `@grammyjs/auto-retry` | `^2.0.2` | Handle Telegram 429 rate limits | Auto-retries API calls after `retry_after` interval; essential for multi-bot environments hitting Telegram API limits |
+| `@grammyjs/transformer-throttler` | `^1.2.1` | Outgoing message flood control | Prevents hitting Telegram's global/chat/group limits when broadcasting to many bots simultaneously |
 
-### Authentication
+**Why grammY over Telegraf:**
+grammY is TypeScript-native from the ground up (Telegraf v4 migrated from JS and has inconsistent typing). grammY's `webhookCallback` function produces a standard `NextResponse`-compatible handler, making it drop-in for Next.js App Router Route Handlers. grammY v1.41.1 is actively maintained (published 2026-03-05); Telegraf is slower-moving. For serverless (Vercel), grammY's webhook-first design is the right fit — long polling requires a persistent process.
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `@supabase/ssr` | latest | Auth for Next.js App Router | Official Supabase package for cookie-based sessions; integrates with RLS; listed in Next.js official auth docs |
-| `jose` | ^5.x | JWT verification in proxy/middleware | Edge-compatible; used in Next.js official auth docs for session encryption |
+**Why NOT Telegraf:**
+Telegraf v4 types are brittle (known community issue). The Telegraf NestJS integration `@grammyjs/nestjs` is the only multi-bot solution, which couples you to NestJS. grammY handles multi-bot via dynamic instantiation natively.
 
-**Pattern:** Use `@supabase/ssr` for auth management. Supabase handles token refresh. In `proxy.ts` (Next.js middleware), read the Supabase session cookie and redirect unauthenticated users before route hits. Do NOT use NextAuth/Auth.js — it adds complexity without benefit when Supabase Auth already provides what's needed.
+### Admin Panel (Super Admin)
 
-### Real-Time Chat Infrastructure
+No new UI library is needed. The project already has `shadcn` (v3.8.5) and `lucide-react`. For the super admin panel:
 
-**Critical constraint from official Next.js docs (2026-02-27):** *"WebSockets won't work [on Vercel] because the connection closes on timeout, or after the response is generated."*
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| `@tremor/react` | `^3.18.7` | Charts/metrics for admin dashboard | Pre-built BarChart, LineChart, KPICard components for hotel subscription analytics; built on Radix + Tailwind (compatible with existing stack); no new CSS framework needed |
+| Supabase service role client | existing `@supabase/supabase-js` | Bypass RLS for admin operations | `createClient(url, SERVICE_ROLE_KEY)` in Server Actions/Route Handlers only — never expose to client; list all hotels, override billing, inspect logs |
 
-This means Supabase Realtime (WebSocket-based) must run **client-to-Supabase directly**, not through Next.js Route Handlers.
+**Why Tremor over Recharts directly:**
+Tremor wraps Recharts with pre-styled, accessible components that match Tailwind-first projects. Raw Recharts requires significant custom styling to look production-ready. Tremor v3.18.7 is the latest stable release.
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Supabase Realtime (client SDK) | latest | Guest chat delivery | Client subscribes directly to Supabase channel; bypasses Vercel function WebSocket limitation |
-| SSE via Next.js Route Handler | built-in | Stream Claude API responses | `ReadableStream` response from Route Handler streams Claude token output to client; works on Vercel |
-| `@supabase/supabase-js` | ^2.x | Client-side Supabase | Realtime subscriptions, row inserts |
+**Why NOT a separate admin framework (AdminJS, Refine):**
+AdminJS and Refine add significant bundle weight and opinionated routing that conflicts with Next.js App Router conventions. Since the project already has shadcn + Tailwind, composing admin UI from existing components is faster and more maintainable. The super admin panel is low-traffic internal tooling — it does not need a dedicated framework.
 
-**Chat flow:**
-1. Guest sends message → POST to Next.js Route Handler (`/api/chat`)
-2. Route Handler saves message to Supabase, calls Claude API with `stream: true`
-3. Route Handler returns SSE stream (Claude tokens) to client
-4. Other clients (hotel dashboard, other employees) see new messages via Supabase Realtime subscription
+### Per-Employee (Per-Seat) Billing
 
-### Internationalization (i18n)
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| `@mollie/api-client` | `^4.4.0` (existing) | EU per-seat subscription | Mollie subscriptions support `quantity` in amount but NOT native per-seat quantity billing — implement by updating subscription `amount` on employee add/remove |
+| `iyzipay` | `^2.0.65` (existing) | TR per-seat subscription | iyzico subscriptions are fixed-amount plans; per-seat requires same workaround: create new plan or update amount dynamically |
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `next-intl` | ^3.x | Multi-language UI | Listed first in official Next.js i18n docs; App Router native; Server Component compatible (no bundle bloat); type-safe translation keys |
+**Per-seat billing implementation pattern (both iyzico and Mollie):**
 
-**Languages to support (minimum):** English, Dutch (NL), Turkish (TR) based on boutique hotel target market. `next-intl` handles locale routing via `app/[locale]/` convention.
+Neither iyzico nor Mollie has Stripe-style `quantity` × `unit_price` per-seat subscriptions. The correct pattern for both:
 
-**Do NOT use `i18next` + `react-i18next`:** Designed for client-side rendering. In Next.js App Router, translations shipped to client increase bundle size. `next-intl` runs on the server by default.
+1. Define base plans: `starter_1_employee`, `starter_2_employees`, etc. OR use a single plan and bill seat additions as one-off charges.
+2. When hotel owner adds/removes an AI employee via super admin or self-service, trigger a plan upgrade/downgrade API call.
+3. Alternatively: calculate `seats × unit_price` server-side, create a new subscription amount for next billing cycle.
 
-### Subscription Billing
+This is a business logic concern implemented in Server Actions — not a new library. No additional billing library is needed.
 
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `stripe` (Node SDK) | ^16.x | Subscription management | Server-side subscription creation, invoice retrieval, plan changes |
-| Stripe Customer Portal | hosted | Self-serve billing management | Hotel owners can manage their own subscriptions without custom UI; saves months of dev time |
-| Stripe Webhooks → Route Handler | built-in | Billing event processing | `POST /api/webhooks/stripe` handles `customer.subscription.updated`, `invoice.payment_failed`, etc. |
+**iyzico constraint (verified):** iyzico subscriptions are credit-card-only and use fixed-interval/fixed-amount plans. No quantity parameter in the subscription product API. Per-seat means creating distinct plans (e.g., "1 Employee — 299 TRY/mo", "2 Employees — 499 TRY/mo") OR adjusting the charged amount each billing cycle. Confirm with iyzico support before committing to dynamic amounts.
 
-**Pricing model recommendation:** Per-hotel subscription, not per-AI-employee. Tiers based on number of active AI employees (e.g., Starter: 2 employees, Pro: 5, Enterprise: unlimited). This simplifies billing and aligns cost with value delivered.
-
-### Supporting Libraries
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| `@anthropic-ai/sdk` | latest | Claude API client | All AI agent interactions; use streaming mode for guest-facing chat |
-| `zod` | ^3.x | Schema validation | Validate Claude API outputs, form inputs, Stripe webhook payloads; used in Next.js official docs |
-| `@tanstack/react-query` | ^5.x | Client-side async state | Guest chat UI polling fallback, hotel dashboard data fetching; mentioned in Next.js official docs |
-| `shadcn/ui` | latest | UI component library | Hotel admin dashboard; built on Radix + Tailwind; no lock-in (components copied into project) |
-| `lucide-react` | latest | Icons | Ships with shadcn/ui; consistent icon set |
-| `react-hook-form` | ^7.x | Form management | Hotel onboarding, employee configuration forms |
-| `date-fns` | ^3.x | Date formatting | Conversation timestamps, billing periods; locale-aware |
-| `@formatjs/intl-localematcher` + `negotiator` | latest | Locale detection | Used in Next.js official i18n docs for Accept-Language header parsing |
-| `drizzle-orm` | ^0.30.x | Type-safe DB queries | Optional — Supabase client is sufficient for most queries; use Drizzle only if complex migrations become frequent |
-
-**On Drizzle vs raw Supabase client:** For this project, start with the Supabase client (`supabase.from('conversations').select(...)`). Drizzle adds complexity for a team that may be building this solo or with a small team. Add it in a later phase if query complexity demands it.
-
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| Turbopack | Build tool (dev) | Default in Next.js 16 dev mode; ~5x faster than Webpack |
-| `@next/bundle-analyzer` | Bundle size analysis | Use before each production deploy to catch large dependencies |
-| Vitest | Unit testing | Faster than Jest; compatible with modern ESM; test Claude prompt templates and billing logic |
-| Playwright | E2E testing | Test critical flows: hotel onboarding, guest chat, billing |
-| ESLint + Prettier | Code quality | Next.js ships with eslint config; add `eslint-plugin-jsx-a11y` for accessibility |
+**Mollie constraint (verified):** Mollie Subscriptions API `update-subscription` allows changing `amount` and `interval`, but no native `quantity` multiplier. Same pattern as iyzico — create tiered plans or update amount on seat change.
 
 ---
 
-## What NOT to Use
+## Multi-Bot Architecture: Critical Constraint
+
+**BotFather is mandatory — bots cannot be created programmatically.**
+
+Telegram's API has no endpoint to create a new bot. BotFather (`@BotFather` in Telegram) is the only way to obtain a bot token. This is a hard platform constraint as of 2026-03-06.
+
+**Implication for onboarding flow:**
+The super admin (or hotel owner, depending on UX decision) must:
+1. Open Telegram, go to @BotFather
+2. Create a new bot for each AI employee (e.g., `/newbot` → name: "Otel Fatma Hanım" → username: `otel_fatma_bot`)
+3. Paste the received token into OtelAI super admin panel
+
+OtelAI then stores the token in Supabase `telegram_bots` table (encrypted at rest), registers the webhook via `https://api.telegram.org/bot{TOKEN}/setWebhook`, and the bot is live.
+
+**There is no workaround for programmatic creation.** Design UX to make BotFather token entry as simple as possible (guided instructions, deep-link to BotFather, copy-paste field).
+
+---
+
+## Multi-Bot Webhook Routing
+
+**Pattern: Dynamic Next.js Route Handler with token in path**
+
+```
+/api/telegram/[botToken]/route.ts
+```
+
+Each bot's webhook is registered as:
+```
+https://otelai.com/api/telegram/{ENCRYPTED_TOKEN_SLUG}/webhook
+```
+
+Using the token (or a hash of it) in the URL path:
+1. Route Handler receives POST from Telegram
+2. Looks up bot token from Supabase by path segment
+3. Instantiates `new Bot(token)` for that specific bot
+4. Processes update with `webhookCallback`
+
+**Security:** Use `secretToken` parameter in `setWebhook` — grammY's `webhookCallback` validates `X-Telegram-Bot-Api-Secret-Token` header automatically when `secretToken` option is provided. Use a per-bot secret, not a global one.
+
+**Vercel timeout constraint:**
+- Free/Hobby: 10s function timeout
+- Pro: 60s timeout
+- Claude API responses for AI employees may exceed 10s on complex queries
+
+**Mitigation:** Use Vercel Pro (60s) OR implement the "fire and forget" pattern:
+1. Webhook handler acknowledges Telegram within 1-2s (200 OK)
+2. Enqueues the actual AI processing to Upstash Redis / QStash
+3. Background worker (separate Vercel function or Upstash QStash job) calls Claude and sends response via `bot.api.sendMessage()`
+
+The project already has `@upstash/redis` — Upstash QStash (queue) can be added as the background job solution if needed.
+
+---
+
+## What NOT to Add
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Firebase / Firestore | NoSQL document model fights against relational hotel-employee-conversation data; no SQL JOINs; RLS must be reimplemented in application layer | Supabase (PostgreSQL) |
-| NextAuth.js / Auth.js | Adds session complexity when Supabase Auth already handles tokens + refresh + RLS integration | `@supabase/ssr` |
-| `i18next` + `react-i18next` | Client-side i18n increases bundle size; not designed for React Server Components | `next-intl` |
-| WebSockets via Next.js Route Handlers | **Verified: Does not work on Vercel** (function closes connection on timeout) | Supabase Realtime client SDK (direct to Supabase) |
-| Socket.io | Requires persistent Node.js server; incompatible with Vercel serverless; WebSocket constraint above applies | Supabase Realtime + SSE streaming |
-| Prisma | Heavy for this stack; Supabase client + generated types already provide type safety; migration tooling overlap with Supabase migrations | Supabase client or Drizzle if complex queries grow |
-| Langchain / LangGraph | Over-engineered abstraction for this use case; adds a moving dependency on top of Claude API; Anthropic SDK is sufficient for hotel-domain agents | `@anthropic-ai/sdk` directly with custom agent loop |
-| OpenAI API | User has Claude API already decided; mixing LLM providers adds cost complexity and inconsistent behavior across agents | Claude API only |
-| CSS-in-JS (styled-components, Emotion) | Next.js docs explicitly note CSS-in-JS has App Router limitations with Server Components | Tailwind CSS v4 |
-| React Context for global state | Doesn't work in Server Components; causes unnecessary client-side rendering | Zustand (if needed) + Server Component data fetching |
+| Telegraf | TypeScript types are problematic; NestJS-coupled multi-bot solution | grammY |
+| `node-telegram-bot-api` | Low-level, no TypeScript, no conversations plugin, unmaintained | grammY |
+| GramIO | Newer alternative with smaller ecosystem, fewer plugins, less documentation | grammY (larger ecosystem, more plugins) |
+| Long polling in production | Requires persistent Node.js process; incompatible with Vercel serverless | Webhooks via Next.js Route Handlers |
+| Separate admin framework (AdminJS, Refine) | Conflicts with Next.js App Router; heavier than necessary for internal tooling | shadcn/ui + Tremor (already in stack) |
+| Separate billing library for per-seat | Neither iyzico nor Mollie needs a new library — business logic only | Server Actions with existing `iyzipay`/`@mollie/api-client` |
+| Upstash QStash (preemptive) | Only needed if Vercel Pro 60s timeout proves insufficient for Claude responses | Add in Phase 2+ if timeout issues emerge |
+| Telegram MTProto client (telegram.js, gramjs) | MTProto is for user accounts, not bots — different API entirely, unnecessary complexity | Telegram Bot API via grammY |
 
 ---
 
-## Stack Patterns by Variant
+## Installation
 
-**If hotel needs custom domain (e.g., chat.hotelname.com):**
-- Use Next.js multi-tenant subdomain routing via `proxy.ts`
-- Vercel supports wildcard domains on Pro plan
-- Reference: Vercel Platforms Starter Kit (linked from Next.js official multi-tenant guide)
+```bash
+# Telegram bot framework + plugins
+pnpm add grammy @grammyjs/conversations @grammyjs/storage-supabase @grammyjs/auto-retry @grammyjs/transformer-throttler
 
-**If AI employee needs to take autonomous actions (book reservations, send emails):**
-- Implement as tool-use in Claude API (`tools` parameter)
-- Each tool maps to a Supabase mutation or external API call
-- Do NOT use background job queues for MVP — Server Actions are sufficient
-- Add Inngest or similar for background jobs only when autonomous tasks exceed 60s Vercel timeout
+# Admin dashboard charts (super admin panel)
+pnpm add @tremor/react
+```
 
-**If guest chat needs to work offline / in poor connectivity:**
-- Add optimistic UI updates with `@tanstack/react-query` mutations
-- Store pending messages locally, sync when connection restores
-- Supabase Realtime handles reconnection automatically
+**No new dev dependencies required** — TypeScript types for grammY are bundled in the package itself.
 
-**If multi-language AI responses are needed (Claude responding in guest's language):**
-- Pass detected locale into Claude system prompt: `"Respond in {locale} language"`
-- Do not translate Claude outputs post-hoc — instruct language directly
-- `next-intl` handles UI only; Claude handles content language
+---
+
+## Integration Points with Existing Stack
+
+| Existing | New | Integration |
+|----------|-----|-------------|
+| `@supabase/supabase-js` | `@grammyjs/storage-supabase` | grammY sessions stored in Supabase `grammy_sessions` table; same DB connection |
+| `@anthropic-ai/sdk` | grammY message handlers | Claude called inside grammY conversation handlers; `conversation.external(() => claude.messages.create(...))` to wrap side effects |
+| `@upstash/ratelimit` | grammY middleware | Rate-limit Telegram users per bot using existing Upstash setup; `@grammyjs/ratelimiter` is an alternative but Upstash approach is already in project |
+| `iyzipay` / `@mollie/api-client` | Supabase `telegram_bots` table | Employee count change triggers billing update via existing payment clients in Server Actions |
+| `next-intl` | grammY message handlers | Hotel's locale stored in Supabase; inject into Claude system prompt for correct response language (Telegram messages are plain text, not i18n-routed) |
+| Supabase service role | Super admin panel | Server Actions use `createClient(url, SERVICE_ROLE_KEY)` to read all hotels, override billing, manage bot tokens |
 
 ---
 
@@ -159,82 +169,47 @@ This means Supabase Realtime (WebSocket-based) must run **client-to-Supabase dir
 
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| Next.js 16.1.6 | React 19.x | React 19 is required for Next.js 16 |
-| Tailwind CSS v4 | Next.js 16 | Default; v3 needs explicit `tailwindcss@^3` pin |
-| `@supabase/ssr` latest | Next.js 16 App Router | Uses cookie API (`cookies()` from `next/headers`) |
-| `next-intl` ^3.x | Next.js 16 App Router | `app/[locale]/` structure required |
-| `jose` ^5.x | Edge Runtime | Required for proxy.ts session verification |
-| `@anthropic-ai/sdk` latest | Node.js 18+ / Edge partial | Use in Route Handlers (Node runtime), not Edge runtime (streaming headers differ) |
-| Stripe ^16.x | Node.js 18+ | Webhook signature verification requires Node runtime; mark Route Handler with `export const runtime = 'nodejs'` |
+| `grammy@^1.41.1` | Node.js 18+, Next.js 16 App Router | Use in Route Handlers with `export const runtime = 'nodejs'` (NOT Edge — grammY has Node-only dependencies for some plugins) |
+| `@grammyjs/conversations@^2.1.1` | `grammy@^1.41.1` | Must use matching major versions; v2.x requires grammY v1.x |
+| `@grammyjs/storage-supabase@^2.5.0` | `@supabase/supabase-js@^2.x` | Compatible with existing Supabase client version |
+| `@tremor/react@^3.18.7` | Tailwind CSS v4, React 19 | Tremor v3 officially supports Tailwind v3; v4 compatibility needs verification — test with existing `tailwindcss@^4.2.1`. Fallback: use Recharts directly with shadcn styling. |
+| `@grammyjs/auto-retry@^2.0.2` | `grammy@^1.41.1` | API transformer; no runtime conflicts |
+
+**Tremor + Tailwind v4 risk (LOW-MEDIUM confidence):** Tremor v3.18.7 was built targeting Tailwind v3. The project uses Tailwind v4. Tremor may have styling issues. Verify by installing and rendering a BarChart in isolation before committing. Alternative: use Recharts (`recharts@^3.7.0`) directly with shadcn-compatible styling.
 
 ---
 
-## Installation
+## Alternatives Considered
 
-```bash
-# Create project
-pnpm create next-app@latest otel-ai --typescript --tailwind --app --turbopack
-
-# Core: Database + Auth
-pnpm add @supabase/supabase-js @supabase/ssr
-
-# AI
-pnpm add @anthropic-ai/sdk
-
-# Billing
-pnpm add stripe
-
-# i18n
-pnpm add next-intl @formatjs/intl-localematcher negotiator
-
-# UI + Forms
-pnpm add @tanstack/react-query react-hook-form zod date-fns lucide-react
-
-# shadcn/ui (installs incrementally per component)
-pnpm dlx shadcn@latest init
-
-# Session / JWT
-pnpm add jose
-
-# Dev dependencies
-pnpm add -D @types/negotiator vitest @playwright/test @next/bundle-analyzer
-```
-
----
-
-## Supabase vs Firebase: Full Decision Matrix
-
-| Criterion | Supabase | Firebase (Firestore) | Winner |
-|-----------|----------|----------------------|--------|
-| Data model fit | PostgreSQL — relational hotel/staff/conversation tables with JOINs | NoSQL documents — forces denormalization for relational data | Supabase |
-| Multi-tenant isolation | Row-Level Security at DB layer — `hotel_id = auth.uid()` in policy | Application-layer security rules — more complex, more error-prone | Supabase |
-| Real-time chat | Postgres changes → WebSocket → client (Supabase Realtime) | Firestore live queries — similar capability | Tie |
-| Auth integration | Auth JWT → RLS policies directly (`auth.uid()`) | Firebase Auth → separate Firestore rules | Supabase |
-| Next.js official support | Listed in Next.js 16 official auth docs | Not mentioned | Supabase |
-| Team familiarity | Used in `spplymarkt` project — existing env vars, patterns | No | Supabase |
-| Pricing at scale | Predictable PostgreSQL row/bandwidth pricing | Per-read/write costs can spike with chat volume | Supabase |
-| SQL query power | Full PostgreSQL — analytics queries for hotel admins easy | Limited aggregation — dashboard queries require Cloud Functions | Supabase |
-| Migrations | Supabase CLI migrations with version control | Firebase schema is schemaless — harder to track | Supabase |
-
-**Verdict: Supabase wins on 8/9 criteria for this specific use case.**
+| Category | Recommended | Alternative | When to Use Alternative |
+|----------|-------------|-------------|-------------------------|
+| Bot framework | `grammy` | `telegraf` | If team has existing Telegraf codebase; not recommended for greenfield |
+| Bot framework | `grammy` | `GramIO` | Newer, potentially faster — viable if grammY ecosystem gaps emerge in 2026 |
+| Admin charts | `@tremor/react` | `recharts` directly | If Tremor/Tailwind v4 incompatibility confirmed; Recharts is the underlying engine |
+| Session storage | `@grammyjs/storage-supabase` | `@grammyjs/storage-psql` (v2.5.1) | psql adapter is slightly newer; use if Supabase-specific adapter has bugs |
+| Background jobs | Not added yet | Upstash QStash | Add if Vercel Pro 60s timeout insufficient for Claude + tool-use chains |
 
 ---
 
 ## Sources
 
-- `https://nextjs.org/docs/app/guides` — guides index, version 16.1.6, lastUpdated 2026-02-27 (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/authentication` — Supabase listed as recommended auth library, Session management with jose, Zod for validation (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/internationalization` — next-intl listed first, @formatjs/intl-localematcher + negotiator pattern (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/backend-for-frontend` — WebSockets don't work on Vercel lambda (Route Handlers); SSE streaming works (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/production-checklist` — Tailwind v4 default confirmed (v3 guide is the exception), @tanstack/react-query mentioned for client-side fetching (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/tailwind-v3-css` — Confirmed Tailwind v4 is default in Next.js 16; v3 requires explicit downgrade (HIGH confidence)
-- `https://nextjs.org/docs/app/guides/multi-tenant` — Vercel Platforms Starter Kit referenced (HIGH confidence)
-- Claude SDK and model information (claude-opus-4-6, claude-sonnet-4-6) — system context (HIGH confidence per project background)
-- Supabase Realtime architecture, RLS, and PostgreSQL capabilities — training data + supabase.com docs referenced via user's existing project (MEDIUM confidence — verify current Supabase Realtime pricing tier limits)
-- Stripe subscription billing patterns — training data (MEDIUM confidence — verify current Stripe SDK version)
-- `@anthropic-ai/sdk` streaming patterns — training data (MEDIUM confidence — verify current SDK version before implementation)
+- `npm info grammy version` — v1.41.1, verified 2026-03-06 (HIGH confidence)
+- `npm info @grammyjs/conversations version` — v2.1.1 (HIGH confidence)
+- `npm info @grammyjs/storage-supabase version` — v2.5.0 (HIGH confidence)
+- `npm info @grammyjs/auto-retry version` — v2.0.2 (HIGH confidence)
+- `npm info @tremor/react version` — v3.18.7 (HIGH confidence)
+- `npm info recharts version` — v3.7.0 (HIGH confidence)
+- [grammY Vercel hosting docs](https://grammy.dev/hosting/vercel) — webhook setup, 10s timeout constraint, streaming workaround (HIGH confidence)
+- [grammY webhookCallback API ref](https://grammy.dev/ref/core/webhookcallback) — secretToken parameter confirmed (HIGH confidence)
+- [grammY conversations plugin](https://grammy.dev/plugins/conversations) — replay engine, `conversation.external()` pattern, form APIs (HIGH confidence)
+- [Telegram Bot API docs](https://core.telegram.org/bots/api) — setWebhook secretToken, Bot API v9.2 current (HIGH confidence)
+- [Telegram BotFather mandatory](https://community.latenode.com/t/create-telegram-bot-programmatically-without-botfather/29160) — no programmatic bot creation API exists (HIGH confidence — community + official Telegram docs confirm)
+- [iyzico subscription docs](https://docs.iyzico.com/en/products/subscription/subscription-implementation) — no quantity/per-seat parameter; fixed-amount plans only (MEDIUM confidence — official docs reviewed, no per-seat found)
+- [Mollie subscriptions API](https://docs.mollie.com/reference/subscriptions-api) — update-subscription allows amount change; no native quantity multiplier (MEDIUM confidence — official docs reviewed)
+- WebSearch: grammY vs Telegraf comparison — community sources, multiple consistent findings (MEDIUM confidence)
+- WebSearch: Tremor Tailwind v4 compatibility — NOT confirmed; flagged as risk (LOW confidence — needs testing)
 
 ---
 
-*Stack research for: OtelAI — Hotel AI Virtual Staff SaaS*
-*Researched: 2026-03-01*
+*Stack research for: OtelAI — Telegram-first multi-bot hotel staff milestone*
+*Researched: 2026-03-06*

@@ -1,445 +1,690 @@
 # Architecture Research
 
-**Domain:** Multi-agent AI SaaS — Hotel Virtual Staff Platform
-**Researched:** 2026-03-01
-**Confidence:** MEDIUM (training knowledge + well-established patterns; web verification denied)
+**Domain:** Telegram Multi-Bot Agent-Native SaaS — Hotel AI Platform Extension
+**Researched:** 2026-03-06
+**Confidence:** HIGH (existing codebase verified + Telegram API official docs verified)
 
 ---
 
-## Standard Architecture
+## Context: What Already Exists
 
-### System Overview
+The following is confirmed by reading the actual codebase. This is not speculative.
 
+**Existing pipeline (complete, working):**
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        TENANT LAYER (Per Hotel)                       │
-│                                                                        │
-│  ┌──────────────────────────────────────────────────────────────┐     │
-│  │                   Hotel Owner Dashboard (Next.js)             │     │
-│  │   [Staff Overview] [Chat with Employee] [Settings] [Reports]  │     │
-│  └─────────────────────────┬────────────────────────────────────┘     │
-│                             │                                          │
-│  ┌──────────────────────────▼────────────────────────────────────┐    │
-│  │                     Guest-Facing Layer                         │    │
-│  │         [Web Chat Widget]   [WhatsApp Webhook]                 │    │
-│  └─────────────────────────┬────────────────────────────────────┘     │
-└────────────────────────────┼─────────────────────────────────────────┘
-                             │
-┌────────────────────────────▼─────────────────────────────────────────┐
-│                        API LAYER (Next.js API Routes / Edge)          │
-│                                                                        │
-│   /api/chat/[agentId]     /api/tasks/[agentId]    /api/webhooks/      │
-│   /api/admin/             /api/tenants/            /api/notifications/ │
-└────────────────────────────┬─────────────────────────────────────────┘
-                             │
-┌────────────────────────────▼─────────────────────────────────────────┐
-│                       AGENT ORCHESTRATION LAYER                        │
-│                                                                        │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │
-│  │Reception-│ │Housekeep-│ │ Revenue  │ │  Guest   │ │Accounting│   │
-│  │  ist AI  │ │ ing Mgr  │ │ Manager  │ │Relations │ │   AI     │   │
-│  │          │ │    AI    │ │    AI    │ │    AI    │ │          │   │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘   │
-│       │            │            │             │            │          │
-│  ┌────▼────────────▼────────────▼─────────────▼────────────▼──────┐  │
-│  │                    Agent Context Bus                             │  │
-│  │   (Shared Hotel Knowledge + Tenant-Scoped State)                │  │
-│  └────────────────────────────┬────────────────────────────────────┘  │
-└───────────────────────────────┼──────────────────────────────────────┘
-                                │
-┌───────────────────────────────▼──────────────────────────────────────┐
-│                         DATA LAYER (Supabase)                          │
-│                                                                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐               │
-│  │  hotels      │  │  messages    │  │  agent_memory  │               │
-│  │  tenants     │  │  threads     │  │  (per-agent,   │               │
-│  │  users       │  │  tasks       │  │   per-tenant)  │               │
-│  └──────────────┘  └──────────────┘  └────────────────┘               │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐               │
-│  │  bookings    │  │  rooms       │  │  hotel_context │               │
-│  │  guests      │  │  inventory   │  │  (policies,    │               │
-│  │  (per-tenant)│  │  (per-tenant)│  │   knowledge)   │               │
-│  └──────────────┘  └──────────────┘  └────────────────┘               │
-└──────────────────────────────────────────────────────────────────────┘
+invokeAgent(params) → assembleSystemPrompt(DB) → Claude API → executeTool() → persistTurn()
 ```
 
-### Component Responsibilities
+**Existing channels:**
+- SSE streaming: `POST /api/agent/stream` (authenticated owner, session-scoped)
+- WhatsApp webhook: `POST /api/whatsapp/webhook` (Twilio signature validation, service-role resolution)
+- Web widget: `POST /api/widget/message` (widget_token hotel resolution)
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| Hotel Owner Dashboard | Owner UI: chat with AI staff, configure, monitor | Next.js app with Supabase auth |
-| Guest-Facing Layer | Guest chat widget, WhatsApp webhook handler | Embeddable JS widget + Next.js webhook route |
-| API Layer | Route messages to correct agent, enforce tenant isolation | Next.js API Routes (Edge Runtime where latency matters) |
-| Agent Orchestration | Build agent context, call Claude API, route responses | Server-side service with agent factory pattern |
-| Agent Context Bus | Shared hotel knowledge available to all agents | Postgres tables queried at invocation time — NOT a runtime message bus |
-| Data Layer | Persist all state (messages, memory, hotel data) | Supabase PostgreSQL with Row Level Security (RLS) for tenant isolation |
-| Notification Service | Push internal alerts (Slack/email/in-app) | Supabase Realtime or webhook queue |
+**Existing agent roles in AgentRole enum:**
+- `FRONT_DESK` — claude-opus-4-6, tools: availability + pricing + reservation + update_hotel_info
+- `BOOKING_AI` — claude-opus-4-6, tools: availability + pricing + reservation
+- `GUEST_EXPERIENCE` — claude-sonnet-4-6, no tools (milestone messaging)
+- `HOUSEKEEPING_COORDINATOR` — claude-sonnet-4-6, tools: get_room_status + update_room_status + assign_cleaning_task
+
+**Existing DB tables:** hotels, profiles, hotel_facts, rooms, conversation_turns, conversation_summaries, guest_interactions, agent_tasks, escalations, hotel_whatsapp_numbers, agents, subscriptions
+
+**Key design decisions already in place:**
+- `hotel_id` injected from ToolContext, never trusted from Claude's tool input
+- Service-role client used in webhook handlers (no session cookies on webhooks)
+- Conversation ID format: `{channel_prefix}_{hotelId}_{guestIdentifier}`
+- escalation detection runs fire-and-forget after every agent response
+- channel field in escalations: `'whatsapp' | 'widget' | 'dashboard'`
 
 ---
 
-## Multi-Tenant Architecture
+## New System Overview
 
-### Tenant Isolation Strategy
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     TELEGRAM DELIVERY LAYER (new)                    │
+│                                                                       │
+│  [Setup Wizard Bot]  [Front Desk Bot]  [Booking Bot]                 │
+│  [Housekeeping Bot]  [Guest Experience Bot]                          │
+│       │                    │                                          │
+│       └────────────────────┘                                          │
+│                     Telegram API                                      │
+│                     POST webhooks                                     │
+└────────────────────────────┬────────────────────────────────────────┘
+                              │
+┌────────────────────────────▼────────────────────────────────────────┐
+│                  WEBHOOK ROUTER (new route handler)                   │
+│                                                                       │
+│  POST /api/telegram/[botToken]                                        │
+│    1. Validate X-Telegram-Bot-Api-Secret-Token header                 │
+│    2. Resolve hotel_id + AgentRole from botToken via DB lookup        │
+│    3. Extract chat_id + text from Telegram Update JSON                │
+│    4. Derive conversationId: tg_{hotelId}_{chatId}                   │
+│    5. invokeAgent() — same pipeline as WhatsApp webhook               │
+│    6. sendMessage() via Telegram Bot API with resolved bot token      │
+│    7. Return 200 (always, prevents Telegram retries)                  │
+└────────────────────────────┬────────────────────────────────────────┘
+                              │
+┌────────────────────────────▼────────────────────────────────────────┐
+│              EXISTING AGENT PIPELINE (unchanged)                      │
+│                                                                       │
+│  invokeAgent({ role, userMessage, conversationId, hotelId })         │
+│    → assembleSystemPrompt (DB fresh every call)                       │
+│    → Claude API (tool_use → executeTool → recurse)                   │
+│    → persistTurn                                                      │
+│    → detectAndInsertEscalation (fire-and-forget)                     │
+└────────────────────────────┬────────────────────────────────────────┘
+                              │
+┌────────────────────────────▼────────────────────────────────────────┐
+│                    EXISTING DATA LAYER (Supabase)                     │
+│                                                                       │
+│  hotels          hotel_facts      conversation_turns                  │
+│  agents          hotel_bots (new) subscriptions (modified)           │
+│  agent_tasks     escalations                                          │
+└─────────────────────────────────────────────────────────────────────┘
 
-Use **Row Level Security (RLS) in Supabase** as the primary isolation mechanism. Every table that holds hotel-specific data has a `hotel_id` column. Supabase RLS policies enforce that every query is automatically scoped to the authenticated hotel's ID.
+┌─────────────────────────────────────────────────────────────────────┐
+│                   SUPER ADMIN PANEL (new UI route)                    │
+│                                                                       │
+│  /admin/* — guarded by role: 'super-admin' in JWT app_metadata       │
+│    [Create Hotel Account]  [List Hotels]  [Manage Bots]              │
+│    [Billing Overview]      [Generate Deep Links]                      │
+│                                                                       │
+│  POST /api/admin/hotels       — create hotel + user account          │
+│  POST /api/admin/hotels/[id]/bots — provision bot tokens             │
+│  GET  /api/admin/hotels       — list all hotels                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-**Why this over schema-per-tenant or database-per-tenant:**
-- Schema-per-tenant works at ~50 tenants but becomes operationally complex beyond that
-- RLS scales to thousands of tenants with zero per-tenant overhead
-- Supabase has first-class RLS tooling
+---
 
-**Confidence:** HIGH — Supabase's documented recommended approach for SaaS multi-tenancy.
+## New Components
+
+### 1. `hotel_bots` Table (NEW — critical)
+
+Maps bot tokens to hotel + agent role. This is the resolution table for webhook routing.
 
 ```sql
--- Every tenant-scoped table has this pattern
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Hotel can only see own messages"
-  ON messages FOR ALL
-  USING (hotel_id = auth.jwt() ->> 'hotel_id');
-```
-
-### Tenant Data Scope
-
-```
-hotels
-  └── hotel_id (UUID, primary key)
-  └── name, config, subscription_tier
-  └── hotel_context (JSONB: policies, room types, check-in rules, amenities)
-
-hotel_agents
-  └── hotel_id (FK)
-  └── agent_role (receptionist | housekeeping | revenue | guest_relations | accounting)
-  └── system_prompt_overrides (JSONB: customization per hotel)
-  └── enabled (bool: subscription tier controls which agents are active)
-
-agent_memory
-  └── hotel_id (FK)
-  └── agent_role
-  └── memory_type (working | episodic | semantic)
-  └── content (JSONB)
-  └── created_at, expires_at
-```
-
----
-
-## AI Agent Architecture Pattern
-
-### Pattern: Stateless Agent Invocation with Assembled Context
-
-**What:** Each AI agent is stateless — it has no persistent runtime process. On every invocation, the system assembles the full context (system prompt + hotel knowledge + relevant memory + conversation history) and sends it to Claude API. The response is stored back to the database.
-
-**Why stateless over persistent agents:**
-- Vercel serverless functions cannot hold long-running processes
-- Simpler to reason about: no agent "state" to corrupt or leak between tenants
-- Claude's context window is large enough to hold what each agent needs per turn
-- Scales horizontally without coordination
-
-**Confidence:** HIGH — this is the correct pattern for Claude API on serverless infrastructure.
-
-```typescript
-// Agent invocation pattern
-async function invokeAgent(params: {
-  hotelId: string;
-  agentRole: AgentRole;
-  threadId: string;
-  newMessage: string;
-}): Promise<AgentResponse> {
-  // 1. Assemble context (all from DB, scoped to hotel_id)
-  const [hotelContext, agentConfig, conversationHistory, agentMemory] =
-    await Promise.all([
-      getHotelContext(params.hotelId),           // policies, rooms, etc.
-      getAgentConfig(params.hotelId, params.agentRole),
-      getConversationHistory(params.threadId, { limit: 20 }),
-      getAgentMemory(params.hotelId, params.agentRole),
-    ]);
-
-  // 2. Build system prompt
-  const systemPrompt = buildSystemPrompt({
-    role: params.agentRole,
-    hotelContext,
-    agentConfig,
-    agentMemory,
-    language: hotelContext.defaultLanguage,
-  });
-
-  // 3. Call Claude API
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: conversationHistory,
-  });
-
-  // 4. Persist response + update memory
-  await Promise.all([
-    saveMessage(params.threadId, response),
-    updateAgentMemory(params.hotelId, params.agentRole, response),
-  ]);
-
-  return parseAgentResponse(response);
-}
-```
-
-### Pattern: Layered System Prompt Assembly
-
-Each agent's system prompt has four layers assembled at invocation time:
-
-```
-┌────────────────────────────────────────────────────┐
-│  Layer 1: Role Identity (static, hardcoded)         │
-│  "You are Maya, the receptionist at [hotel_name].   │
-│   Your job is to..."                                │
-├────────────────────────────────────────────────────┤
-│  Layer 2: Hotel Context (dynamic, from DB)          │
-│  "Hotel facts: 24 rooms, check-in 3pm, no pets,    │
-│   pool open 8am-10pm, breakfast €15 extra..."       │
-├────────────────────────────────────────────────────┤
-│  Layer 3: Agent Memory (dynamic, from DB)           │
-│  "Remember: Guest John Smith (room 12) prefers      │
-│   quiet room, allergic to feather pillows..."       │
-├────────────────────────────────────────────────────┤
-│  Layer 4: Current Task / Behavioral Instructions    │
-│  "Always respond in the guest's language.           │
-│   If you cannot resolve, flag for human review."   │
-└────────────────────────────────────────────────────┘
-```
-
-**Confidence:** MEDIUM — established pattern, but specific Claude prompt engineering details may require iteration.
-
-### Pattern: Three-Tier Memory Model
-
-**Semantic memory** — Facts that never change or rarely change. Hotel description, room types, pricing tiers, policies. Stored in `hotel_context` JSONB column, loaded on every agent invocation. Updated by owner via settings UI.
-
-**Episodic memory** — Things that happened. Specific guest interactions, incidents, complaints, requests. Stored in `agent_memory` with `memory_type = 'episodic'`. Retrieved selectively (e.g., for the specific guest currently in conversation).
-
-**Working memory** — Current conversation thread. Last 15-20 messages from `messages` table. The active context window for the ongoing interaction.
-
-```typescript
-// Memory retrieval strategy
-async function buildMemoryContext(
-  hotelId: string,
-  agentRole: AgentRole,
-  guestId?: string
-): Promise<string> {
-  const [semanticMemory, episodicMemory] = await Promise.all([
-    // Always load: hotel facts
-    db.hotelContext.findUnique({ where: { hotelId } }),
-    // Conditionally load: guest-specific memories (only if guest in conversation)
-    guestId
-      ? db.agentMemory.findMany({
-          where: { hotelId, agentRole, guestId, memoryType: 'episodic' },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        })
-      : Promise.resolve([]),
-  ]);
-  return formatMemoryForPrompt(semanticMemory, episodicMemory);
-}
-```
-
-**Confidence:** MEDIUM — pattern is sound; specifics of what to include need product iteration.
-
-### Pattern: Agent-to-Agent Coordination via Database Queue
-
-Agents do NOT call each other directly (no synchronous agent-to-agent API calls). Instead, coordination happens through a tasks/notifications table:
-
-```
-Receptionist AI receives: "Room 204 checkout, please clean for 3pm arrival"
-  → Receptionist WRITES a task: { type: 'clean_room', room: 204, deadline: 15:00, assigned_to: 'housekeeping' }
-  → Housekeeping AI reads this task on next invocation (or via realtime trigger)
-  → Housekeeping AI takes action, marks task complete
-  → Receptionist AI is notified on next invocation
-```
-
-**Why async queue over direct calls:**
-- Avoids cascading failures (one agent's API timeout doesn't block another)
-- Creates an audit trail of all agent actions
-- Works naturally with serverless architecture
-- Human owner can see all pending/completed tasks
-
-**Confidence:** HIGH — async task queues are the correct coordination pattern for distributed agent systems.
-
-```sql
--- tasks table
-CREATE TABLE tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  hotel_id UUID NOT NULL REFERENCES hotels(id),
-  created_by_agent agent_role NOT NULL,
-  assigned_to_agent agent_role,  -- NULL = unassigned/for human
-  task_type TEXT NOT NULL,
-  payload JSONB NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',  -- pending | in_progress | done | escalated
-  priority INTEGER DEFAULT 5,
-  due_at TIMESTAMPTZ,
-  completed_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT now()
+CREATE TABLE public.hotel_bots (
+  id          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  hotel_id    UUID    NOT NULL REFERENCES public.hotels(id) ON DELETE CASCADE,
+  role        TEXT    NOT NULL,  -- matches AgentRole enum values
+  bot_token   TEXT    NOT NULL UNIQUE,   -- Telegram bot token (encrypted at rest)
+  bot_username TEXT,                     -- for display in admin panel
+  webhook_secret TEXT NOT NULL,          -- X-Telegram-Bot-Api-Secret-Token value
+  is_active   BOOL    NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE INDEX idx_hotel_bots_token ON public.hotel_bots(bot_token);
+CREATE UNIQUE INDEX idx_hotel_bots_hotel_role ON public.hotel_bots(hotel_id, role);
+```
+
+**Why one row per hotel+role:** Enables fast O(1) lookup at webhook time. Index on `bot_token` is the hot path — every incoming Telegram message hits this index.
+
+**Why `webhook_secret` stored per-bot:** Each bot gets a distinct secret to validate `X-Telegram-Bot-Api-Secret-Token`. This prevents spoofed requests even if one token leaks.
+
+### 2. `POST /api/telegram/[botToken]/route.ts` (NEW)
+
+Dynamic route segment captures the bot token from the URL path. This matches the Telegram setWebhook URL pattern `https://your-domain.com/api/telegram/{BOT_TOKEN}`.
+
+```typescript
+// src/app/api/telegram/[botToken]/route.ts
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function POST(
+  req: Request,
+  { params }: { params: { botToken: string } }
+): Promise<Response> {
+  // 1. Validate X-Telegram-Bot-Api-Secret-Token header
+  const secretHeader = req.headers.get('x-telegram-bot-api-secret-token') ?? '';
+
+  // 2. Resolve hotel + role from botToken via DB (service-role, no auth session on webhooks)
+  const supabase = createServiceClient();
+  const { data: botRecord } = await supabase
+    .from('hotel_bots')
+    .select('hotel_id, role, webhook_secret')
+    .eq('bot_token', params.botToken)
+    .eq('is_active', true)
+    .single();
+
+  if (!botRecord || botRecord.webhook_secret !== secretHeader) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  // 3. Parse Telegram Update JSON
+  const update = await req.json();
+  const message = update.message;
+  if (!message?.text || !message?.chat?.id) {
+    return new Response('', { status: 200 }); // non-message updates: ack and ignore
+  }
+
+  const chatId = String(message.chat.id);
+  const userText = message.text;
+
+  // 4. Derive conversationId — same pattern as existing channels
+  const conversationId = `tg_${botRecord.hotel_id}_${chatId}`;
+
+  // 5. Sanitize + rate limit (reuse existing helpers)
+  const sanitized = sanitizeGuestInput(userText);
+  const rateLimit = await checkHotelRateLimit(botRecord.hotel_id);
+  if (!rateLimit.success) {
+    await sendTelegramMessage(params.botToken, chatId, 'Too many messages. Please wait a moment.');
+    return new Response('', { status: 200 });
+  }
+
+  // 6. Invoke agent — identical to WhatsApp webhook pattern
+  try {
+    const response = await invokeAgent({
+      role: botRecord.role as AgentRole,
+      userMessage: sanitized,
+      conversationId,
+      hotelId: botRecord.hotel_id,
+      guestIdentifier: chatId,
+    });
+
+    // 7. Reply via Telegram Bot API
+    await sendTelegramMessage(params.botToken, chatId, response);
+  } catch (err) {
+    console.error('[telegram webhook] invokeAgent failed:', err);
+    // Do not expose errors to users
+  }
+
+  // 8. Always 200 — prevents Telegram retry storms
+  return new Response('', { status: 200 });
+}
+```
+
+### 3. `lib/telegram/sendMessage.ts` (NEW)
+
+Outbound message sender. Mirrors `lib/whatsapp/sendReply.ts` in pattern.
+
+```typescript
+export async function sendTelegramMessage(
+  botToken: string,
+  chatId: string,
+  text: string,
+): Promise<void> {
+  // Telegram Bot API: https://api.telegram.org/bot{token}/sendMessage
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+  // Telegram max message length: 4096 characters
+  // Split if needed or truncate to prevent API errors
+  const truncated = text.length > 4000 ? text.slice(0, 4000) + '...' : text;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: truncated }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Telegram sendMessage failed: ${res.status} ${body}`);
+  }
+}
+```
+
+### 4. `lib/telegram/registerWebhook.ts` (NEW)
+
+Called by the admin panel when a bot token is provisioned. Sets the Telegram webhook URL.
+
+```typescript
+export async function registerTelegramWebhook(
+  botToken: string,
+  webhookSecret: string,
+  appUrl: string,
+): Promise<void> {
+  const webhookUrl = `${appUrl}/api/telegram/${botToken}`;
+
+  const res = await fetch(
+    `https://api.telegram.org/bot${botToken}/setWebhook`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: webhookUrl,
+        secret_token: webhookSecret,
+        drop_pending_updates: true,
+        allowed_updates: ['message'],  // only text messages, no inline/callback needed for MVP
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`setWebhook failed: ${res.status} ${body}`);
+  }
+}
+```
+
+### 5. Super Admin Route Group (NEW)
+
+```
+src/app/admin/                   — super admin area
+  layout.tsx                     — guards: JWT role === 'super-admin' + redirect
+  page.tsx                       — hotel list
+  hotels/
+    new/page.tsx                 — create hotel account form
+    [hotelId]/page.tsx           — hotel detail: bots, billing, settings
+    [hotelId]/bots/page.tsx      — bot provisioning UI
+
+src/app/api/admin/
+  hotels/route.ts                — GET list, POST create
+  hotels/[hotelId]/bots/route.ts — GET list, POST provision bot
+  hotels/[hotelId]/bots/[botId]/
+    register/route.ts            — POST setWebhook + save record
+```
+
+**Super admin JWT guard:**
+```typescript
+// src/app/admin/layout.tsx
+export default async function AdminLayout({ children }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // JWT app_metadata.role must be 'super-admin'
+  // This is set via: UPDATE auth.users SET raw_app_meta_data = ... (SQL, not client-side)
+  const role = user?.app_metadata?.role;
+  if (!user || role !== 'super-admin') {
+    redirect('/login');
+  }
+  return <>{children}</>;
+}
+```
+
+### 6. Setup Wizard Bot Handler (SPECIAL CASE)
+
+The Setup Wizard bot is a separate agent role, not one of the four employee bots. It handles hotel onboarding via Telegram conversation when a hotel owner first signs up.
+
+**Key difference:** The Setup Wizard bot operates across ALL hotels (before hotel association exists). Resolution requires a different flow:
+
+```
+Setup Wizard Bot webhook arrives
+  → Look up hotel_bots WHERE role = 'setup_wizard' AND bot_token = :token
+  → This is a single shared setup wizard bot (not per-hotel)
+  → Resolve hotel_id from chat_id via a setup_sessions table
+  → OR: use Telegram start parameter deep link to pass hotel_id
+```
+
+**Setup wizard flow:**
+```
+Super admin creates hotel account in /admin panel
+  → Generates unique deep link: https://t.me/OtelAISetupBot?start={hotelId}
+  → Sends this link to hotel owner via email
+  → Hotel owner clicks link → Telegram opens, /start {hotelId} fires
+  → Setup Wizard bot webhook receives: update.message.text = "/start {hotelId}"
+  → Extract hotelId from start parameter
+  → Begin onboarding conversation (hotel name, timezone, room count, etc.)
+  → Agent calls update_hotel_info tool to persist answers
+  → At end: provision the 4 employee bot tokens (manual step, guided by wizard)
+```
+
+**Deep link format (Telegram spec):**
+```
+https://t.me/{bot_username}?start={payload}
+// payload: A-Z, a-z, 0-9, _, - only. Max 512 chars.
+// Received in webhook as: update.message.text = "/start {payload}"
 ```
 
 ---
 
-## Data Flow
+## Modified Components
 
-### Flow 1: Guest Message → AI Receptionist → Response
+### 1. `escalation.ts` — channel enum extended
 
-```
-Guest sends message (web chat widget or WhatsApp)
-  ↓
-POST /api/webhooks/guest-chat (Next.js API Route)
-  ↓
-Middleware: Identify hotel_id from widget token / WhatsApp number mapping
-  ↓
-Middleware: Rate limit + content filter
-  ↓
-Create/find conversation thread for this guest
-  ↓
-Queue task: invoke_agent { hotel_id, agent=receptionist, thread_id, message }
-  ↓
-[Edge function or background job]
-  ↓
-invokeAgent()
-  ├── Load hotel context from DB
-  ├── Load conversation history (last 20 msgs)
-  ├── Load guest memory (this guest's past interactions)
-  └── Build system prompt
-  ↓
-Claude API (claude-opus-4-6 or claude-haiku for speed)
-  ↓
-Parse response → extract: reply_text, actions[], flags[]
-  ↓
-Save message to messages table
-  ↓
-Execute actions (e.g., create task for housekeeping, update booking)
-  ↓
-If flags.needs_human_review → send notification to hotel owner
-  ↓
-Return response to guest (via SSE stream or webhook callback)
+Current `channel` check in `invokeAgent.ts`:
+```typescript
+channel: params.conversationId.startsWith('wa_') ? 'whatsapp'
+       : params.conversationId.startsWith('widget_') ? 'widget'
+       : 'dashboard',
 ```
 
-### Flow 2: Hotel Owner Chatting with AI Employee
-
-```
-Owner opens "Maya (Receptionist)" chat in dashboard
-  ↓
-POST /api/chat/receptionist (authenticated with Supabase session)
-  ↓
-Supabase JWT → extract hotel_id (RLS auto-enforces tenant scope)
-  ↓
-invokeAgent() with owner-context flag
-  ↓
-[Different system prompt layer: owner mode vs guest mode]
-  ↓
-Claude API
-  ↓
-Response includes: natural language reply + optional structured data
-(e.g., "Here are today's arrivals: [table data]")
-  ↓
-Stream response to dashboard via SSE
+Must add `'telegram'` to channel detection AND to the DB CHECK constraint:
+```typescript
+channel: params.conversationId.startsWith('wa_') ? 'whatsapp'
+       : params.conversationId.startsWith('widget_') ? 'widget'
+       : params.conversationId.startsWith('tg_') ? 'telegram'
+       : 'dashboard',
 ```
 
-### Flow 3: Autonomous Task Execution (Background)
-
-```
-Scheduled job runs every 15 minutes (Vercel Cron or Supabase pg_cron)
-  ↓
-For each active hotel:
-  └── For each active agent role:
-      ↓
-      Check: Are there pending tasks for this agent?
-      Check: Are there scheduled actions due (e.g., morning report)?
-      ↓
-      If yes → invokeAgent() with task context
-      ↓
-      Agent decides: execute task | request more info | escalate to owner
-      ↓
-      Update task status
-      ↓
-      If escalated → notification to owner
+```sql
+-- Migration needed: add 'telegram' to escalations.channel CHECK
+ALTER TABLE public.escalations
+  DROP CONSTRAINT escalations_channel_check,
+  ADD CONSTRAINT escalations_channel_check
+    CHECK (channel IN ('whatsapp', 'widget', 'telegram', 'dashboard'));
 ```
 
-**Confidence for data flows:** HIGH — these flows follow standard event-driven SaaS patterns adapted for AI agents.
+### 2. `assembleContext.ts` — service-role client for webhook invocations
+
+Current `assembleSystemPrompt` calls `createClient()` (session-based). This breaks for webhook handlers which have no session cookie.
+
+**Fix required:** Pass a `supabase` client instance into `assembleSystemPrompt`, or use the service-role client when `hotelId` is already verified externally. The WhatsApp webhook works because `invokeAgent` already calls `createServiceClient()` for the `is_enabled` guard, but `assembleContext.ts` re-creates a session client that will fail.
+
+**The WhatsApp webhook passes this today because:**
+- `invokeAgent` is called from `POST /api/whatsapp/webhook`
+- The `assembleContext.ts` uses `await createClient()` which returns the server-side Supabase client
+- This client in Route Handlers reads cookies from `cookies()` — but there are no cookies on webhook requests
+
+**Investigate:** Check whether existing WhatsApp webhook actually works with `assembleContext.ts` using `createClient()`. If it does, Next.js may be allowing the service-role fallback. If not, this is an existing bug that the Telegram milestone must fix. The Telegram webhook handler must pass a service-role client, or `invokeAgent` needs a `useServiceRole` flag.
+
+**Recommended fix — add `supabase` param option to `invokeAgent`:**
+```typescript
+// InvokeAgentParams addition
+interface InvokeAgentParams {
+  // ... existing fields ...
+  _serviceClient?: SupabaseClient; // webhook callers inject their own service client
+}
+```
+
+### 3. `billing/plans.ts` — replace tier limits with per-bot pricing
+
+Current model: `maxAgents` per plan tier (2 on starter, 4 on pro, 6 on enterprise).
+
+New model: Per-bot pricing. Each active bot = one billing unit. No tier gates on bot count.
+
+**New billing data model:**
+```sql
+-- hotel_bots already has is_active
+-- Billing is now: COUNT(hotel_bots WHERE hotel_id = X AND is_active = TRUE)
+-- Super admin sets price per bot per month in admin panel or external payment config
+```
+
+**Enforcement change:** Remove `enforceAgentLimit()` call from agent enable/disable toggle. Replace with a subscription check that counts active bots and compares against payment status. If payment is overdue, deactivate all bots (not a tier limit, but a payment enforcement).
+
+### 4. `subscriptions` table — extend for per-bot billing
+
+```sql
+ALTER TABLE public.subscriptions
+  ADD COLUMN price_per_bot_eur NUMERIC DEFAULT 9.00,
+  ADD COLUMN price_per_bot_try NUMERIC DEFAULT 90.00;
+-- active_bot_count computed at charge time: COUNT(hotel_bots WHERE is_active AND hotel_id = X)
+```
 
 ---
 
-## Recommended Project Structure
+## Data Flow: Telegram Message to Agent Response
+
+```
+Telegram sends POST to /api/telegram/{botToken}
+  ↓
+X-Telegram-Bot-Api-Secret-Token header present?
+  No → 403 Forbidden
+  Yes → continue
+  ↓
+DB lookup: hotel_bots WHERE bot_token = {botToken}
+  Not found → 200 (silently ignore — prevents enumeration)
+  Found → { hotel_id, role, webhook_secret }
+  ↓
+webhook_secret === header value?
+  No → 403 Forbidden
+  Yes → continue
+  ↓
+Parse update.message: { chat.id, text }
+  No text or no chat.id → 200 (non-message update, ignored)
+  ↓
+sanitizeGuestInput(text)
+  ↓
+checkHotelRateLimit(hotel_id)
+  Exceeded → sendTelegramMessage(token, chatId, polite_decline) → 200
+  OK → continue
+  ↓
+conversationId = `tg_{hotel_id}_{chatId}`
+  ↓
+invokeAgent({
+  role,           // from hotel_bots row
+  userMessage,    // sanitized text
+  conversationId, // tg_ prefixed
+  hotelId,        // from hotel_bots row
+  guestIdentifier: chatId
+})
+  ↓
+[Same pipeline as WhatsApp — assembleSystemPrompt → Claude → tools → persist]
+  ↓
+response: string
+  ↓
+sendTelegramMessage(botToken, chatId, response)
+  ↓
+return new Response('', { status: 200 })
+```
+
+---
+
+## Data Flow: Super Admin Provisions New Hotel
+
+```
+Super admin logs in to /admin (JWT role === 'super-admin')
+  ↓
+POST /api/admin/hotels
+  { hotelName, ownerEmail, ownerName, country }
+  ↓
+1. Create Supabase auth user for hotel owner
+   → supabase.auth.admin.createUser({ email, user_metadata: { hotel_name, full_name } })
+   → handle_new_user trigger fires: creates hotel + profile + seeds defaults + creates trial subscription
+   ↓
+2. Return hotel_id + generated magic link for owner login
+  ↓
+POST /api/admin/hotels/{hotelId}/bots
+  { role: 'front_desk', bot_token: '...', bot_username: '...' }
+  ↓
+1. Generate webhook_secret (crypto.randomUUID())
+2. INSERT into hotel_bots
+3. Call registerTelegramWebhook(botToken, webhookSecret, NEXT_PUBLIC_APP_URL)
+   → Telegram confirms: setWebhook returns { ok: true }
+4. Return bot record + deep link for owner: `https://t.me/{bot_username}`
+  ↓
+Super admin repeats for each of 4 employee bots per hotel
+  ↓
+Super admin generates Setup Wizard deep link:
+  `https://t.me/OtelAISetupBot?start={hotelId}`
+  → Sends to hotel owner via email (Resend)
+```
+
+---
+
+## Data Flow: Setup Wizard Onboarding
+
+```
+Hotel owner receives email with Setup Wizard deep link
+  ↓
+Owner taps link → Telegram opens Setup Wizard bot
+  ↓
+Telegram sends POST /api/telegram/{setupWizardToken}:
+  update.message.text = "/start {hotelId}"
+  ↓
+Webhook handler detects "/start {payload}" pattern
+  → Extract hotelId from payload
+  → Resolve hotel: SELECT * FROM hotels WHERE id = hotelId
+  ↓
+conversationId = `tg_setup_{hotelId}_{chatId}`
+  ↓
+invokeAgent({
+  role: AgentRole.FRONT_DESK,  // Setup Wizard uses Front Desk role in onboarding mode
+  userMessage: "Welcome! Let's set up your hotel.",
+  conversationId,
+  hotelId,
+})
+  ↓
+Setup Wizard agent asks questions:
+  "What is your hotel's city?"
+  "What timezone are you in?"
+  "How many room types do you have?"
+  → Agent calls update_hotel_info tool on each answer
+  ↓
+At completion: agent sends instructions for connecting employee bots
+  (The bot tokens were already provisioned by super admin; owner just needs to follow guide)
+```
+
+---
+
+## Component Boundaries
+
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| `/api/telegram/[botToken]` | Validate webhook, resolve hotel+role, call invokeAgent, send reply | Telegram API (inbound webhook), hotel_bots table, invokeAgent, sendTelegramMessage |
+| `hotel_bots` table | Maps bot tokens to hotel+role, stores webhook secrets | Webhook router (reads), admin panel (writes) |
+| `lib/telegram/sendMessage.ts` | POST to Telegram Bot API to deliver text response | Telegram Bot API (https://api.telegram.org) |
+| `lib/telegram/registerWebhook.ts` | Call setWebhook on Telegram API for a given bot token | Telegram Bot API (https://api.telegram.org) |
+| `/admin` route group | Super admin UI for hotel and bot management | /api/admin/* routes |
+| `/api/admin/hotels` | Create hotel accounts, list hotels | Supabase auth.admin (service role), hotels table |
+| `/api/admin/hotels/[id]/bots` | Provision bot tokens, trigger setWebhook | hotel_bots table, registerTelegramWebhook |
+| `invokeAgent()` | Unchanged — stateless agent orchestrator | assembleSystemPrompt, Claude API, executeTool, persistTurn |
+
+---
+
+## Architectural Patterns
+
+### Pattern 1: Bot Token in URL Path (Routing by URL)
+
+**What:** Each bot gets its own webhook URL: `/api/telegram/{BOT_TOKEN}`. Telegram sends updates to the bot's unique URL. The token in the path is the routing key for hotel + role resolution.
+
+**Why this over a shared dispatcher URL:**
+- Zero routing ambiguity: one URL = one bot = one hotel+role
+- Telegram's `secret_token` header adds a second layer of security per bot
+- Scales to any number of bots without changing routing logic
+- Pattern proven in production for multi-bot SaaS (verified via community sources)
+
+**When to use:** Multi-tenant SaaS with many independent bots. Works with Vercel's file-based routing via `[botToken]` dynamic segment.
+
+**Trade-off:** Bot tokens appear in server logs and Vercel function URL logs. Mitigate by not logging the raw URL, and by also validating the `secret_token` header — so knowing the URL alone is insufficient.
+
+### Pattern 2: Service-Role DB Lookup for Webhook Resolution
+
+**What:** Webhook handlers cannot use session cookies. Use service-role Supabase client to look up `hotel_id` + `role` from `hotel_bots` table by bot token. This mirrors the existing `resolveHotelFromNumber()` pattern for WhatsApp.
+
+**Why:** Telegram webhooks are unauthenticated inbound HTTP — no Supabase session. Service client bypasses RLS. The bot token itself is the authentication credential.
+
+**Security:** Double validate: (1) bot token in path must exist in `hotel_bots`, (2) `webhook_secret` in header must match stored secret. Both checks must pass before `invokeAgent` is called.
+
+### Pattern 3: Shared `invokeAgent()` Pipeline Across All Channels
+
+**What:** The Telegram webhook handler calls the same `invokeAgent()` function as the WhatsApp webhook, the SSE stream endpoint, and the cron jobs. No channel-specific agent logic.
+
+**Why:** Channel differences (streaming vs non-streaming, message format, delivery mechanism) are handled in the webhook handler layer. The agent pipeline is channel-agnostic.
+
+**What changes per channel:**
+- Conversation ID prefix: `wa_` vs `widget_` vs `tg_`
+- Role resolution: WhatsApp uses Twilio number → hotel_id, Telegram uses bot_token → hotel_id + role
+- Response delivery: Twilio API vs Telegram Bot API vs SSE stream
+
+### Pattern 4: Super Admin Role via JWT app_metadata
+
+**What:** Super admin is a single Supabase user with `raw_app_meta_data.role = 'super-admin'`. Set via direct SQL in Supabase dashboard (not client-side). The `/admin` layout checks JWT claims — no separate admin table needed.
+
+**Why:** Simpler than a separate admin database. JWT claim is injected by the existing `custom_access_token_hook`. No additional middleware complexity.
+
+**SQL to grant super admin:**
+```sql
+UPDATE auth.users
+SET raw_app_meta_data = raw_app_meta_data || '{"role": "super-admin"}'
+WHERE email = 'admin@example.com';
+```
+
+**Why not a separate admin table with RLS:** JWT claim check in layout.tsx is sufficient for an internal tool with 1-2 admin users. A DB table adds complexity without security benefit here.
+
+### Pattern 5: Conversation ID as Channel + Hotel + Guest Key
+
+**What:** Conversation ID = `{channel}_{hotelId}_{guestKey}`. This is the existing convention extended to Telegram.
+
+**Existing:**
+- `wa_{hotelId}_{phone}` — WhatsApp
+- `widget_{hotelId}_{sessionId}` — Web widget
+- `{hotelId}_owner_chat` — Dashboard
+
+**New:**
+- `tg_{hotelId}_{chatId}` — Telegram employee bots
+- `tg_setup_{hotelId}_{chatId}` — Setup Wizard
+
+**Why chatId as guest key:** Telegram `chat.id` is stable per user per bot. It is the natural guest identifier for episodic memory lookup. Persistent across bot restarts.
+
+---
+
+## New File Structure
+
+Only NEW files and MODIFIED files listed. Existing structure is unchanged.
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Login, register, onboarding
-│   ├── (dashboard)/              # Hotel owner authenticated area
-│   │   ├── staff/                # AI employee management
-│   │   │   └── [agentRole]/      # Chat with specific employee
-│   │   ├── guests/               # Guest management
-│   │   ├── tasks/                # Task queue view
-│   │   ├── reports/              # Analytics
-│   │   └── settings/             # Hotel config, agent customization
-│   ├── guest/                    # Guest-facing chat (unauthenticated)
-│   │   └── [hotelSlug]/          # Embeddable or hosted guest chat
+├── app/
+│   ├── admin/                           # NEW — super admin area
+│   │   ├── layout.tsx                   # JWT role guard (super-admin)
+│   │   ├── page.tsx                     # Hotel list
+│   │   └── hotels/
+│   │       ├── new/page.tsx             # Create hotel account
+│   │       └── [hotelId]/
+│   │           ├── page.tsx             # Hotel detail
+│   │           └── bots/page.tsx        # Bot provisioning UI
+│   │
 │   └── api/
-│       ├── chat/                 # Owner ↔ agent chat endpoint
-│       │   └── [agentRole]/
-│       ├── guest/                # Guest ↔ receptionist endpoint
-│       ├── webhooks/             # WhatsApp, external integrations
-│       │   └── whatsapp/
-│       ├── tasks/                # Task CRUD
-│       ├── agents/               # Agent config management
-│       └── cron/                 # Scheduled autonomous tasks
+│       ├── telegram/
+│       │   └── [botToken]/
+│       │       └── route.ts             # NEW — Telegram webhook handler (dynamic)
+│       └── admin/
+│           ├── hotels/
+│           │   └── route.ts             # NEW — GET list, POST create hotel
+│           └── hotels/[hotelId]/
+│               ├── route.ts             # NEW — GET hotel detail
+│               └── bots/
+│                   └── route.ts         # NEW — GET list, POST provision bot
 │
 ├── lib/
-│   ├── agents/                   # Agent system — core domain
-│   │   ├── types.ts              # AgentRole, AgentConfig, AgentResponse
-│   │   ├── factory.ts            # createAgent(role, hotelId) → Agent
-│   │   ├── orchestrator.ts       # invokeAgent() — main entry point
-│   │   ├── context-builder.ts    # Assembles system prompt from layers
-│   │   ├── memory.ts             # Read/write agent memory
-│   │   └── roles/                # Per-role definitions
-│   │       ├── receptionist.ts   # System prompt template, tools, behavior
-│   │       ├── housekeeping.ts
-│   │       ├── revenue.ts
-│   │       ├── guest-relations.ts
-│   │       └── accounting.ts
-│   │
-│   ├── claude/                   # Claude API wrapper
-│   │   ├── client.ts             # Anthropic SDK instance
-│   │   ├── stream.ts             # SSE streaming helpers
-│   │   └── rate-limiter.ts       # Per-tenant rate limiting
-│   │
-│   ├── db/                       # Database access layer
-│   │   ├── client.ts             # Supabase client (server-side)
-│   │   ├── hotels.ts             # Hotel CRUD
-│   │   ├── messages.ts           # Message thread operations
-│   │   ├── tasks.ts              # Task queue operations
-│   │   ├── memory.ts             # Agent memory operations
-│   │   └── guests.ts             # Guest profile operations
-│   │
-│   ├── notifications/            # Alert system
-│   │   ├── in-app.ts             # Supabase Realtime push
-│   │   └── email.ts              # Transactional emails
-│   │
-│   └── multi-tenancy/
-│       ├── tenant-context.ts     # Extract hotel_id from JWT/session
-│       └── rate-limits.ts        # Per-tenant API limits
+│   └── telegram/                        # NEW module
+│       ├── sendMessage.ts               # POST to Telegram Bot API
+│       ├── registerWebhook.ts           # setWebhook call
+│       └── resolveBot.ts               # DB lookup: botToken → { hotel_id, role }
 │
-├── components/                   # React UI components
-│   ├── chat/                     # Chat interface components
-│   ├── staff/                    # Employee card, status display
-│   ├── tasks/                    # Task list, task status
-│   └── shared/                   # Buttons, forms, layout
-│
-└── types/                        # Shared TypeScript types
-    ├── agents.ts
-    ├── hotel.ts
-    └── database.ts               # Supabase generated types
+└── supabase/migrations/
+    └── 0009_telegram.sql                # NEW — hotel_bots table, escalations channel update
 ```
 
-### Structure Rationale
+---
 
-- **lib/agents/roles/:** Each agent role is a self-contained module with its own system prompt template, allowed tools, and behavioral rules. Adding a 6th agent = adding one file here.
-- **lib/claude/:** Isolated Claude API layer makes it easy to swap models, add retries, or inject rate limiting without touching agent logic.
-- **lib/db/:** All database access is centralized — RLS enforcement happens at Supabase level, but DB functions provide typed, tested abstractions.
-- **app/api/cron/:** Autonomous agent tasks run as Vercel cron jobs — keeps scheduled work visible and testable.
+## Anti-Patterns
+
+### Anti-Pattern 1: One Shared Webhook URL for All Bots
+
+**What people do:** Configure all bots to point to `/api/telegram/webhook` and dispatch by bot username inside the handler.
+
+**Why it's wrong:** You need to know the bot token to respond to a specific bot (the token is part of `https://api.telegram.org/bot{TOKEN}/sendMessage`). If you receive an update and don't know which token was used to receive it, you cannot reply. Telegram sends the bot token in the URL you set — the update payload does not include the receiving bot's token.
+
+**Do this instead:** Dynamic route `/api/telegram/[botToken]` — the token is captured from the URL, used for DB lookup AND for sendMessage in the reply.
+
+### Anti-Pattern 2: Storing Bot Tokens Unencrypted and Using Them as Auth
+
+**What people do:** Store raw bot tokens in `hotel_bots.bot_token` and treat the token-in-URL as sufficient auth.
+
+**Why it's wrong:** Bot tokens appear in server access logs and Vercel function logs. Token alone should not grant access without the secondary `X-Telegram-Bot-Api-Secret-Token` header check.
+
+**Do this instead:** Always validate BOTH the token (DB lookup) AND the secret header. Consider encrypting tokens at rest using AES-256-GCM with a key from env (decrypt only when needed for API calls). Log the first 8 chars only.
+
+### Anti-Pattern 3: Calling `createClient()` (Session Client) Inside Webhook Handlers
+
+**What people do:** Reuse `createClient()` from `lib/supabase/server.ts` for webhook handlers that call `invokeAgent()`.
+
+**Why it's wrong:** `createClient()` in Next.js App Router reads session cookies via `cookies()`. Webhook handlers from Telegram/Twilio/Mollie have no session cookies. This silently fails or returns an unauthenticated client.
+
+**Do this instead:** Use `createServiceClient()` for all webhook handler DB operations. The hotel_id has already been validated from the bot token — service client is safe to use here.
+
+**Existing concern:** `assembleSystemPrompt` calls `createClient()` internally. Verify whether the WhatsApp webhook actually works today or if it's hitting this issue. If it works, it may be because Next.js creates a server client that falls back gracefully. Regardless, the Telegram implementation must test this path explicitly.
+
+### Anti-Pattern 4: Letting Hotel Owners Register Their Own Bot Tokens
+
+**What people do:** Build a self-service UI where hotel owners paste bot tokens directly.
+
+**Why it's wrong for OtelAI:** Each bot requires a BotFather account, proper name/avatar setup, and correct webhook registration. Doing this correctly is complex. Hotel owners will make mistakes. The super admin controls bot quality and naming consistency.
+
+**Do this instead:** Super admin creates all bots via BotFather (manual, one-time per hotel), stores the tokens in the admin panel, and provisions them server-side. Hotel owners receive ready-to-use bot links.
+
+### Anti-Pattern 5: Blocking the Webhook Response While Awaiting `invokeAgent()`
+
+**What people do:** `await invokeAgent()` directly, then respond 200 to Telegram.
+
+**Why this is acceptable for Telegram (unlike SSE):** Telegram allows up to 60 seconds for webhook response before retrying. Claude API + tool calls typically complete in 3-15 seconds. For MVP, synchronous await is fine.
+
+**When this becomes a problem:** Complex tool chains hitting the recursion limit (5 rounds) can take 30+ seconds. If Vercel's function timeout (60 seconds for Pro, 10 for Hobby) is hit, the response 200 is never sent and Telegram retries the message → duplicate agent responses.
+
+**Do this instead for v1:** Set `maxDuration = 60` on the Telegram route (requires Vercel Pro or above, same as the stream endpoint). For Hobby: keep tool chains short. For later: move invokeAgent to a background queue and respond 200 immediately.
 
 ---
 
@@ -449,284 +694,105 @@ src/
 
 | Service | Integration Pattern | Notes |
 |---------|---------------------|-------|
-| Claude API (Anthropic) | Direct REST via `@anthropic-ai/sdk` | Use streaming for owner chat; non-streaming for background tasks |
-| Supabase | Supabase JS SDK (server client) | Service role key for API routes; anon key + session for client |
-| WhatsApp Business API | Inbound webhook + outbound HTTP | Requires Meta Business verification; use official WhatsApp Cloud API |
-| Vercel Cron | Endpoint invocation on schedule | Free tier: 1 cron per day; Pro: more frequent; needed for autonomous tasks |
-| Supabase Realtime | WebSocket subscription | For pushing task notifications to owner dashboard without polling |
-| Resend (email) | REST API for transactional email | Escalation alerts, daily summaries |
+| Telegram Bot API (inbound) | HTTPS POST webhook to `/api/telegram/[botToken]` | Secret token header validated per bot. Telegram retries on non-200. Always return 200. |
+| Telegram Bot API (outbound) | POST to `https://api.telegram.org/bot{token}/sendMessage` | Use per-bot token from DB. 4096 char message limit. No SSE — send complete message. |
+| Supabase (hotel_bots) | Service-role SELECT for bot resolution | Index on bot_token for O(1) lookup. Hot path on every message. |
+| BotFather | Manual interaction only | No programmatic API for bot creation. Super admin creates bots manually via BotFather, then enters tokens in admin panel. This is intentional — Telegram has no createBot API. |
 
 ### Internal Boundaries
 
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
-| Dashboard UI ↔ API | HTTPS REST + SSE streaming | SSE for streaming chat responses; REST for everything else |
-| API ↔ Agent Orchestrator | Direct function call (same process) | Not microservices — keep it simple for v1 |
-| Agent Orchestrator ↔ Claude API | HTTP via Anthropic SDK | Each invocation is independent; no persistent connection |
-| Agent ↔ Agent coordination | Async via tasks table | Never synchronous direct calls between agents |
-| API ↔ Database | Supabase JS SDK (server-side) | All queries go through service role with RLS for safety |
-| Guest Widget ↔ API | HTTPS REST with hotel token | Hotel token identifies tenant; guest session managed separately |
+| Telegram webhook → invokeAgent | Direct function call (same process) | No streaming (Telegram expects full message). No `onToken` callback. |
+| invokeAgent → sendTelegramMessage | Return value passed to send function | Response text → Telegram reply. Same pattern as WhatsApp. |
+| Admin panel → hotel_bots | REST API via `/api/admin/hotels/[id]/bots` | Service-role writes. Super admin only. |
+| Admin panel → registerWebhook | Server-side fetch to Telegram API | Fires on bot token save. Can be re-triggered for URL changes. |
+| Telegram webhook → escalation | Fire-and-forget via detectAndInsertEscalation | Same as existing channels. `channel = 'telegram'`. |
 
 ---
 
-## Architectural Patterns
+## Build Order
 
-### Pattern 1: Agent Factory with Role Registry
-
-Each agent role is registered in a central registry. The factory creates the correct agent configuration by composing role-specific behavior with hotel-specific configuration.
-
-**What:** Central registry maps `AgentRole` enum to role definition (system prompt template, available tools, memory scope, communication mode: guest-facing vs internal-only).
-
-**When to use:** Whenever new agent is invoked. Single entry point for all agent creation.
-
-**Trade-offs:** Adds indirection, but makes adding new roles trivial and keeps all role-specific logic in one place.
-
-```typescript
-// lib/agents/roles/registry.ts
-export const AGENT_REGISTRY: Record<AgentRole, AgentRoleDefinition> = {
-  receptionist: {
-    name: 'Receptionist',
-    defaultName: 'Maya',
-    systemPromptTemplate: receptionistPrompt,
-    guestFacing: true,
-    allowedTools: ['lookup_booking', 'create_task', 'update_guest_profile'],
-    memoryScope: ['hotel', 'guest'],  // loads both hotel and guest-specific memory
-  },
-  housekeeping: {
-    name: 'Housekeeping Manager',
-    defaultName: 'Rosa',
-    systemPromptTemplate: housekeepingPrompt,
-    guestFacing: false,
-    allowedTools: ['update_room_status', 'create_task', 'assign_task'],
-    memoryScope: ['hotel'],           // only hotel-level memory
-  },
-  // ...
-};
-```
-
-**Confidence:** HIGH — standard factory/registry pattern, well-suited to this use case.
-
-### Pattern 2: Streaming Response with Structured Action Extraction
-
-For owner chat, stream the conversational text to the UI while also parsing structured actions out of the response. Use Claude's tool_use feature to return actions as structured JSON alongside natural language.
-
-**What:** System prompt instructs Claude to respond with both: (a) a natural language reply for the human, and (b) optional tool_use blocks for structured actions like creating tasks, updating rooms, sending alerts.
-
-**When to use:** Any time an agent response might trigger a database action or notification.
-
-**Trade-offs:** More complex response parsing, but avoids fragile string parsing and enables reliable action extraction.
-
-```typescript
-// lib/agents/orchestrator.ts
-const response = await anthropic.messages.create({
-  model: 'claude-opus-4-6',
-  system: systemPrompt,
-  messages: conversationHistory,
-  tools: getToolsForRole(agentRole),  // role-specific tool definitions
-});
-
-// Parse response: text blocks for display, tool_use blocks for actions
-const textContent = response.content
-  .filter(b => b.type === 'text')
-  .map(b => b.text)
-  .join('');
-
-const actions = response.content
-  .filter(b => b.type === 'tool_use')
-  .map(b => ({ tool: b.name, input: b.input }));
-
-await executeActions(actions, { hotelId, agentRole });
-```
-
-**Confidence:** HIGH — Claude tool use is the canonical approach for structured output alongside natural language.
-
-### Pattern 3: Hybrid Autonomous + Interactive Mode
-
-Agents operate in two modes: **interactive** (human sends message, agent responds) and **autonomous** (cron-triggered, agent reviews state and acts without prompting).
-
-**What:** The same `invokeAgent()` function handles both modes. The difference is only in the input: interactive mode passes a user message; autonomous mode passes a "system review" prompt asking the agent to check for pending tasks or proactive actions.
-
-**When to use:** Autonomous mode runs on Vercel Cron (e.g., every 15 mins for task processing, daily for reports).
-
-**Trade-offs:** Simple and reuses all agent logic. Risk: autonomous mode can generate unnecessary actions — requires well-designed system prompts with "if nothing needs doing, do nothing" instructions.
-
-```typescript
-// Autonomous invocation example
-await invokeAgent({
-  hotelId,
-  agentRole: 'housekeeping',
-  threadId: 'system-autonomous',
-  mode: 'autonomous',
-  context: {
-    pendingTasks: await getPendingTasksForAgent(hotelId, 'housekeeping'),
-    todayCheckouts: await getTodayCheckouts(hotelId),
-    currentTime: new Date().toISOString(),
-  },
-});
-```
-
-**Confidence:** MEDIUM — pattern is sound; the system prompt engineering for reliable autonomous behavior requires iteration.
-
----
-
-## Data Flow: State Management
+Based on component dependencies:
 
 ```
-[Owner Dashboard (React)]
-  ↓ POST /api/chat/[agentRole]
-  ↓
-[API Route]
-  ├── Validate session (Supabase auth)
-  ├── Extract hotel_id from JWT
-  └── invokeAgent()
-      ├── DB: Load hotel context
-      ├── DB: Load conversation history
-      ├── DB: Load agent memory
-      ├── Build system prompt
-      └── Claude API → stream response
-  ↓
-  ↓ SSE stream
-[Owner Dashboard]
-  → Renders streaming text
-  → On complete: actions executed, task created if needed
-  → Supabase Realtime: other agents notified of new task
+1. DB Migration: hotel_bots table + escalations.channel update
+   → Unblocks all Telegram work
+   → No existing code changes
+
+2. lib/telegram/sendMessage.ts + lib/telegram/registerWebhook.ts
+   → Pure utility functions, no dependencies
+   → Test manually against a test bot token
+
+3. POST /api/telegram/[botToken]/route.ts (webhook handler)
+   → Depends on: hotel_bots table, sendMessage, invokeAgent (exists)
+   → Test: point a test bot to this endpoint, send a message
+   → Fix assembleContext.ts service client issue if needed
+
+4. Bot provisioning: POST /api/admin/hotels/[id]/bots
+   → Depends on: hotel_bots table, registerWebhook
+   → Can be a simple script initially (curl), not a UI
+
+5. Super Admin layout + hotel list (/admin)
+   → Depends on: JWT role guard (can be set via SQL)
+   → Milestone: super admin can see all hotels
+
+6. Hotel creation via admin panel
+   → Depends on: Supabase auth.admin API
+   → Milestone: super admin can create a hotel account
+
+7. Bot provisioning UI (/admin/hotels/[id]/bots)
+   → Depends on: steps 3, 4, 5, 6
+   → Milestone: super admin can provision and register all 5 bots
+
+8. Setup Wizard bot (special handler for /start {hotelId})
+   → Depends on: webhook handler (step 3), deep link pattern
+   → Modify webhook handler to detect /start and handle onboarding flow
+
+9. Per-bot billing model
+   → Depends on: hotel_bots table, payment provider webhooks
+   → Replace enforceAgentLimit with count-based billing enforcement
 ```
 
+**Critical path:**
 ```
-[Guest Widget (embedded in hotel website)]
-  ↓ POST /api/guest (with hotel token)
-  ↓
-[API Route — no auth, identified by hotel token]
-  ├── Resolve hotel_id from token
-  ├── Detect or create guest session
-  └── invokeAgent({ agentRole: 'receptionist' })
-  ↓
-[Response]
-  → JSON (not streamed) — simpler for widget integration
-  → Guest sees response
-  → Any tasks created go to owner notification queue
+DB Migration (step 1) → Webhook handler (step 3) → Working Telegram bots
+                      ↓
+                Bot provisioning API (step 4) → Admin provisioning flow
 ```
 
 ---
 
-## Anti-Patterns
+## Confidence Assessment
 
-### Anti-Pattern 1: Persistent Agent Processes
-
-**What people do:** Run long-lived agent processes (e.g., Node.js websocket connections per agent) that hold conversation state in memory.
-
-**Why it's wrong:** Incompatible with Vercel serverless. If server restarts, all in-memory state is lost. Cannot scale horizontally. Memory leaks per tenant accumulate.
-
-**Do this instead:** Stateless invocation — load all context from DB on each call. Claude's context window is large enough that this adds only ~50-100ms DB overhead per invocation.
-
-### Anti-Pattern 2: Putting Hotel Context in a Single Giant System Prompt
-
-**What people do:** Build one massive 10,000-token system prompt with everything about the hotel baked in at startup.
-
-**Why it's wrong:** Context is stale the moment it is compiled. Hotel policies change, rooms go out of service, prices update. Also, all agents share the same mega-prompt which prevents role-specific behavior.
-
-**Do this instead:** Layered prompt assembly at invocation time. Load only what's needed for this agent's role. Hotel context comes from DB (always fresh). Agent role definition is static code.
-
-### Anti-Pattern 3: Direct Agent-to-Agent Synchronous Calls
-
-**What people do:** Receptionist agent calls a function that directly invokes the housekeeping agent and waits for the response.
-
-**Why it's wrong:** Creates tight coupling and cascading timeouts. If housekeeping agent call takes 5 seconds, receptionist response is delayed. On Vercel, function timeout chains become a problem.
-
-**Do this instead:** Agent writes a task/notification to the database. Housekeeping agent picks it up on next invocation (triggered by cron or Supabase webhook). Completely decoupled.
-
-### Anti-Pattern 4: Single Shared Thread for All Hotel Communication
-
-**What people do:** Store all messages in one big table, filtered only by `hotel_id`.
-
-**Why it's wrong:** Owner chat with agent Maya, guest chat in room 12, and autonomous task logs all mixed together. Makes context assembly complex and pollutes conversation history.
-
-**Do this instead:** Thread-scoped conversations. Each context (owner ↔ Maya, guest_session_xyz ↔ receptionist, autonomous_daily_report) has its own thread. Agents only see history relevant to current interaction.
-
-### Anti-Pattern 5: Skipping Rate Limiting on AI Endpoints
-
-**What people do:** Expose `/api/chat` with no rate limiting, trusting that only paying customers will use it.
-
-**Why it's wrong:** A single guest with a web chat widget can generate hundreds of Claude API calls in minutes (intentionally or accidentally). Claude API costs are per-token and scale with usage.
-
-**Do this instead:** Per-tenant rate limiting at the API route level. Use Redis (Upstash) or Supabase counters. Limit: reasonable messages-per-minute per guest session and per hotel per hour.
-
----
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 0-50 hotels | Monolith is correct. One Next.js app, one Supabase project, Vercel free/hobby tier. Cron every 15 min. |
-| 50-500 hotels | Monitor Claude API rate limits (per-org limits). Add Redis (Upstash) for rate limiting. Consider Supabase Pro for connection pooling. |
-| 500-5000 hotels | Supabase becomes bottleneck for connection counts. Add PgBouncer or use Supabase's built-in pooler mode. Split cron jobs by region if multi-region. |
-| 5000+ hotels | Consider queue-based agent invocation (BullMQ + Upstash Redis) to handle burst task processing. Agent orchestration may need its own service. |
-
-### Scaling Priorities
-
-1. **First bottleneck:** Claude API token costs and rate limits — instrument token usage per hotel/agent from day 1; add caching for repeated hotel context calls.
-2. **Second bottleneck:** Supabase connection pool exhaustion under concurrent requests — enable Supabase Pooler from the start (uses PgBouncer behind the scenes).
-3. **Third bottleneck:** Vercel function cold starts for streaming responses — use Edge Runtime for latency-sensitive endpoints.
-
----
-
-## Build Order Implications
-
-The architecture has hard dependencies that dictate build sequence:
-
-```
-1. Database Schema + RLS (Supabase)
-   Must exist before anything else. All other components depend on it.
-
-2. Auth + Tenant Context Middleware
-   Must exist before any API routes. Establishes hotel_id extraction.
-
-3. Hotel Context Storage (CRUD for hotel knowledge)
-   Agent system is useless without hotel data to inject into prompts.
-
-4. Agent Orchestrator Core (invokeAgent, context-builder, memory)
-   The engine. Build this before any UI that talks to agents.
-
-5. First Agent (Receptionist — owner-facing chat only)
-   Prove the pattern works with one agent before building 5.
-   Owner can chat with receptionist from a basic UI.
-
-6. Guest-Facing Layer (web widget, WhatsApp webhook)
-   Built after receptionist works, adds external-facing channel.
-
-7. Remaining Agent Roles
-   Add agents one by one using the established factory pattern.
-
-8. Autonomous Mode + Cron
-   Add autonomous behavior after interactive mode is stable.
-
-9. Owner Dashboard Polish + Analytics
-   UI layer on top of working agent system.
-```
-
-**Dependency graph:**
-```
-Schema → Auth → Hotel CRUD → Agent Core → First Agent → Guest Layer
-                                    ↓
-                              More Agents
-                                    ↓
-                           Autonomous Mode → Cron Jobs
-                                    ↓
-                              Dashboard UI
-```
+| Component | Confidence | Reason |
+|-----------|------------|--------|
+| Telegram webhook URL pattern | HIGH | Verified via official core.telegram.org/bots/webhooks |
+| secret_token header validation | HIGH | Verified via official API docs and multiple sources |
+| Dynamic route [botToken] in Next.js | HIGH | Standard Next.js App Router feature |
+| Bot token in URL as routing key | HIGH | Confirmed by Telegram community pattern + official docs |
+| BotFather no programmatic API | HIGH | Multiple sources confirm manual-only creation |
+| service-role client for webhooks | HIGH | Matches existing WhatsApp pattern in codebase |
+| assembleContext.ts session client issue | MEDIUM | Needs empirical verification — may work or may be a latent bug |
+| Per-bot billing model | MEDIUM | Business logic decision, implementation straightforward |
+| Vercel maxDuration constraint | MEDIUM | Known constraint; 60s on Pro verified by community |
+| Setup Wizard deep link pattern | HIGH | Official Telegram docs confirm ?start= parameter behavior |
 
 ---
 
 ## Sources
 
-- Anthropic Claude API documentation — tool use and agent patterns (training knowledge, confidence: MEDIUM; web verification denied)
-- Supabase RLS documentation — multi-tenant isolation pattern (training knowledge + Supabase's documented recommended approach, confidence: HIGH for RLS pattern)
-- Vercel serverless architecture constraints — stateless execution model (training knowledge, confidence: HIGH — fundamental platform constraint)
-- Standard multi-tenant SaaS patterns — Row Level Security approach (MEDIUM — well-established pattern verified by multiple community sources in training)
-- Agent memory taxonomy (semantic/episodic/working) — derived from cognitive science and applied to AI agent systems (MEDIUM — standard framing in AI agent literature)
+- Telegram Bot API official docs — setWebhook: https://core.telegram.org/bots/api#setwebhook
+- Telegram webhook guide: https://core.telegram.org/bots/webhooks
+- Telegram bot tutorial (onboarding patterns): https://core.telegram.org/bots/tutorial
+- Telegram deep links: https://core.telegram.org/api/links
+- Next.js dynamic routes: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+- MakerKit super admin pattern: https://makerkit.dev/docs/next-supabase-turbo/admin/adding-super-admin
+- OtelAI codebase — invokeAgent.ts, whatsapp/webhook/route.ts, resolveHotel.ts, agentFactory.ts (verified by reading)
+- OtelAI DB migrations — 0001-0008 (verified by reading)
 
 ---
 
-*Architecture research for: OtelAI — Multi-agent Hotel Virtual Staff SaaS*
-*Researched: 2026-03-01*
-*Note: Web search and web fetch tools were unavailable during this research session. All findings are based on training knowledge (cutoff August 2025) and project context. Confidence levels reflect this limitation. Verify Claude API tool_use syntax and Supabase RLS specifics against current official documentation before implementation.*
+*Architecture research for: OtelAI Telegram milestone — multi-bot per-tenant agent-native delivery*
+*Researched: 2026-03-06*
+*Note: All Telegram API facts verified against official core.telegram.org documentation. Codebase facts verified by reading source files directly.*

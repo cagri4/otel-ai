@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** OtelAI — AI Virtual Hotel Staff SaaS
-**Domain:** Multi-agent AI SaaS for boutique hotel virtual staff management
-**Researched:** 2026-03-01
-**Confidence:** MEDIUM (stack HIGH via official docs; features/architecture/pitfalls MEDIUM via training knowledge)
+**Project:** OtelAI — Telegram-First Multi-Bot Hotel Staff Platform (v2.0 Milestone)
+**Domain:** Agent-native SaaS — Telegram delivery layer on top of existing hotel AI platform
+**Researched:** 2026-03-06
+**Confidence:** HIGH
 
 ## Executive Summary
 
-OtelAI is a multi-tenant SaaS platform that provides boutique hotels (10-50 rooms) with AI-powered virtual staff members — each with a defined role, persona, and scope — rather than a generic chatbot. The product's core differentiator is the employee metaphor: hotels get a named AI receptionist, booking assistant, and guest experience manager they can configure and "talk to," much like managing real staff. This framing is absent in all identified competitors (Asksuite, Quicktext, HiJiffy), which present as tools or widgets. Research confirms this positioning is technically achievable with the current Claude API and Supabase stack, and the boutique hotel segment has genuine unmet need for 24/7 staff coverage at sub-enterprise cost.
+OtelAI v2.0 adds a Telegram-first delivery layer to an existing, working hotel AI SaaS platform. The core agent pipeline (`invokeAgent → Claude API → tools → persistTurn`) is already built and proven across WhatsApp and web widget channels. This milestone is fundamentally a channel extension, not a greenfield build: the primary engineering challenge is routing Telegram webhooks to the correct hotel and agent role, not building new AI capabilities. The recommended approach is to register a unique dynamic Next.js route per bot (`/api/telegram/[botToken]`), resolve hotel+role from a new `hotel_bots` DB table, and call the existing `invokeAgent()` function identically to the WhatsApp webhook pattern. The new product differentiator is the combination of one-dedicated-bot-per-AI-employee, conversational onboarding via a Setup Wizard bot, and per-employee pricing selection at trial end. No competitor in the hotel SaaS space operates owner management through Telegram.
 
-The recommended architecture is a stateless multi-tenant system: Next.js 16 on Vercel, Supabase PostgreSQL with Row Level Security (RLS) for tenant isolation, and Claude API (`claude-opus-4-6` for guest-facing, `claude-sonnet-4-6` for internal tasks) invoked on-demand with assembled context. Agents are not persistent processes — context is loaded from the database on each invocation and the Claude context window is the working memory for that turn. This is the correct pattern for Vercel's serverless infrastructure. WhatsApp Business API (via gateway) and web chat widget are the primary guest channels; Supabase Realtime delivers live updates to the owner dashboard. Stripe with tiered pricing (per number of active AI employees) handles subscription billing.
+The most significant hard constraint across all research: Telegram has no API for programmatic bot creation. Every bot must be created manually through @BotFather. This is not a limitation to engineer around — it is the intended Telegram platform design and must be reflected in all onboarding UX. The correct architecture response is a super admin panel where the admin creates bots via BotFather, stores the tokens, and registers webhooks server-side before sending the hotel owner a guided Setup Wizard deep link. A second major risk is the existing billing enforcement logic (`enforceAgentLimit()`) which uses tier-based agent caps incompatible with the new per-employee pricing model; this must be replaced before any per-seat billing is exposed to hotel owners.
 
-The most critical risks center on guest-facing AI behavior: hallucinating availability or prices without tool calls, multi-tenant data leakage between hotels, and insufficient human oversight for autonomous agent actions. These must be addressed in architecture before any guest-facing deployment — they are not polish items. Secondary risks include onboarding friction killing activation (boutique hotel owners are not technical; first value must come in under 5 minutes), context window management for long conversations, and timezone handling in a globally deployed booking system.
+Security and reliability require non-negotiable attention in the first phase: bot tokens must be encrypted at rest using Supabase Vault from day one (plaintext exposure would allow impersonation of every hotel's AI employees), and webhook handlers must return HTTP 200 before awaiting the agent response (Telegram's retry behavior causes duplicate AI responses and cascading Claude API costs if the handler blocks). Both patterns follow the existing WhatsApp webhook conventions in the codebase and do not require new infrastructure.
 
 ---
 
@@ -19,201 +19,166 @@ The most critical risks center on guest-facing AI behavior: hallucinating availa
 
 ### Recommended Stack
 
-Supabase (PostgreSQL) wins decisively over Firebase for this use case: the data model is fundamentally relational (hotels, employees, guests, conversations, bookings), and RLS provides tenant isolation at the database layer rather than requiring application-level security reimplementation. The team already has Supabase familiarity from the `spplymarkt` project. One critical constraint from verified Next.js 16 official documentation: WebSockets do not work through Vercel Route Handlers (function closes on timeout) — Supabase Realtime must be subscribed to directly from the client, not proxied through Next.js API routes.
+The project already contains everything needed except the Telegram bot framework. The existing validated stack (Next.js 16, Supabase, Claude API, Twilio, iyzico, Mollie, shadcn/ui, next-intl, Upstash, Resend) is unchanged. Net-new additions are minimal: `grammy` (TypeScript-native Telegram Bot API client, v1.41.1, published 2026-03-05) plus three grammY plugins for conversation state, rate limiting, and flood control. For the super admin dashboard charts, `@tremor/react` wraps Recharts with Tailwind-compatible pre-built components — though Tailwind v4 compatibility is unconfirmed and needs a test render before committing.
 
-**Core technologies:**
-- **Next.js 16 + React 19**: Full-stack framework; App Router Server Components reduce Claude API call latency; Vercel-native deployment — decided
-- **Supabase (PostgreSQL + Auth + Realtime)**: Database with full JOIN support, RLS for multi-tenant isolation, Realtime for live chat — preferred over Firebase on 8/9 decision criteria
-- **Claude API** (`claude-opus-4-6` / `claude-sonnet-4-6`): Guest-facing agents use Opus for quality; background/internal agents use Sonnet for cost efficiency
-- **Tailwind CSS v4**: Default in Next.js 16 (v3 requires explicit downgrade); CSS-first config, Turbopack-compatible
-- **`@supabase/ssr`**: Official Supabase auth package for Next.js App Router; integrates with RLS via `auth.uid()` in policy definitions; listed in Next.js official auth docs
-- **`next-intl` v3**: Listed first in Next.js official i18n docs; Server Component-native; type-safe translation keys; supports EN/TR/DE/FR for target market
-- **Stripe**: Subscription billing; use tiered plans (Starter: 2 agents, Pro: 5, Enterprise: unlimited) over per-seat pricing — simpler to implement and reason about
-- **SSE via Next.js Route Handler**: Streams Claude token output to client; works on Vercel (unlike WebSockets)
+Neither iyzico nor Mollie has native per-seat quantity billing (unlike Stripe). Per-employee pricing is pure business logic: calculate `activeBots × unitPrice` server-side and update the subscription amount at activation/deactivation events. No new billing library is required.
 
-**Do not use:** Firebase (relational data model mismatch), NextAuth (Supabase Auth already handles this), Socket.io (no persistent server on Vercel), LangChain/LangGraph (abstraction overhead with no benefit over direct Claude SDK), Prisma (overlap with Supabase migration tooling).
+**Core new technologies:**
+- `grammy@^1.41.1`: Telegram Bot API client — TypeScript-native, webhook-first, Vercel serverless compatible; preferred over Telegraf due to cleaner types and native multi-bot support
+- `@grammyjs/conversations@^2.1.1`: Multi-step Setup Wizard flows — replay-engine state machine; no manual state management needed
+- `@grammyjs/storage-supabase@^2.5.0`: Session persistence — stores grammY state in existing Supabase DB, no new infrastructure
+- `@grammyjs/auto-retry@^2.0.2`: Telegram 429 handling — automatic retry after `retry_after` interval, essential for multi-bot scale
+- `@grammyjs/transformer-throttler@^1.2.1`: Outbound flood control — prevents hitting Telegram rate limits (30 msg/sec global, 1 msg/sec per chat) during proactive messaging
+- `@tremor/react@^3.18.7`: Admin dashboard charts — KPI cards, bar charts, line charts for subscription analytics; Tailwind v4 compatibility needs verification before committing
 
 ### Expected Features
 
-Research defines 6 AI employee roles. Three are guest-facing (Receptionist, Booking AI, Guest Experience AI) and three are internal-only (Housekeeping Coordinator, Revenue Manager, Finance AI). The MVP must validate the core loop — hotel configures AI → guests interact → owner sees results — before building internal operational roles.
+**Must have (table stakes — without these, the product feels broken):**
+- One dedicated Telegram bot per AI employee role (Front Desk, Booking, Housekeeping, Guest Experience)
+- Deep-link account activation (`t.me/OtelAISetupBot?start={hotelId}`) — standard Telegram onboarding pattern since 2018
+- Setup Wizard bot guiding hotel owner through conversational onboarding with inline keyboard buttons at every step
+- Subscription state enforcement: trial or paid = bots respond; expired = "subscribe to reactivate" message with link
+- Trial countdown notifications via Telegram at days 7, 12, 13, 14
+- Trial-end employee selection flow: inline keyboard showing each employee with usage stats and price; owner taps to select
+- Payment link sent via Telegram to existing web checkout (iyzico/Mollie) — do NOT rebuild payments in Telegram
+- Super admin panel: create hotel accounts, provision bots, generate deep links, view all hotel trial/subscription status
+- Escalation via Telegram (parallel to existing email escalation)
 
-**Must have for v1 (table stakes):**
-- Front Desk AI (Role 1): 24/7 WhatsApp + web chat, FAQ answering, escalation to human, multi-language (EN + TR + 1 EU language)
-- Guest Experience AI (Role 3): Pre-arrival package, checkout reminder, post-stay review request (milestone-triggered)
-- Hotel Knowledge Base: Owner-editable; feeds both guest-facing roles; must exist before any AI can respond meaningfully
-- Owner Dashboard: Chat with AI employees, view conversation history, escalation notification inbox
-- Onboarding Wizard: Guided setup that reaches first working AI response in under 5 minutes; populates knowledge base
-- WhatsApp Business API integration (via gateway, not direct Meta API): Primary guest channel
-- Escalation system: Unhandled requests notify owner within 2 minutes
-- Stripe subscription: Monthly billing with tiered plans
-
-**Should have for v1.x (differentiators after validation):**
-- Booking AI (Role 2): Handles availability inquiries over WhatsApp (HIGH complexity — requires real-time calendar sync)
-- Housekeeping Coordinator (Role 4): Internal room status and task dispatch
-- Guest sentiment tracking: Flags negative sentiment mid-stay for proactive intervention
-- Employee performance analytics: Answers "is this working?" for owners
-- Proactive check-in day message, soft upsell during inquiry
+**Should have (competitive differentiators):**
+- Trial-end selection shows per-employee ROI stats ("handled 47 guest messages this week") — reduces churn at conversion
+- Morning briefing proactive messages from each active bot (daily summary pushed to owner)
+- Per-hotel AI cost visibility in admin panel (token count per hotel for cost management)
+- Setup Wizard bot self-deactivation after onboarding completes (clean UX, no clutter)
+- Employee bots with distinct custom names and avatars reinforcing the employee metaphor
 
 **Defer to v2+:**
-- Revenue Manager AI (Role 5): Requires 3+ months of booking data to be useful
-- Finance AI (Role 6): Requires accounting integration and compliance research
-- Direct booking with payment processing: Requires legal review and dispute-handling design
-- PMS integration (Mews, Cloudbeds): High per-customer integration cost; wait for demand signal
-- Cross-agent collaboration / inter-agent messaging: Validate simpler version first
-- Autonomous rate changes pushed to OTAs: Legal and operational risk; owner-approval required
-
-**Critical anti-features (never build):**
-- Fully autonomous booking with payment (no human confirmation): Legal liability
-- Automated public review responses posted by AI: One bad response goes viral
-- Automated OTA rate changes without approval: Revenue loss risk
-- Generic catch-all AI assistant: Kills the employee metaphor that is the core differentiator
+- Telegram Mini App for richer checkout UI
+- Hotel staff Telegram group integration
+- Multi-language Setup Wizard (EN/TR sufficient for launch markets)
+- AI employee bots responding directly to guests via Telegram (guest channel stays WhatsApp)
+- Single hotel management group with all bots (technically broken — group privacy mode prevents bot identity differentiation)
 
 ### Architecture Approach
 
-The system uses a stateless multi-agent architecture where each AI employee is invoked on-demand (never a persistent process), receives assembled context from the database at call time, and writes results back to the database. Tenant isolation is enforced via RLS at the Supabase layer — every tenant-scoped table has a `hotel_id` column and a RLS policy. Agent-to-agent coordination is asynchronous via a tasks table (never synchronous direct calls between agents). The layered system prompt (role identity → hotel context → agent memory → behavioral instructions) is assembled fresh on every invocation to prevent stale context.
+The Telegram milestone adds a new delivery layer that slots cleanly under the existing agent pipeline. The architecture follows the same pattern as the WhatsApp webhook: a dynamic Next.js route handler validates the incoming request, resolves hotel+role from the database, calls `invokeAgent()` (unchanged), and delivers the response via the channel's send API. The only new DB table is `hotel_bots`, which maps bot tokens to hotel+role with per-bot webhook secrets. The Setup Wizard bot is a special case (single shared bot, not per-hotel) that resolves hotel context from the `?start={hotelId}` deep link payload. The super admin panel is a new route group (`/admin`) protected by JWT `app_metadata.role = 'super-admin'`, built with existing shadcn/ui and Tremor components.
 
 **Major components:**
-1. **Hotel Owner Dashboard** (Next.js authenticated area): Chat with AI staff, configure employees, monitor tasks, view reports
-2. **Guest-Facing Layer**: Embeddable web chat widget + WhatsApp webhook handler; uses hotel token for tenant identification (no auth required from guest)
-3. **API Layer** (Next.js Route Handlers): Routes messages to correct agent, enforces tenant isolation, handles rate limiting
-4. **Agent Orchestration Layer** (`lib/agents/`): Stateless `invokeAgent()` function; assembles context, calls Claude API, parses tool_use blocks, persists responses, triggers notifications
-5. **Agent Context Bus** (Supabase tables, not a runtime bus): Shared hotel knowledge and per-agent memory loaded at invocation time
-6. **Notification Service**: Supabase Realtime for in-app push; Resend for transactional email escalations
-7. **Stripe Billing**: Subscription management with Stripe Customer Portal for self-serve plan changes
+1. `hotel_bots` table — maps bot token to hotel+role+webhook_secret; hot-path lookup on every Telegram message (indexed on `bot_token`)
+2. `POST /api/telegram/[botToken]/route.ts` — dynamic webhook handler; validates secret header, resolves hotel, calls invokeAgent, sends reply; always returns 200
+3. `lib/telegram/sendMessage.ts` + `lib/telegram/registerWebhook.ts` — thin utility layer mirroring existing `lib/whatsapp/sendReply.ts` pattern
+4. `/admin` route group + `/api/admin/**` routes — super admin UI for hotel creation, bot provisioning, deep link generation; guarded by JWT role
+5. Modified `escalation.ts` — add `tg_` channel prefix detection; add `'telegram'` to DB CHECK constraint on `escalations.channel`
+6. Modified `billing/plans.ts` — replace tier-based `enforceAgentLimit()` with `checkBillingStatus()` for per-seat model
 
-**Key patterns to follow:**
-- Agent Factory with Role Registry: Central `AGENT_REGISTRY` maps role enum to role definition (prompt template, allowed tools, memory scope, guest-facing flag)
-- Streaming Response with Structured Action Extraction: Claude `tool_use` blocks for structured actions alongside natural language text — no fragile string parsing
-- Hybrid Autonomous + Interactive Mode: Same `invokeAgent()` handles both; autonomous mode triggered by Vercel Cron every 15 minutes
-- Three-Tier Memory: Semantic (hotel facts, loaded every call), Episodic (guest-specific history, loaded conditionally), Working (last 15-20 conversation turns)
+**Build order (from ARCHITECTURE.md):**
+1. DB migration (`hotel_bots` table + escalations channel constraint)
+2. `lib/telegram/` utilities (sendMessage, registerWebhook)
+3. Webhook route handler (core of the channel)
+4. Bot provisioning API (admin backend)
+5. Super admin UI + hotel creation
+6. Bot provisioning UI
+7. Setup Wizard bot handler
+8. Per-bot billing enforcement
 
 ### Critical Pitfalls
 
-1. **Guest-facing AI hallucinating prices/availability** — Enforce a "tool-first" policy: agent physically cannot answer availability or price questions without a successful tool call. Add to system prompt: "Never state room prices or availability unless retrieved from tools in this conversation." Test acceptance: disconnect DB tool, verify agent refuses to answer.
+1. **BotFather is manual-only — design UX around it** — There is no API to create Telegram bots. Every token comes from a human running `/newbot` in BotFather. The wizard must guide the owner through this step with inline instructions. Attempting to automate it violates Telegram ToS. The wizard must be resumable at the token-paste step.
 
-2. **Multi-tenant data leakage between hotels** — Every system prompt must be hotel-specific (never a shared constant). All tool calls require `hotel_id` as a non-optional parameter. RLS is the second layer (first layer is application filtering). Audit test: two test hotels with different pricing, verify zero cross-contamination.
+2. **Plaintext bot token storage causes catastrophic breach** — A single DB exposure lets an attacker impersonate every hotel's AI employees. Use Supabase Vault from day one. Log only the first 10 characters of any token. Never expose tokens to the browser-side client.
 
-3. **Agent autonomy without human oversight (runaway agent)** — Classify all agent actions as OBSERVE / INFORM / ACT. ACT-class actions (sends external communication, modifies booking, charges guest, affects multiple guests) require hotel owner confirmation or a pre-approved rule. Log all autonomous actions with 5-minute undo buffer. Design approval architecture before giving any agent write access to external systems.
+3. **Webhook handler must return 200 before awaiting the agent** — Blocking on `invokeAgent()` triggers Telegram retry storms: up to 3 retries, each triggering another Claude API call and potentially sending duplicate replies. Return 200 immediately after validating the secret header. Deduplicate by `update_id` to handle retries during outages.
 
-4. **Context window exhaustion in long conversations** — Never dump raw full conversation history into every Claude call. Implement rolling context from day one: last N turns raw + older turns compressed into structured summary (`{ commitments, preferences, open_requests }`). Update summary after each exchange using a lightweight model call (Haiku).
+4. **Per-bot routing requires per-bot URL and per-bot secret** — Sharing one webhook URL or one `secret_token` makes it impossible to identify which hotel received a message (Telegram update payloads do not include the receiving bot's token). Use `[botToken]` dynamic route + unique `webhook_secret` per bot. Validate both before invoking any agent.
 
-5. **API latency making real-time chat feel broken** — Use streaming (SSE) for all guest-facing and owner-facing chat from the first day — it cannot be retrofitted without restructuring the response pipeline. Add typing indicator immediately on message send. Use `claude-haiku` for simple factual lookups; escalate to Opus/Sonnet only for complex reasoning.
+5. **Existing tier-based billing enforcement blocks per-seat activations** — `enforceAgentLimit()` uses hard caps (2, 4, 6 agents) incompatible with unlimited per-seat billing. Replace with subscription-active check. Update iyzico and Mollie product catalogs before any trial-expiry email is sent. Null `hotels.country` breaks provider routing at the worst moment (trial end).
 
-6. **Onboarding friction killing activation** — Design for first value in under 5 minutes: hotel name, city, and contact is enough to start. Use progressive onboarding where AI staff ask for missing info during first "shift." Pre-populate boutique hotel defaults (check-in 3pm, check-out 11am). Track funnel step by step; any step with >20% drop-off gets redesigned before launch.
+6. **MarkdownV2 escaping causes silent message failures** — Claude outputs standard Markdown; Telegram MarkdownV2 requires escaping of `.`, `!`, `(`, `)`, `-` and others. An unescaped character causes Telegram to reject the entire `sendMessage` call with a 400 error and the owner receives nothing. Build `formatForTelegram()` before connecting any agent to Telegram output. Prefer `parse_mode: "HTML"` for simpler escaping.
 
-7. **Timezone handling disasters** — All timestamps stored as UTC in PostgreSQL (`timestamptz`). Convert to hotel-local time at display layer only. Pass explicit hotel timezone context (IANA string, e.g., `Europe/Istanbul`) in every agent call. Use `date-fns-tz` or `luxon` — never raw JavaScript Date for timezone-sensitive operations.
+7. **Setup Wizard drop-off requires durable session state** — Conversational onboarding has 3x higher abandonment than form-based flows. Wizard state must persist in Supabase (`setup_wizard_sessions` table), not in-memory. Handle `/start` as a resume command at every step. Show the AI working after step 3, not step 7. Send a 24-hour re-engagement message on wizard stall.
 
 ---
 
 ## Implications for Roadmap
 
-Based on the architectural dependency chain and pitfall phase mapping, the following phase structure is recommended. Architecture research explicitly defines the build order; pitfalls map each risk to the phase where it must be prevented.
+Based on research, the dependency graph is clear. The webhook infrastructure is the critical path blocker for all other Telegram work. Billing model changes must be completed before any trial-expiry flow is exposed to hotel owners. The Setup Wizard is the highest-complexity feature (stateful conversation, BotFather guidance, resumability) and should be built after the simple employee-bot webhook is proven working.
 
-### Phase 1: Foundation — Database, Auth, Multi-Tenancy
+### Phase 1: Database Foundation + Telegram Webhook Infrastructure
 
-**Rationale:** Everything else depends on the data model. RLS must be designed into the schema from day one — retrofitting it after second hotel is onboarded is a critical failure mode. Auth and tenant context extraction must exist before any API route is built. Timezone strategy, message sequencing, and data retention policy must be decided now.
-**Delivers:** Supabase schema with RLS, `@supabase/ssr` auth, tenant context middleware, hotel CRUD, basic hotel knowledge base storage
-**Addresses:** Platform-level features (subscription, hotel config)
-**Avoids:** Multi-tenant data leakage (Pitfall 2), timezone disasters (Pitfall 6)
-**Research flag:** Standard — well-documented Supabase RLS patterns; skip research-phase
+**Rationale:** All Telegram work is blocked without the `hotel_bots` table. The webhook handler is the critical path. Security (Vault, per-bot secrets, MarkdownV2 escaping, async 200 response) must be established before any token is stored or any bot goes live. This phase has no UI — pure backend. Verifiable with a single test bot against the live endpoint.
 
-### Phase 2: Agent Core + First AI Employee (Receptionist, Owner-Facing Only)
+**Delivers:** Working Telegram webhook that routes messages to `invokeAgent()` and responds. A test hotel owner can message a bot and get an AI reply. Escalations correctly categorized as `channel = 'telegram'`. Bot token storage via Supabase Vault confirmed.
 
-**Rationale:** Prove the agent pattern with one role before building five. The agent orchestrator, context builder, memory system, and layered system prompt assembly are the engine of the entire product. Owner-facing chat (no external channels yet) limits blast radius while the pattern is validated. Tool-first policy and least-privilege tool scoping must be implemented here.
-**Delivers:** `invokeAgent()`, `context-builder`, `memory.ts`, agent factory/registry, Role 1 (Receptionist) working in owner dashboard chat
-**Addresses:** Owner dashboard, chat with AI employees
-**Avoids:** Guest-facing hallucination (Pitfall 1 — enforce tool-first before any guest exposure), prompt injection (Pitfall 4)
-**Research flag:** Needs research-phase — Claude tool_use syntax, streaming response patterns, and prompt engineering for hotel domain require careful validation
+**Addresses:** Employee bot responses (table stakes), subscription enforcement in bots, escalation channel
 
-### Phase 3: Onboarding Wizard + Hotel Knowledge Base Editor
+**Avoids:** Webhook routing collapse (per-bot URL + secret), plaintext token storage (Vault from day one), retry storms (async 200 return), escalation mismatch (`tg_` prefix detection), MarkdownV2 failures (`formatForTelegram` utility), conversation ID collision (`tg_` namespace)
 
-**Rationale:** No agent is useful without hotel context. The onboarding flow is the critical activation bottleneck — research explicitly warns it is commonly built last and should be built first. Progressive onboarding reduces time-to-first-value below 5 minutes. This phase also builds the knowledge base editor that feeds both guest-facing roles.
-**Delivers:** Multi-step onboarding wizard (hotel name/city/contact → first working AI), hotel knowledge base UI (owner-editable FAQs, room info, local recommendations), pre-populated boutique hotel defaults
-**Addresses:** Onboarding wizard (P1 feature), hotel knowledge base editor (P1 feature)
-**Avoids:** Onboarding friction (Pitfall 10)
-**Research flag:** Standard — form UX and data management are well-understood; skip research-phase
+**Research flag:** Standard patterns — mirrors existing WhatsApp webhook implementation; Telegram API official docs are comprehensive. Skip `/gsd:research-phase`.
 
-### Phase 4: Guest-Facing Layer + WhatsApp Integration
+### Phase 2: Super Admin Panel + Bot Provisioning
 
-**Rationale:** After the agent pattern is proven with the owner, open the external guest channel. WhatsApp is the primary revenue-generating channel for guest interactions. Web chat widget serves hotels without WhatsApp setup. Rate limiting, input sanitization, and least-privilege guest tool scoping are mandatory before this goes live.
-**Delivers:** Embeddable web chat widget, WhatsApp webhook handler (via gateway — not direct Meta API), hotel token-based tenant identification for unauthenticated guests, rate limiting per IP and per hotel, streaming SSE response pipeline, typing indicator
-**Addresses:** Front Desk AI (Role 1) guest-facing features, multi-language support (EN + TR + 1 EU language)
-**Avoids:** API latency UX failure (Pitfall 8 — streaming must be implemented here, not retrofitted), multi-language failures (Pitfall 7), prompt injection from guest input (Pitfall 4)
-**Research flag:** Needs research-phase — WhatsApp Business API gateway options (Twilio vs MessageBird vs others), Meta Business verification requirements, current API pricing
+**Rationale:** Bot provisioning is currently a manual curl-command flow. The super admin UI turns it into a repeatable operation. Hotel creation triggers the existing `handle_new_user` Supabase trigger, so no new user-creation logic is needed — just an admin interface. This phase gates all downstream hotel onboarding.
 
-### Phase 5: Guest Experience AI (Role 3) + Escalation System
+**Delivers:** Super admin can create hotel accounts, provision 4+ employee bots per hotel (entering BotFather tokens + triggering `setWebhook`), generate Setup Wizard deep links, and view all hotels with trial/subscription status in a Tremor-powered dashboard.
 
-**Rationale:** Guest Experience AI is lower complexity than Booking AI (no real-time calendar sync required) and delivers high guest satisfaction value through milestone-triggered messages. The escalation system is a prerequisite for any trust in the guest-facing layer — owners need confidence the AI will involve them when needed.
-**Delivers:** Pre-arrival package trigger (D-1), checkout reminder (morning of), post-stay review request (24h post-checkout), escalation system (unresolved requests notify owner within 2 minutes via email), notification inbox in owner dashboard
-**Addresses:** Guest Experience AI (P1), escalation system (P1)
-**Avoids:** Runaway agent without oversight (Pitfall 9 — escalation is the human oversight mechanism for guest-facing roles)
-**Research flag:** Standard — milestone-triggered messages and notification patterns are well-documented; skip research-phase
+**Uses:** shadcn/ui, `@tremor/react` (verify Tailwind v4 compatibility early), Supabase service-role client, `lib/telegram/registerWebhook.ts` (from Phase 1), JWT `app_metadata.role = 'super-admin'` guard
 
-### Phase 6: Stripe Subscription Billing
+**Avoids:** BotFather-manual constraint (admin handles provisioning for v1, owners never need to touch BotFather), Vault token storage confirmed in workflow
 
-**Rationale:** Billing is deferred until core value is proven — consistent with PITFALLS.md recommendation. Free/trial model for early hotels validates product fit before introducing payment friction. Tiered pricing (Starter/Pro/Enterprise by number of active agents) is simpler to implement than pure per-seat. Stripe Customer Portal eliminates need for custom billing UI.
-**Delivers:** Stripe subscription checkout, tiered plan enforcement (agent count limits by tier), Stripe webhook handler (idempotent), Stripe Customer Portal integration, mid-cycle upgrade/downgrade handling, cancellation flow with data retention grace period
-**Addresses:** Stripe subscription (P1 feature)
-**Avoids:** Billing complexity and revenue leakage (Pitfall 11), idempotency failures on Stripe webhook re-delivery
-**Research flag:** Standard — Stripe subscription billing with proration is well-documented; skip research-phase
+**Research flag:** Standard patterns — Next.js admin route group, Supabase auth.admin API, MakerKit JWT role pattern all documented. Install Tremor early and test one chart render before committing; if Tailwind v4 incompatible, use `recharts` directly. Skip `/gsd:research-phase` but validate Tremor install in the first task.
 
-### Phase 7: Booking AI (Role 2) + Conversation Management
+### Phase 3: Setup Wizard Bot (Conversational Onboarding)
 
-**Rationale:** Booking AI is HIGH complexity (requires real-time calendar/availability data, potential double-booking race conditions, payment flow). Deferred until the guest communication foundation is stable. Conversation management (rolling context window, summarization) is also addressed here — Booking AI conversations about availability and pricing are high-stakes and multi-turn.
-**Delivers:** Booking inquiry handling over WhatsApp, availability lookup tool (transactional, atomic), soft upsell during inquiry, rolling context with structured summary (`commitments`, `preferences`, `open_requests`), token budget monitoring
-**Addresses:** Booking AI (P2 feature)
-**Avoids:** Booking race conditions (Pitfall 5 — atomic SELECT + INSERT transactions), context window exhaustion (Pitfall 3), hallucinated availability (Pitfall 1 — reiterate tool-first policy)
-**Research flag:** Needs research-phase — PostgreSQL transaction patterns for atomic booking, current calendar sync options for boutique hotels without PMS
+**Rationale:** Highest-complexity feature — stateful multi-step conversation with BotFather guidance, drop-off recovery, and hotel knowledge base seeding. Depends on Phase 1 (webhook infrastructure) and Phase 2 (hotel record exists before wizard links to it). Uses `@grammyjs/conversations` plugin for wizard state management over the replay engine.
 
-### Phase 8: Internal Operations — Housekeeping + Autonomous Mode
+**Delivers:** Hotel owner receives email with deep link, taps it, completes conversational onboarding via Telegram (hotel name, city, room count, language), sees all 4 employee bots activated with direct links. Trial starts. Knowledge base seeded via existing `update_hotel_info` tool. Wizard resumes after drop-off. Re-engagement message sent after 24-hour stall.
 
-**Rationale:** Internal roles (Housekeeping Coordinator) are lower urgency but add significant operational value once guest-facing roles are generating usage data. Autonomous mode (cron-triggered agent invocations) is introduced here — only after interactive mode is stable and the action approval architecture is in place.
-**Delivers:** Housekeeping Coordinator (room status board, cleaning priority queue, task assignment), autonomous agent mode (Vercel Cron every 15 minutes), action classification system (OBSERVE / INFORM / ACT), approval queue for ACT-class actions, audit log for all agent actions, undo buffer (5-minute window)
-**Addresses:** Housekeeping Coordinator (P2), employee on/off scheduling
-**Avoids:** Runaway agent (Pitfall 9 — ACT-class approval architecture must be built before autonomous write access)
-**Research flag:** Needs research-phase — Vercel Cron limitations and scheduling patterns, pg_cron vs Vercel Cron trade-offs
+**Implements:** Setup Wizard bot handler (special `/start {hotelId}` detection), `setup_wizard_sessions` table for durable state, `@grammyjs/conversations` replay engine, BotFather token-entry guidance step with inline screenshot/instructions, 5-step-max-before-value constraint
 
-### Phase 9: Analytics + Dashboard Polish
+**Avoids:** Wizard drop-off (Supabase-persisted sessions, resume on any message), BotFather UX confusion (step-by-step guide inline in wizard), all 7-step abandonment traps
 
-**Rationale:** Analytics require data — they can only be built after multiple phases of production usage. Performance reports answer the owner's question "is this working?" and drive retention. Dashboard polish reduces churn by improving the day-to-day owner experience.
-**Delivers:** AI employee performance reports (conversations handled, escalations, response times), sentiment tracking, guest conversation history view, mobile-responsive dashboard improvements, white-label / branded guest chat widget
-**Addresses:** Employee performance analytics (P2), guest sentiment tracking (P2), white-label (differentiator)
-**Avoids:** (no new pitfalls introduced — low risk phase)
-**Research flag:** Standard — analytics aggregation and dashboard UX are well-understood; skip research-phase
+**Research flag:** Needs `/gsd:research-phase` — `@grammyjs/conversations` v2.x has specific patterns for `conversation.external()` wrappers around Supabase calls; replay engine behavior on session resumption after days-long gap needs verification against current docs.
 
-### Phase 10: Revenue Manager + Finance AI (v2)
+### Phase 4: Billing Model Migration + Trial-End Conversion Flow
 
-**Rationale:** Revenue Manager AI requires 3+ months of booking data to produce meaningful pricing recommendations. Finance AI requires accounting integration research and compliance validation. Both are explicitly scoped to v2+ in FEATURES.md. Build only after Phases 1-9 establish a stable, revenue-generating foundation.
-**Delivers:** Revenue Manager AI (occupancy dashboard, RevPAR reporting, pricing recommendations requiring owner approval), Finance AI (daily revenue summary, expense logging via chat, monthly P&L)
-**Addresses:** Revenue Manager AI (P3), Finance AI (P3)
-**Avoids:** Automated rate changes without approval (anti-feature), autonomous financial actions without oversight (Pitfall 9)
-**Research flag:** Needs research-phase — revenue management domain knowledge, accounting integration options, tax compliance by market (NL, TR)
+**Rationale:** Per-employee pricing is a breaking change to existing billing enforcement. Must be completed before any trial-end flow is shipped. The trial-end Telegram selection flow (inline keyboard with ROI stats per employee) is the highest-stakes conversion moment; every friction point in the checkout flow costs approximately 3% conversion rate.
+
+**Delivers:** `enforceAgentLimit()` replaced with subscription-active check. iyzico and Mollie product catalogs updated to per-employee pricing. Trial countdown notifications (days 7, 12, 13, 14) sent via Telegram. Trial-end employee selection flow with per-employee usage stats, pricing, and confirmation. Payment deep link to web checkout. Null `hotels.country` handled before checkout routing. Active/inactive bots updated based on selection.
+
+**Implements:** Billing enforcement refactor, per-bot billing sync on activation/deactivation, Mollie `update-subscription` amount update pattern, iyzico plan tiering strategy (fixed plans vs dynamic amounts — requires support confirmation), `subscriptions` table extended with `price_per_bot_eur/try`, trial notification cron
+
+**Avoids:** Tier-billing conflicts (replace enforceAgentLimit entirely), trial-to-paid drop-off (ROI stats, correct provider routing, country null guard), prorated mid-cycle billing surprises
+
+**Research flag:** Needs `/gsd:research-phase` — iyzico's support for dynamic subscription amount updates is MEDIUM confidence and requires direct iyzico support confirmation before committing. Mollie `update-subscription` live amount change behavior needs a test against the Mollie sandbox. Prorated billing for both providers mid-cycle is not fully documented.
+
+### Phase 5: Proactive Messaging + Operational Polish
+
+**Rationale:** Proactive features (morning briefings, milestone dispatch via Telegram) extend the existing cron infrastructure. Rate limiting must be correct before scaling to multiple hotels simultaneously. These features add retention value but are not blocking for initial launch.
+
+**Delivers:** Morning briefing messages from each active employee bot (daily summary). Rate-limited Telegram send queue replacing `Promise.all()` in cron jobs. Escalation delivery via Telegram (parallel to email). Per-hotel AI usage visibility in admin panel (Tremor charts for token costs).
+
+**Implements:** `@grammyjs/transformer-throttler` integration, rate-limited queue (20 msg/sec global, 1 msg/sec per chat), 429 retry with `retry_after` plus jitter, `milestoneDispatch.ts` Telegram extension, admin panel AI cost dashboard, Telegram escalation send path alongside existing email
+
+**Avoids:** Send rate limit 429 storms (throttler + queue replace `Promise.all()`), `update_id` deduplication during retry storms, bulk send failures
+
+**Research flag:** Standard patterns for rate limiting and cron extension. Skip `/gsd:research-phase`.
 
 ### Phase Ordering Rationale
 
-- **Foundation before agents:** Schema + RLS must exist before any API route or agent code is written. Adding multi-tenancy after the fact is one of the most expensive architectural retrofits.
-- **Owner-facing before guest-facing:** Validating the agent pattern in a low-risk environment (owner talks to AI) before exposing it to external guests limits blast radius of early implementation errors.
-- **Onboarding before channels:** The knowledge base must be populated before guest-facing channels go live. An AI receptionist with no hotel context is worse than no AI at all.
-- **Billing after core value:** Introducing payment friction before the product has proven value kills early adoption. Free trial for first cohort is the right tradeoff.
-- **Booking AI after guest communication:** Real-time calendar sync, atomic transactions, and booking race conditions add substantial complexity. Build on a stable foundation.
-- **Autonomous mode after interactive:** Autonomous agents writing to external systems require an approval architecture that can only be validated after interactive mode is fully tested.
-- **Analytics last:** Data must exist before it can be analyzed. Analytics built before usage data exists are engineering waste.
+- **Infrastructure before UI:** Phase 1 (DB + webhook) unblocks all Telegram work. Phase 2 (admin UI) unblocks hotel onboarding. Phase 3 (wizard) unblocks owner self-service. This dependency chain is dictated by architecture.
+- **Security from day one:** Bot token Vault encryption and per-bot webhook secrets are Phase 1 requirements, not retrofits. Retrofitting encryption after tokens are stored in plaintext requires a migration of live credentials — high-risk operation.
+- **Billing before conversion:** Phase 4 must complete before any trial-expiry notification is sent. Sending owners to a checkout page with wrong pricing or wrong provider routing at trial end is a one-chance failure that cannot be recovered gracefully.
+- **Proactive features last:** Phase 5 adds retention value but has no hard dependencies beyond Phase 1. It ships after the core owner-bot interaction loop is validated.
 
 ### Research Flags
 
-Phases likely needing `/gsd:research-phase` during planning:
-- **Phase 2 (Agent Core):** Claude tool_use API syntax, streaming response patterns, prompt engineering for hotel domain — verify current SDK before implementation
-- **Phase 4 (WhatsApp Integration):** Gateway options, Meta Business verification requirements, API pricing and limitations — external dependencies with frequent changes
-- **Phase 7 (Booking AI):** PostgreSQL atomic booking transactions, calendar sync options for boutique hotels without PMS — complex domain with legal implications
-- **Phase 8 (Autonomous Mode):** Vercel Cron constraints, pg_cron vs external scheduler trade-offs — infrastructure decisions with significant cost and reliability implications
-- **Phase 10 (Revenue Manager + Finance AI):** Revenue management domain knowledge, accounting integration options, tax compliance by market — specialized domain outside training confidence
+**Needs `/gsd:research-phase` during planning:**
+- **Phase 3 (Setup Wizard):** `@grammyjs/conversations` v2.x replay engine behavior on session resume after days-long gap; `conversation.external()` wrapping patterns for Supabase calls in the replay context; wizard state resumption mechanics need implementation verification against current grammY docs
+- **Phase 4 (Billing Migration):** iyzico dynamic subscription amount support is MEDIUM confidence — needs iyzico support confirmation before committing to dynamic per-seat vs tiered fixed plans; Mollie `update-subscription` live amount change behavior needs sandbox test; prorated billing behavior for both providers
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Foundation):** Supabase RLS, Next.js App Router auth — extensively documented official patterns
-- **Phase 3 (Onboarding):** Multi-step forms, data management UI — well-established UX patterns
-- **Phase 5 (Guest Experience + Escalation):** Milestone-triggered messages, email notifications — standard patterns with established libraries
-- **Phase 6 (Stripe Billing):** Stripe subscription billing with proration — official docs are comprehensive
-- **Phase 9 (Analytics + Polish):** Dashboard analytics, UI refinement — well-understood patterns
+**Standard patterns — skip `/gsd:research-phase`:**
+- **Phase 1 (Telegram Infrastructure):** Mirrors existing WhatsApp webhook; official Telegram API docs cover all patterns comprehensively; Next.js dynamic routes are standard
+- **Phase 2 (Admin Panel):** Standard Next.js admin route group; Supabase auth.admin API is documented; JWT role guard pattern is established
+- **Phase 5 (Proactive Messaging):** grammY throttler plugin documented; rate limiting is standard queue pattern
 
 ---
 
@@ -221,50 +186,49 @@ Phases with standard patterns (skip research-phase):
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core framework (Next.js 16, Tailwind v4, Supabase auth pattern, WebSocket constraint) verified against official Next.js 16.1.6 documentation dated 2026-02-27. Claude models confirmed from system context. Stripe and `@supabase/ssr` from official Next.js auth docs. |
-| Features | MEDIUM | Domain knowledge and competitor analysis from training data (cutoff Aug 2025); web verification unavailable. Hotel operations patterns are stable and unlikely to have changed significantly. Competitor feature claims need validation before positioning decisions. |
-| Architecture | MEDIUM-HIGH | Multi-tenant RLS pattern is Supabase's documented recommended approach (HIGH). Stateless agent invocation on Vercel serverless is a fundamental platform constraint (HIGH). Agent memory taxonomy and prompt layering are well-established patterns (MEDIUM). Claude tool_use syntax needs verification against current API docs. |
-| Pitfalls | MEDIUM | Core pitfalls (prompt injection, race conditions, context overflow, multi-tenant leakage) are universal to AI SaaS and well-documented across multiple sources. Specific rate limits and token limits for current Claude models need verification at docs.anthropic.com. |
+| Stack | HIGH | npm versions verified live (2026-03-06); grammY official docs comprehensive; only Tremor/Tailwind v4 is LOW confidence with a recharts fallback available |
+| Features | MEDIUM-HIGH | Telegram API patterns HIGH; hotel-specific multi-bot SaaS is novel with no direct comparators; per-employee pricing UX patterns MEDIUM from general SaaS literature |
+| Architecture | HIGH | Existing codebase read directly; Telegram API official docs verified for all patterns; dynamic route + per-bot secret pattern confirmed in community production use; one latent bug identified (assembleContext session client on webhooks) |
+| Pitfalls | HIGH | Telegram API mechanics verified against official docs; codebase-specific pitfalls derived from reading actual source files (invokeAgent.ts, billing/plans.ts, whatsapp/webhook/route.ts); billing/UX conversion patterns MEDIUM from SaaS benchmarks |
 
-**Overall confidence:** MEDIUM-HIGH
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Claude API current rate limits and exact token context windows per model**: Verify at docs.anthropic.com before designing conversation management and caching strategy. Research used training data.
-- **WhatsApp Business API gateway comparison (Twilio vs MessageBird vs Vonage vs direct Meta API)**: Pricing and SLA have likely changed since Aug 2025. Research-phase before Phase 4.
-- **Supabase Realtime pricing tier limits**: Verify current connection and message limits on Supabase Pro before designing notification architecture at scale.
-- **Stripe SDK version compatibility**: Research used `^16.x` — verify current version and any breaking changes before Phase 6.
-- **Competitor feature verification**: All competitor capability claims (Asksuite, HiJiffy, Quicktext) should be validated against current product pages before finalizing positioning.
-- **GDPR compliance specifics for hotel guest data in the Netherlands and Turkey**: Both are target markets with different compliance requirements. Needs legal review before any guest PII is stored.
-- **WhatsApp Business API Meta verification timeline**: Direct Meta API requires business verification that can take 4-8 weeks. Plan accordingly; use gateway provider to bypass this for MVP.
+- **Tremor/Tailwind v4 compatibility:** Install `@tremor/react` early in Phase 2 and render a BarChart in isolation. If incompatible, use `recharts@^3.7.0` directly with shadcn styling — same underlying engine.
+- **iyzico dynamic subscription amounts:** Contact iyzico support before Phase 4 design begins. Cannot be resolved by code alone. Determine: dynamic amount update vs tiered fixed plans. This is a billing architecture decision.
+- **Vercel function timeout with Claude + tool chains:** Vercel Pro 60s timeout is assumed. If complex tool chains (5 recursion rounds) approach 60s, Phase 5 will need Upstash QStash for background processing. Monitor in Phase 1 with realistic agent calls.
+- **`assembleContext.ts` session client behavior on webhook calls:** ARCHITECTURE.md flags a potential latent bug: `assembleContext.ts` calls `createClient()` (session-based) inside `invokeAgent()` which is called from webhook handlers with no session cookies. Phase 1 must test this explicitly and add `_serviceClient` param to `invokeAgent` if broken. May be an existing silent bug in the WhatsApp webhook.
+- **BotFather flow UX validation:** Confirm whether hotel owners find the manual BotFather step acceptable in real usability testing. If it causes consistent drop-off, default to super-admin-creates-all-bots model for all hotels (admin handles BotFather, owners never touch it).
 
 ---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `https://nextjs.org/docs/app/guides` — Next.js 16.1.6 guides index, verified 2026-02-27
-- `https://nextjs.org/docs/app/guides/authentication` — Supabase as recommended auth, `@supabase/ssr`, `jose`, Zod
-- `https://nextjs.org/docs/app/guides/internationalization` — `next-intl` listed first, locale routing pattern
-- `https://nextjs.org/docs/app/guides/backend-for-frontend` — WebSocket constraint on Vercel confirmed
-- `https://nextjs.org/docs/app/guides/production-checklist` — Tailwind v4 default confirmed, `@tanstack/react-query`
-- `https://nextjs.org/docs/app/guides/tailwind-v3-css` — v4 is default; v3 requires explicit downgrade
-- Claude model information (claude-opus-4-6, claude-sonnet-4-6) — confirmed via system context
-- Supabase RLS multi-tenancy — Supabase's documented recommended approach for SaaS
+- Telegram Bot API official docs (`core.telegram.org/bots/api`) — setWebhook, secretToken, rate limits, retry behavior, deep links
+- Telegram webhook guide (`core.telegram.org/bots/webhooks`) — retry behavior, SSL requirements, 60-second timeout
+- Telegram Bots FAQ (`core.telegram.org/bots/faq`) — rate limits (30 msg/sec global, 1 msg/sec per chat, 20 msg/min groups)
+- grammY official docs (`grammy.dev`) — Vercel hosting, webhookCallback, conversations plugin, flood limits
+- Supabase Vault docs (`supabase.com/docs/guides/database/vault`) — encrypted column storage, statement logging warning
+- OtelAI codebase (direct file reads) — `invokeAgent.ts`, `whatsapp/webhook/route.ts`, `agentFactory.ts`, `billing/plans.ts`, `billing/enforcement.ts`, migrations 0001-0008
+- npm registry (live `npm info` calls 2026-03-06) — grammy@1.41.1, @grammyjs/conversations@2.1.1, @tremor/react@3.18.7, recharts@3.7.0
 
 ### Secondary (MEDIUM confidence)
-- Hotel operations domain knowledge — training data, cutoff Aug 2025; stable domain
-- Competitor analysis (Asksuite, Quicktext, HiJiffy, Cloudbeds, Apaleo, Chekin) — training data; needs validation
-- Claude API tool_use patterns and streaming — training data; verify at docs.anthropic.com
-- Stripe subscription billing patterns — training data; verify current SDK
-- Agent memory taxonomy (semantic/episodic/working) — established pattern in AI agent literature
-- OWASP LLM Top 10 (prompt injection, least privilege) — established security framework
+- SaaS per-seat pricing patterns (getmonetizely.com, metronome.com, schematichq.com) — per-employee pricing pitfalls and enforcement patterns
+- Mollie subscriptions API docs — update-subscription amount changes, no native quantity multiplier confirmed
+- iyzico subscription docs — fixed-amount plans, no per-seat quantity parameter confirmed
+- Trial-to-paid conversion benchmarks (pulseahead.com) — 15-25% opt-in, 5-15% opt-out conversion rates
+- MakerKit super admin pattern — JWT app_metadata.role approach for Next.js + Supabase
+- Telegram conversational onboarding patterns (coincodecap.com, voiceflow.com/blog) — wizard design principles
+- NN/g new AI user onboarding research — 3x higher abandonment for chatbot-only vs hybrid onboarding
 
-### Tertiary (LOW confidence — validate before use)
-- WhatsApp Business API gateway options and pricing — training data; frequent API changes
-- Supabase Realtime current pricing tier limits — training data; verify at supabase.com
-- Competitor-specific pricing and feature availability — may have changed post-Aug 2025
+### Tertiary (LOW confidence — needs validation)
+- Tremor/Tailwind v4 compatibility — NOT confirmed; community reports mixed; needs live test install
+- iyzico dynamic amount subscription support — official docs show no quantity parameter; direct support confirmation required
+- Hotel-specific Telegram owner-management SaaS patterns — no direct comparators found; patterns inferred from general Telegram bot SaaS literature
 
 ---
-*Research completed: 2026-03-01*
+
+*Research completed: 2026-03-06*
 *Ready for roadmap: yes*
