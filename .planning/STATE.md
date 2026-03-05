@@ -2,19 +2,17 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-02)
+See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 8 — Housekeeping Coordinator
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first)
 
 ## Current Position
 
-Phase: 8 of 8 (Housekeeping Coordinator) — COMPLETE
-Plan: 2 of 2 completed
-Status: All plans complete
-Last activity: 2026-03-05 — Completed 08-02-PLAN.md (housekeeping queue cron at 07:00 UTC, assign_cleaning_task tool with Resend email, HOUSEKEEPING_COORDINATOR upgraded to 3 tools)
-
-Progress: [████████████████████████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-06 — Milestone v2.0 started
 
 ## Performance Metrics
 
