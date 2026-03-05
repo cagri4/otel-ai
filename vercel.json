@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/milestone-dispatch",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/housekeeping-queue",
+      "schedule": "0 7 * * *"
     }
   ]
 }
