@@ -54,7 +54,7 @@ Plans:
 - [x] 02-01-PLAN.md — Schema migration (memory tables + agent_tasks), TypeScript types, memory helpers (Wave 1)
 - [x] 02-02-PLAN.md — Agent Factory, context assembly, invokeAgent() orchestrator, tool system (Wave 2)
 - [x] 02-03-PLAN.md — Agent-to-agent coordination via async tasks helpers + delegate_task tool (Wave 2)
-- [ ] 02-04-PLAN.md — SSE streaming route, Front Desk AI chat UI at /desk (Wave 3)
+- [x] 02-04-PLAN.md — SSE streaming route, Front Desk AI chat UI at /desk (Wave 3)
 
 ### Phase 3: Knowledge Base and Onboarding
 **Goal**: A new hotel owner reaches a working AI conversation in under 5 minutes, and can populate the hotel knowledge base that all AI employees draw from
@@ -66,12 +66,12 @@ Plans:
   3. Pre-populated boutique hotel defaults (check-in 3pm, checkout 11am, standard policies) are in place before owner fills anything in
   4. The Front Desk AI draws answers from the hotel's knowledge base, not generic defaults
   5. Knowledge base content can be stored or served in multiple languages
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Knowledge base data model and CRUD API — FAQs, room info, local recommendations
-- [ ] 03-02: Knowledge base editor UI — add/edit/delete entries, multi-language content support
-- [ ] 03-03: Onboarding wizard — multi-step setup (hotel name, city, contact), pre-populated defaults, progressive AI first-shift
+- [ ] 03-01-PLAN.md — Knowledge base schema, rooms table, seed trigger, types, CRUD Server Actions, agent context integration (Wave 1)
+- [ ] 03-02-PLAN.md — Knowledge base editor UI with tabbed CRUD for facts and rooms (Wave 2)
+- [ ] 03-03-PLAN.md — Onboarding wizard, progressive AI first-shift, multilingual agent instructions (Wave 2)
 
 ### Phase 4: Guest-Facing Layer
 **Goal**: Guests can chat with the Front Desk AI via WhatsApp and a hotel website widget, in their own language, with rate limiting and injection protection in place before any guest traffic touches the system
