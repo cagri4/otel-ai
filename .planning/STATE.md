@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 4 of 8 (Guest-Facing Layer)
-Plan: 5 of 5 in current phase (02 just completed — plans completed out of order: 04, 01, 02; remaining: 03, 05)
+Plan: 5 of 5 in current phase (03 just completed — plans completed out of order: 04, 01, 02, 03; remaining: 05)
 Status: In Progress
-Last activity: 2026-03-05 — Completed 04-02-PLAN.md (WhatsApp webhook, Twilio signature validation, hotel resolution, FRONT_DESK agent invocation, sendWhatsAppReply)
+Last activity: 2026-03-05 — Completed 04-03-PLAN.md (service-role Supabase client, widget session API, widget message API with Realtime broadcast, ChatWidget component, /widget/[token] page)
 
-Progress: [███████████] 55%
+Progress: [████████████] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
+- Total plans completed: 14
 - Average duration: 12.9 min
-- Total execution time: 158 min
+- Total execution time: 179 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [███████████] 55%
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
-| 04-guest-facing-layer | 5 | 70 min (so far, 3 of 5 plans done) | - |
+| 04-guest-facing-layer | 5 | 91 min (so far, 4 of 5 plans done) | - |
 
 **Recent Trend:**
-- Last 5 plans: 15 min, 13 min, 7 min, 23 min, 19 min
+- Last 5 plans: 13 min, 7 min, 23 min, 19 min, 21 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -91,6 +91,9 @@ Recent decisions affecting current work:
 - Non-streaming invokeAgent for WhatsApp — channel requires complete message; onToken callback omitted (Phase 4 Plan 2)
 - Conversation ID wa_{hotelId}_{phone} pattern — persistent per guest phone across sessions; wa_ prefix distinguishes from widget_ channels (Phase 4 Plan 2)
 - TWILIO_WHATSAPP_NUMBER sandbox fallback — routes all sandbox traffic to first hotel for MVP testing without requiring hotel_whatsapp_numbers entry (Phase 4 Plan 2)
+- [Phase 04-guest-facing-layer]: Service-role client in service.ts bypasses RLS for server-side ops where no user session exists (widget/WhatsApp) — token validation happens in code, not RLS (Phase 4 Plan 3)
+- [Phase 04-guest-facing-layer]: hotelId parsed server-side from conversationId (widget_{hotelId}_{uuid}) — never accepted from client body to prevent hotel spoofing (Phase 4 Plan 3)
+- [Phase 04-guest-facing-layer]: Supabase Realtime Broadcast used for AI response delivery to widget guests — agent runs to completion server-side then pushes to channel (Phase 4 Plan 3)
 
 ### Pending Todos
 
@@ -103,5 +106,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 04-02-PLAN.md — Twilio WhatsApp webhook (signature validation, hotel resolution, FRONT_DESK agent, reply sender). Phase 4 Plans 01, 02, and 04 complete (3 of 5); plans 03, 05 remain.
+Stopped at: Completed 04-03-PLAN.md — Web chat widget (service-role client, session API, message API with Supabase Realtime Broadcast, ChatWidget component, /widget/[token] page). Phase 4 Plans 01, 02, 03, 04 complete (4 of 5); plan 05 remains.
 Resume file: None

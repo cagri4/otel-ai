@@ -28,8 +28,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **DESK-01**: User can chat with Front Desk AI from owner dashboard
 - [x] **DESK-02**: Guests can chat with Front Desk AI via WhatsApp
-- [ ] **DESK-03**: Guests can chat with Front Desk AI via embeddable web chat widget
-- [ ] **DESK-04**: Front Desk AI answers hotel FAQs using hotel knowledge base
+- [x] **DESK-03**: Guests can chat with Front Desk AI via embeddable web chat widget
+- [x] **DESK-04**: Front Desk AI answers hotel FAQs using hotel knowledge base
 - [ ] **DESK-05**: Front Desk AI communicates in guest's language (EN, TR + 1 EU language minimum)
 - [ ] **DESK-06**: Front Desk AI escalates unhandled requests to hotel owner within 2 minutes
 - [x] **DESK-07**: Front Desk AI maintains conversation context across multiple messages
@@ -89,10 +89,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Guest Web Chat
 
-- [ ] **CHAT-01**: Embeddable web chat widget for hotel website
-- [ ] **CHAT-02**: Widget identifies hotel via token (no guest auth required)
-- [ ] **CHAT-03**: Real-time message delivery via Supabase Realtime (client-direct)
-- [ ] **CHAT-04**: Widget supports hotel branding (colors, logo, welcome message)
+- [x] **CHAT-01**: Embeddable web chat widget for hotel website
+- [x] **CHAT-02**: Widget identifies hotel via token (no guest auth required)
+- [x] **CHAT-03**: Real-time message delivery via Supabase Realtime (client-direct)
+- [x] **CHAT-04**: Widget supports hotel branding (colors, logo, welcome message)
 
 ### Billing
 
@@ -183,8 +183,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | ONBR-03 | Phase 3 | Complete |
 | ONBR-04 | Phase 3 | Complete |
 | DESK-02 | Phase 4 | Complete |
-| DESK-03 | Phase 4 | Pending |
-| DESK-04 | Phase 4 | Pending |
+| DESK-03 | Phase 4 | Complete |
+| DESK-04 | Phase 4 | Complete |
 | DESK-05 | Phase 4 | Pending |
 | DESK-06 | Phase 4 | Pending |
 | DESK-07 | Phase 4 | Complete |
@@ -192,10 +192,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | WHAP-02 | Phase 4 | Complete |
 | WHAP-03 | Phase 4 | Complete |
 | WHAP-04 | Phase 4 | Complete |
-| CHAT-01 | Phase 4 | Pending |
-| CHAT-02 | Phase 4 | Pending |
-| CHAT-03 | Phase 4 | Pending |
-| CHAT-04 | Phase 4 | Pending |
+| CHAT-01 | Phase 4 | Complete |
+| CHAT-02 | Phase 4 | Complete |
+| CHAT-03 | Phase 4 | Complete |
+| CHAT-04 | Phase 4 | Complete |
 | I18N-01 | Phase 4 | Complete |
 | I18N-02 | Phase 4 | Complete |
 | I18N-03 | Phase 4 | Complete |
