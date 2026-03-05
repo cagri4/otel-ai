@@ -4,6 +4,7 @@
  * These mirror the Supabase database schema defined in:
  *   supabase/migrations/0001_foundation.sql
  *   supabase/migrations/0002_agent_core.sql
+ *   supabase/migrations/0003_knowledge_base.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -26,6 +27,7 @@ export interface Hotel {
   timezone: string;             // IANA timezone string e.g. "Europe/Istanbul" (NOT NULL, default 'UTC')
   contact_email: string | null; // Primary contact email
   contact_phone: string | null; // Primary contact phone
+  onboarding_completed_at: string | null; // Set when hotel owner completes onboarding wizard (added in 0003)
   created_at: string;           // ISO 8601 UTC timestamp (timestamptz)
   updated_at: string;           // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
 }
@@ -50,7 +52,7 @@ export interface Profile {
 // Static knowledge base: policies, amenities, FAQs, pricing notes
 // =============================================================================
 
-export type HotelFactCategory = 'policy' | 'amenity' | 'faq' | 'pricing_note';
+export type HotelFactCategory = 'policy' | 'amenity' | 'faq' | 'pricing_note' | 'recommendation';
 
 export interface HotelFact {
   id: string;           // UUID primary key
@@ -59,6 +61,27 @@ export interface HotelFact {
   fact: string;         // The fact content (NOT NULL)
   created_at: string;   // ISO 8601 UTC timestamp (timestamptz)
   updated_at: string;   // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
+}
+
+// =============================================================================
+// Room — Structured room inventory (added in 0003_knowledge_base.sql)
+// Corresponds to: public.rooms table
+// Room data is injected into agent context alongside semantic facts (KNOW-04)
+// =============================================================================
+
+export interface Room {
+  id: string;                    // UUID primary key
+  hotel_id: string;              // UUID — references public.hotels.id (NOT NULL)
+  name: string;                  // Room display name e.g. "Deluxe Ocean View" (NOT NULL)
+  room_type: string;             // e.g. "standard", "deluxe", "suite" (NOT NULL)
+  bed_type: string | null;       // e.g. "king", "twin", "queen"
+  max_occupancy: number | null;  // Maximum number of guests
+  description: string | null;   // Long-form room description
+  amenities: string[] | null;   // PostgreSQL text array of amenity strings
+  base_price_note: string | null; // e.g. "from $120/night" — for agent display, not booking engine
+  sort_order: number;            // Display sort order (NOT NULL, default 0)
+  created_at: string;            // ISO 8601 UTC timestamp (timestamptz)
+  updated_at: string;            // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
 }
 
 // =============================================================================
@@ -162,6 +185,16 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<HotelFact, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      rooms: {
+        Row: Room;
+        Insert: Omit<Room, 'id' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<Room, 'id' | 'created_at'>>;
         Relationships: Relationship[];
       };
       guest_interactions: {
