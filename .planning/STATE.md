@@ -5,14 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first)
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Roadmap created, ready for Phase 9 planning
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 9 (Telegram Infrastructure) — Not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-06 — Milestone v2.0 started
+Status: Roadmap created — awaiting plan-phase
+Last activity: 2026-03-06 — v2.0 roadmap created (phases 9-13)
+
+```
+v2.0 Progress: [          ] 0%
+Phase 9:  [ ] Not started
+Phase 10: [ ] Not started
+Phase 11: [ ] Not started
+Phase 12: [ ] Not started
+Phase 13: [ ] Not started
+```
 
 ## Performance Metrics
 
@@ -151,16 +160,34 @@ Recent decisions affecting current work:
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: Cron idempotency via upsert with ignoreDuplicates=true — postgrest-js insert() lacks onConflict option; upsert equivalent to INSERT ON CONFLICT DO NOTHING
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: assignCleaningTask uses maybeSingle() for queue update — optional assignment works even without today's queue entry; Resend graceful fallback when RESEND_API_KEY unset
 
+### v2.0 Context
+
+- grammy@1.41.1 chosen over Telegraf — TypeScript-native, webhook-first, Vercel serverless compatible, cleaner multi-bot support
+- Webhook handler must return 200 before invokeAgent() — prevents Telegram retry storms and duplicate Claude API calls
+- Bot tokens stored via Supabase Vault — plaintext token exposure would allow impersonation of every hotel's AI employees
+- Per-bot dynamic route (/api/telegram/[botToken]) + per-bot webhook_secret — shared URL/secret makes hotel resolution impossible
+- enforceAgentLimit() must be replaced before per-seat trial-end flow — tier caps (2/4/6) are incompatible with per-employee pricing
+- iyzico dynamic subscription amounts: MEDIUM confidence — contact iyzico support before Phase 12 design commits to dynamic vs fixed tiers
+- Conversation ID prefix tg_{hotelId}_{role} — consistent with existing wa_/widget_ namespace pattern
+- parse_mode: "HTML" preferred over MarkdownV2 — simpler escaping rules, less risk of silent sendMessage failures
+- super-admin panel: JWT app_metadata.role = 'super-admin' guard, /admin route group, Supabase auth.admin API
+- Setup Wizard uses @grammyjs/conversations v2.x replay engine — session state stored in Supabase, not in-memory
+- assembleContext.ts session client potential bug — test explicitly in Phase 9 (may be silent bug in WhatsApp webhook too)
+- Tremor/Tailwind v4 compatibility unconfirmed — install @tremor/react early in Phase 10 and test one chart render before committing
+
 ### Pending Todos
 
-None yet.
+- Contact iyzico support before Phase 12 begins: confirm whether dynamic subscription amount updates are supported or if fixed-tier workaround is needed
+- Validate Tremor/Tailwind v4 compatibility in first Phase 10 task before committing to @tremor/react for admin dashboard
 
 ### Blockers/Concerns
 
 - Phase 7: PostgreSQL atomic booking transactions and calendar sync options for boutique hotels without PMS need research
+- Phase 11 (Setup Wizard): @grammyjs/conversations v2.x replay engine behavior on session resume after days-long gap needs research-phase before planning
+- Phase 12 (Billing Migration): iyzico dynamic subscription amounts MEDIUM confidence — needs direct support confirmation before plan commits
 
 ## Session Continuity
 
-Last session: 2026-03-05
-Stopped at: Completed 08-02-PLAN.md — housekeeping queue cron (runHousekeepingQueue at 07:00 UTC), assign_cleaning_task tool with Resend email, HOUSEKEEPING_COORDINATOR upgraded to 3 tools. Phase 8 complete.
+Last session: 2026-03-06
+Stopped at: v2.0 roadmap created — phases 9-13 defined. Ready for /gsd:plan-phase 9
 Resume file: None

@@ -281,12 +281,39 @@ Deferred to future release. Tracked but not in current roadmap.
 | HSKP-02 | Phase 8 | Complete |
 | HSKP-03 | Phase 8 | Complete |
 | HSKP-04 | Phase 8 | Complete |
+| TGIF-01 | Phase 9 | Pending |
+| TGIF-02 | Phase 9 | Pending |
+| TGIF-03 | Phase 9 | Pending |
+| TGIF-04 | Phase 9 | Pending |
+| TGIF-05 | Phase 9 | Pending |
+| EBOT-05 | Phase 9 | Pending |
+| EBOT-06 | Phase 9 | Pending |
+| SADM-01 | Phase 10 | Pending |
+| SADM-02 | Phase 10 | Pending |
+| SADM-03 | Phase 10 | Pending |
+| SADM-04 | Phase 10 | Pending |
+| EBOT-01 | Phase 10 | Pending |
+| EBOT-02 | Phase 10 | Pending |
+| EBOT-03 | Phase 10 | Pending |
+| EBOT-04 | Phase 10 | Pending |
+| ONBT-01 | Phase 11 | Pending |
+| ONBT-02 | Phase 11 | Pending |
+| ONBT-03 | Phase 11 | Pending |
+| ONBT-04 | Phase 11 | Pending |
+| PRIC-01 | Phase 12 | Pending |
+| PRIC-02 | Phase 12 | Pending |
+| PRIC-03 | Phase 12 | Pending |
+| PRIC-04 | Phase 12 | Pending |
+| PRIC-05 | Phase 12 | Pending |
+| WDSH-01 | Phase 13 | Pending |
 
 **Coverage:**
 - v1 requirements: 69 total
 - Mapped to phases: 69
+- v2.0 requirements: 25 total
+- Mapped to phases: 25
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-02*
-*Last updated: 2026-03-06 after v2.0 milestone requirements*
+*Last updated: 2026-03-06 after v2.0 roadmap creation (phases 9-13)*

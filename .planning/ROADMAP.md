@@ -4,6 +4,8 @@
 
 OtelAI ships in 8 phases, building from data foundation to full AI staff team. The order is dependency-driven: multi-tenancy and auth must exist before agents, agents must prove out owner-side before guests touch them, onboarding must populate the knowledge base before any guest channel goes live, and billing is introduced only after the product has demonstrated value. Each phase delivers a complete, verifiable capability — not a horizontal layer.
 
+v2.0 (phases 9-13) adds a Telegram-first delivery layer on top of the proven v1.0 agent pipeline. The order is again dependency-driven: webhook infrastructure before any bot can respond, admin provisioning before any hotel can onboard, Setup Wizard before owners go live, billing model before trial expiry is reached, and operational polish last.
+
 ## Phases
 
 **Phase Numbering:**
@@ -11,6 +13,8 @@ OtelAI ships in 8 phases, building from data foundation to full AI staff team. T
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
+
+### v1.0 — Web Dashboard (Phases 1-8)
 
 - [x] **Phase 1: Foundation** - Multi-tenant Supabase schema, auth, and hotel configuration (completed 2026-03-03)
 - [x] **Phase 2: Agent Core** - Stateless agent orchestrator, memory system, and first AI employee (owner-facing) (completed 2026-03-05)
@@ -20,6 +24,14 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Billing** - iyzico (TR) and Mollie (EU) subscription billing with tiered plan enforcement (completed 2026-03-05)
 - [x] **Phase 7: Booking AI** - Availability inquiry handling, tool-enforced pricing, upsell logic (completed 2026-03-05)
 - [x] **Phase 8: Housekeeping Coordinator** - Room status board, cleaning priority queue, task assignment (completed 2026-03-05)
+
+### v2.0 — Agent-Native SaaS (Phases 9-13)
+
+- [ ] **Phase 9: Telegram Infrastructure** - Webhook handler, hotel_bots table, bot token security, MarkdownV2/HTML formatting
+- [ ] **Phase 10: Super Admin Panel and Employee Bots** - Admin UI for hotel creation and bot provisioning, all four AI employee Telegram bots active
+- [ ] **Phase 11: Setup Wizard Bot** - Conversational Telegram onboarding from deep link to all employee bots active with 14-day trial
+- [ ] **Phase 12: Billing Model Migration and Trial-End Flow** - Per-employee pricing, trial countdown notifications, trial-end selection flow, payment link
+- [ ] **Phase 13: Proactive Messaging and Dashboard Readonly** - Morning briefings, rate-limited send queue, web dashboard readonly mode
 
 ## Phase Details
 
@@ -157,10 +169,70 @@ Plans:
 - [ ] 08-01-PLAN.md — Room status DB tables, HOUSEKEEPING_COORDINATOR role, tools, SSE routing, dashboard page with live status board (Wave 1)
 - [ ] 08-02-PLAN.md — Daily priority queue cron, assign_cleaning_task tool with Resend email notification (Wave 2)
 
+---
+
+## v2.0 Phase Details
+
+### Phase 9: Telegram Infrastructure
+**Goal**: A Telegram message sent to any registered hotel bot reaches the correct AI employee and receives a formatted reply — with bot tokens encrypted, webhook secrets validated, and no Telegram retry storms
+**Depends on**: Phase 8 (v1.0 complete)
+**Requirements**: TGIF-01, TGIF-02, TGIF-03, TGIF-04, TGIF-05, EBOT-05, EBOT-06
+**Success Criteria** (what must be TRUE):
+  1. A message sent to a registered employee bot arrives at the webhook handler, is validated, and triggers an AI response via the existing invokeAgent() pipeline without modification
+  2. The webhook handler returns HTTP 200 before the agent completes — duplicate sends during Telegram retries do not produce duplicate AI replies
+  3. Bot tokens are stored encrypted via Supabase Vault — plaintext tokens never appear in DB query logs or API responses
+  4. A webhook request with a missing or incorrect X-Telegram-Bot-Api-Secret-Token header is rejected with no agent invocation
+  5. AI responses sent to Telegram are correctly formatted — no unescaped characters cause silent sendMessage failures
+**Plans**: TBD
+
+### Phase 10: Super Admin Panel and Employee Bots
+**Goal**: Super admin can create a hotel account, provision all four employee bots by pasting BotFather tokens, trigger automatic webhook registration, and generate a Setup Wizard deep link — and each employee bot responds as the correct AI role
+**Depends on**: Phase 9
+**Requirements**: SADM-01, SADM-02, SADM-03, SADM-04, EBOT-01, EBOT-02, EBOT-03, EBOT-04
+**Success Criteria** (what must be TRUE):
+  1. Super admin can view a list of all hotels with their trial and subscription status in a single dashboard view
+  2. Super admin can create a new hotel account and provision all four employee bots by entering BotFather tokens — webhook registration happens automatically on save
+  3. Super admin can generate a Setup Wizard deep link for any hotel with one click
+  4. Hotel owner messaging the Front Desk bot gets a Front Desk AI response; messaging the Booking bot gets a Booking AI response — each bot routes to the correct agent role
+**Plans**: TBD
+
+### Phase 11: Setup Wizard Bot
+**Goal**: Hotel owner receives a deep link, opens the Setup Wizard bot in Telegram, completes conversational onboarding, and sees all four employee bots activate with a 14-day trial — with wizard state persisted so drop-off does not restart from zero
+**Depends on**: Phase 10
+**Requirements**: ONBT-01, ONBT-02, ONBT-03, ONBT-04
+**Success Criteria** (what must be TRUE):
+  1. Hotel owner taps the deep link, starts the Setup Wizard bot, and reaches a working employee bot conversation by answering fewer than 6 questions
+  2. If the owner closes Telegram and returns hours later, the wizard resumes from exactly where they stopped — no data re-entry required
+  3. On wizard completion, all four employee bots activate and the owner receives direct Telegram links to each one
+  4. The 14-day trial starts automatically on wizard completion — no admin action required
+**Plans**: TBD
+
+### Phase 12: Billing Model Migration and Trial-End Flow
+**Goal**: Per-employee pricing replaces tier-based billing — hotel owners are notified of trial expiry via Telegram, select which employees to keep, and complete payment through the existing web checkout
+**Depends on**: Phase 11
+**Requirements**: PRIC-01, PRIC-02, PRIC-03, PRIC-04, PRIC-05
+**Success Criteria** (what must be TRUE):
+  1. Each AI employee role has its own monthly price — the hotel owner's monthly bill is the sum of their active employees, not a fixed tier
+  2. Trial countdown notifications arrive in Telegram at days 7, 12, 13, and 14 of the trial
+  3. At trial end, the hotel owner receives an inline keyboard showing each employee with usage stats and price — they select which to keep and confirm
+  4. After selection, the owner receives a payment link to the existing iyzico (TR) or Mollie (EU) web checkout with the correct total amount
+  5. Unselected employees' bots stop responding immediately after selection; selected employees' bots continue uninterrupted after payment
+**Plans**: TBD
+
+### Phase 13: Proactive Messaging and Dashboard Readonly
+**Goal**: Active employee bots send morning briefings to hotel owners, the Telegram send queue is rate-limited to prevent 429 errors at scale, and the existing web dashboard remains accessible in readonly mode
+**Depends on**: Phase 9
+**Requirements**: WDSH-01
+**Success Criteria** (what must be TRUE):
+  1. Hotel owner can still access the existing web dashboard — all conversation history and hotel configuration visible, no data removed
+  2. Each active employee bot sends a morning briefing to the hotel owner — delivered without triggering Telegram rate limits even when multiple hotels receive briefings simultaneously
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+v1.0 phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can start after Phase 9)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -172,3 +244,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 6. Billing | 2/4 | In Progress|  |
 | 7. Booking AI | 3/3 | Complete    | 2026-03-05 |
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
+| 9. Telegram Infrastructure | 0/TBD | Not started | - |
+| 10. Super Admin Panel and Employee Bots | 0/TBD | Not started | - |
+| 11. Setup Wizard Bot | 0/TBD | Not started | - |
+| 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |
+| 13. Proactive Messaging and Dashboard Readonly | 0/TBD | Not started | - |
