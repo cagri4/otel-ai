@@ -38,16 +38,29 @@ const OBSERVE_TOOLS = new Set([
   'get_room_availability',
   'get_room_pricing',
   'lookup_guest_reservation',
+  'get_room_status',          // Housekeeping: reads room status — no state change
 ]);
 
 /**
  * INFORM tools: write informational or notification data.
- * Side effects are limited to internal state (task queue, hotel info).
+ * Side effects are limited to internal state (task queue, hotel info, room status updates).
  */
 const INFORM_TOOLS = new Set([
   'delegate_task',
   'update_hotel_info',
+  'update_room_status',       // Housekeeping: updates internal room status — no external side effects
 ]);
+
+/**
+ * ACT tools: external side effects beyond internal state changes.
+ * These tools send external communications or perform actions outside the system.
+ * assign_cleaning_task: sends external Resend email to staff member — ACT classification.
+ *
+ * Note: The conservative default in classifyAction() already returns 'ACT' for any
+ * unrecognized tool. This comment documents the explicit ACT classification intent.
+ */
+// ACT_TOOLS — assign_cleaning_task falls through to the default ACT return value.
+// Listed here for documentation: ['assign_cleaning_task']
 
 // =============================================================================
 // classifyAction

@@ -4,17 +4,17 @@
  * These are the tool schemas passed to the Claude API — not the implementations.
  * They define the JSON Schema format for each tool's input parameters.
  *
- * Four tools are defined for Phase 2:
- * - get_room_availability: Forces agents to call the tool before stating availability
- * - get_room_pricing: Forces agents to call the tool before stating prices
- * - lookup_guest_reservation: Looks up an existing guest reservation
- * - delegate_task: Delegates work to another AI employee via the async tasks table
+ * Phase 2: get_room_availability, get_room_pricing, lookup_guest_reservation, delegate_task
+ * Phase 3: update_hotel_info (progressive onboarding)
+ * Phase 8 Plan 1: get_room_status, update_room_status (housekeeping status)
+ * Phase 8 Plan 2: assign_cleaning_task (staff assignment with Resend email)
  *
  * Tool-first policy: Tool descriptions include "MUST be called" directives.
  * This structurally prevents agents from hallucinating data — they must
  * call the tool to get data before they can respond.
  *
  * Source: .planning/phases/02-agent-core/02-02-PLAN.md, 02-03-PLAN.md
+ *         .planning/phases/08-housekeeping-coordinator/08-02-PLAN.md
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
@@ -170,6 +170,35 @@ const updateRoomStatusTool: Anthropic.Messages.Tool = {
 };
 
 /**
+ * Assigns a room cleaning task to a housekeeping staff member and sends an email.
+ * Used by HOUSEKEEPING_COORDINATOR when the owner requests a task assignment.
+ * hotel_id is injected by executor.ts — NOT in the tool schema.
+ */
+const assignCleaningTaskTool: Anthropic.Messages.Tool = {
+  name: 'assign_cleaning_task',
+  description:
+    'Assign a room cleaning task to a housekeeping staff member and send them an email notification. Use this when the owner asks to assign a cleaning task to a specific staff member.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      room_identifier: {
+        type: 'string',
+        description: 'Room name or number to be cleaned (e.g. "Room 12", "Suite 3")',
+      },
+      staff_name: {
+        type: 'string',
+        description: 'Name of the staff member to assign the task to',
+      },
+      notes: {
+        type: 'string',
+        description: 'Optional special instructions or notes for the cleaning task',
+      },
+    },
+    required: ['room_identifier', 'staff_name'],
+  },
+};
+
+/**
  * Delegates a task to another AI employee via the async tasks queue.
  * Used by FRONT_DESK to hand off work to other departments without blocking.
  */
@@ -213,6 +242,7 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
   delegate_task: delegateTaskTool,
   get_room_status: getRoomStatusTool,
   update_room_status: updateRoomStatusTool,
+  assign_cleaning_task: assignCleaningTaskTool,
 };
 
 /**
@@ -221,7 +251,7 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
  * FRONT_DESK gets all core tools including delegate_task for cross-department delegation.
  * BOOKING_AI gets the three booking tools (availability, pricing, reservation lookup) but not delegate_task.
  * GUEST_EXPERIENCE gets no tools — generates messages from templates provided in system prompt.
- * HOUSEKEEPING_COORDINATOR gets two housekeeping tools (get/update room status) — no delegate_task.
+ * HOUSEKEEPING_COORDINATOR gets three housekeeping tools (get/update room status, assign task) — no delegate_task.
  *
  * @param role - The agent role requesting tools
  * @returns Array of Anthropic.Messages.Tool definitions for the role
@@ -249,11 +279,12 @@ export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
         lookupGuestReservationTool,
       ];
     case AgentRole.HOUSEKEEPING_COORDINATOR:
-      // Housekeeping-specific tools: read and update room cleaning status
+      // Housekeeping-specific tools: read and update room cleaning status, assign tasks to staff
       // No delegate_task (prevents circular delegation chains from non-FRONT_DESK roles)
       return [
         getRoomStatusTool,
         updateRoomStatusTool,
+        assignCleaningTaskTool,
       ];
     default:
       // Fallback: unregistered roles get no tools

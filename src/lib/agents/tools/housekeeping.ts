@@ -1,9 +1,10 @@
 /**
  * Housekeeping tool implementations for the OtelAI agent system.
  *
- * Two tools for the HOUSEKEEPING_COORDINATOR role:
- * - getRoomStatus:    Fetches current cleaning status of all rooms for a hotel.
- * - updateRoomStatus: Updates the cleaning status of a specific room by name.
+ * Three tools for the HOUSEKEEPING_COORDINATOR role:
+ * - getRoomStatus:      Fetches current cleaning status of all rooms for a hotel.
+ * - updateRoomStatus:   Updates the cleaning status of a specific room by name.
+ * - assignCleaningTask: Assigns a room cleaning task to a staff member and sends email.
  *
  * Uses the service-role client (createServiceClient) because the Housekeeping
  * Coordinator runs in the dashboard chat context where tool execution happens
@@ -14,7 +15,8 @@
  * It is injected from ToolContext.hotelId in the executor dispatch map.
  * This prevents cross-hotel data leakage (same pattern as booking tools).
  *
- * Source: .planning/phases/08-housekeeping-coordinator/08-01-PLAN.md
+ * Source: .planning/phases/08-housekeeping-coordinator/08-01-PLAN.md (Tasks 1-2)
+ *         .planning/phases/08-housekeeping-coordinator/08-02-PLAN.md (Task 2)
  */
 
 import { createServiceClient } from '@/lib/supabase/service';
@@ -210,4 +212,186 @@ export async function updateRoomStatus(params: {
     notes: notes ?? null,
     message: `Room "${room.name}" status updated to "${new_status}".`,
   };
+}
+
+// =============================================================================
+// assignCleaningTask — Assign a room cleaning task to a staff member
+// =============================================================================
+
+/**
+ * Assigns a room cleaning task to a housekeeping staff member.
+ *
+ * Steps:
+ * 1. Resolve room by ILIKE partial name match (same pattern as updateRoomStatus).
+ * 2. Look up staff member by ILIKE partial name match in housekeeping_staff.
+ *    - Zero matches → error with list of active staff names.
+ *    - Multiple matches → return candidates for agent to disambiguate.
+ *    - Single match → proceed.
+ * 3. Update housekeeping_queue if a today's entry exists for this room.
+ * 4. Send email via Resend to the staff member's email address.
+ *    - If RESEND_API_KEY is not set, skip email and return email_sent: false.
+ *
+ * CRITICAL: hotel_id is injected from ToolContext — NOT from AI input.
+ *
+ * @param params - hotel_id from context; room_identifier, staff_name, notes from AI
+ * @returns Confirmation with room name, staff name, and email status
+ */
+export async function assignCleaningTask(params: {
+  hotel_id: string;
+  room_identifier: string;
+  staff_name: string;
+  notes?: string;
+}): Promise<Record<string, unknown>> {
+  const { hotel_id, room_identifier, staff_name, notes } = params;
+
+  if (!hotel_id || !room_identifier || !staff_name) {
+    return { error: true, message: 'hotel_id, room_identifier, and staff_name are required.' };
+  }
+
+  const supabase = createServiceClient();
+
+  // Step 1: Resolve room by partial, case-insensitive name match scoped to hotel
+  const { data: matchedRooms, error: roomError } = await supabase
+    .from('rooms')
+    .select('id, name')
+    .eq('hotel_id', hotel_id)
+    .ilike('name', `%${room_identifier}%`)
+    .returns<{ id: string; name: string }[]>();
+
+  if (roomError) {
+    return { error: true, message: roomError.message };
+  }
+
+  const roomMatches = matchedRooms ?? [];
+
+  if (roomMatches.length === 0) {
+    return {
+      error: true,
+      message: `No room found matching "${room_identifier}". Please ask the owner to clarify the room name.`,
+    };
+  }
+
+  if (roomMatches.length > 1) {
+    const candidates = roomMatches.map((r) => r.name);
+    return {
+      error: true,
+      multiple_matches: true,
+      message: `Found multiple rooms matching "${room_identifier}". Please ask which one: ${candidates.join(', ')}`,
+      candidates,
+    };
+  }
+
+  const room = roomMatches[0];
+
+  // Step 2: Resolve staff member by partial, case-insensitive name match
+  const { data: matchedStaff, error: staffError } = await (supabase as unknown as SupabaseClient)
+    .from('housekeeping_staff')
+    .select('id, name, email')
+    .eq('hotel_id', hotel_id)
+    .eq('is_active', true)
+    .ilike('name', `%${staff_name}%`);
+
+  if (staffError) {
+    return { error: true, message: staffError.message };
+  }
+
+  const staffMatches = (matchedStaff as { id: string; name: string; email: string }[]) ?? [];
+
+  if (staffMatches.length === 0) {
+    // No match — fetch all active staff names to include in error response
+    const { data: allStaff } = await (supabase as unknown as SupabaseClient)
+      .from('housekeeping_staff')
+      .select('name')
+      .eq('hotel_id', hotel_id)
+      .eq('is_active', true);
+
+    const allNames = ((allStaff as { name: string }[]) ?? []).map((s) => s.name);
+    return {
+      error: true,
+      message: `No active staff member found matching "${staff_name}".${allNames.length > 0 ? ` Available staff: ${allNames.join(', ')}` : ' No active staff members configured yet.'}`,
+    };
+  }
+
+  if (staffMatches.length > 1) {
+    const candidates = staffMatches.map((s) => s.name);
+    return {
+      error: true,
+      multiple_matches: true,
+      message: `Found multiple staff matching "${staff_name}". Please ask which one: ${candidates.join(', ')}`,
+      candidates,
+    };
+  }
+
+  const staffMember = staffMatches[0];
+
+  // Step 3: Update housekeeping_queue if a today entry exists for this room
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const { data: queueRow } = await (supabase as unknown as SupabaseClient)
+    .from('housekeeping_queue')
+    .select('id')
+    .eq('hotel_id', hotel_id)
+    .eq('room_id', room.id)
+    .eq('queue_date', todayStr)
+    .maybeSingle();
+
+  if (queueRow) {
+    await (supabase as unknown as SupabaseClient)
+      .from('housekeeping_queue')
+      .update({
+        assigned_to: staffMember.name,
+        assigned_at: new Date().toISOString(),
+      })
+      .eq('id', (queueRow as { id: string }).id);
+  }
+
+  // Step 4: Send email notification via Resend
+  if (!process.env.RESEND_API_KEY) {
+    // Graceful degradation — assignment is recorded but email cannot be sent
+    return {
+      success: true,
+      room: room.name,
+      room_id: room.id,
+      assigned_to: staffMember.name,
+      email_sent: false,
+      reason: 'RESEND_API_KEY not configured',
+      message: `Task assigned to ${staffMember.name} for room "${room.name}". Email notification skipped (RESEND_API_KEY not set).`,
+    };
+  }
+
+  try {
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: staffMember.email,
+      subject: `Cleaning Task: ${room.name}`,
+      html: `<p>You have been assigned to clean <strong>${room.name}</strong>.</p>
+             <p>${notes ? `Notes: ${notes}` : 'No additional notes.'}</p>
+             <p>Please update the status when complete.</p>`,
+    });
+
+    return {
+      success: true,
+      room: room.name,
+      room_id: room.id,
+      assigned_to: staffMember.name,
+      email_sent: true,
+      message: `Task assigned to ${staffMember.name} for room "${room.name}". Email notification sent to ${staffMember.email}.`,
+    };
+  } catch (emailError) {
+    const emailMsg = emailError instanceof Error ? emailError.message : String(emailError);
+    console.error(`[assignCleaningTask] Failed to send email to ${staffMember.email}: ${emailMsg}`);
+
+    return {
+      success: true,
+      room: room.name,
+      room_id: room.id,
+      assigned_to: staffMember.name,
+      email_sent: false,
+      reason: `Email send failed: ${emailMsg}`,
+      message: `Task assigned to ${staffMember.name} for room "${room.name}". Email notification failed but task is recorded.`,
+    };
+  }
 }
