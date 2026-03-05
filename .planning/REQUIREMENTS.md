@@ -59,10 +59,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Hotel Knowledge Base
 
-- [ ] **KNOW-01**: Hotel owner can add/edit hotel FAQs (check-in time, WiFi, parking, policies)
-- [ ] **KNOW-02**: Hotel owner can add/edit room information (types, pricing, amenities, photos description)
-- [ ] **KNOW-03**: Hotel owner can add/edit local recommendations (restaurants, attractions, transport)
-- [ ] **KNOW-04**: Knowledge base feeds all AI employees as shared hotel context
+- [x] **KNOW-01**: Hotel owner can add/edit hotel FAQs (check-in time, WiFi, parking, policies)
+- [x] **KNOW-02**: Hotel owner can add/edit room information (types, pricing, amenities, photos description)
+- [x] **KNOW-03**: Hotel owner can add/edit local recommendations (restaurants, attractions, transport)
+- [x] **KNOW-04**: Knowledge base feeds all AI employees as shared hotel context
 - [ ] **KNOW-05**: Knowledge base supports multi-language content (or auto-translation)
 
 ### Onboarding
@@ -70,7 +70,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **ONBR-01**: New hotel owner reaches first working AI response in under 5 minutes
 - [ ] **ONBR-02**: Onboarding wizard collects minimum info (hotel name, city, contact) then starts AI
 - [ ] **ONBR-03**: Progressive onboarding — AI employees ask for missing info during first "shift"
-- [ ] **ONBR-04**: Pre-populated boutique hotel defaults (check-in 3pm, checkout 11am, standard policies)
+- [x] **ONBR-04**: Pre-populated boutique hotel defaults (check-in 3pm, checkout 11am, standard policies)
 
 ### Owner Dashboard
 
@@ -173,15 +173,15 @@ Deferred to future release. Tracked but not in current roadmap.
 | AGENT-06 | Phase 2 | Complete |
 | AGENT-07 | Phase 2 | Complete |
 | DESK-01 | Phase 2 | Complete |
-| KNOW-01 | Phase 3 | Pending |
-| KNOW-02 | Phase 3 | Pending |
-| KNOW-03 | Phase 3 | Pending |
-| KNOW-04 | Phase 3 | Pending |
+| KNOW-01 | Phase 3 | Complete |
+| KNOW-02 | Phase 3 | Complete |
+| KNOW-03 | Phase 3 | Complete |
+| KNOW-04 | Phase 3 | Complete |
 | KNOW-05 | Phase 3 | Pending |
 | ONBR-01 | Phase 3 | Pending |
 | ONBR-02 | Phase 3 | Pending |
 | ONBR-03 | Phase 3 | Pending |
-| ONBR-04 | Phase 3 | Pending |
+| ONBR-04 | Phase 3 | Complete |
 | DESK-02 | Phase 4 | Pending |
 | DESK-03 | Phase 4 | Pending |
 | DESK-04 | Phase 4 | Pending |

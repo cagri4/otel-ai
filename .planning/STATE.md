@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 2 — Agent Core
+**Current focus:** Phase 3 — Knowledge Base and Onboarding
 
 ## Current Position
 
-Phase: 2 of 8 (Agent Core)
-Plan: 4 of 4 in current phase
-Status: Complete
-Last activity: 2026-03-05 — Completed 02-04-PLAN.md (SSE streaming endpoint + Front Desk chat UI at /desk — Phase 2 complete)
+Phase: 3 of 8 (Knowledge Base and Onboarding)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-03-05 — Completed 03-01-PLAN.md (Rooms table, seed trigger, 6 CRUD Server Actions, agent room context integration)
 
-Progress: [██████░░░░] 30%
+Progress: [███████░░░] 35%
 
 ## Performance Metrics
 
@@ -29,6 +29,7 @@ Progress: [██████░░░░] 30%
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
+| 03-knowledge-base | 1 | 10 min | 10 min |
 
 **Recent Trend:**
 - Last 5 plans: 7 min, 19 min, 11 min, 11 min, 15 min
@@ -68,6 +69,10 @@ Recent decisions affecting current work:
 - Fire-and-forget invokeAgent() in ReadableStream.start() — awaiting buffers full response before first SSE byte reaches client (Phase 2 Plan 4)
 - Default conversationId is hotelId_owner_chat — one persistent conversation per hotel owner per research recommendation (Phase 2 Plan 4)
 - Client-side chunked SSE buffer in useChatStream — ReadableStream reader returns arbitrary byte chunks; buffer until \\n\\n delimiter (Phase 2 Plan 4)
+- onboarding_completed_at as dedicated column on hotels — explicit gate for onboarding wizard, not city check proxy (Phase 3 Plan 1)
+- amenities submitted as comma-separated string from form, split to TEXT[] in Server Action — avoids complex array field in FormData (Phase 3 Plan 1)
+- base_price_note as freeform text for agent display only — not structured pricing data; avoids premature booking engine assumptions (Phase 3 Plan 1)
+- loadRoomContext returns empty string on error — matches loadSemanticFacts pattern; agent falls back gracefully (Phase 3 Plan 1)
 
 ### Pending Todos
 
@@ -81,5 +86,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 02-04-PLAN.md — Phase 2 complete. SSE streaming + Front Desk chat UI at /desk. Ready for Phase 3 (Guest Communications).
+Stopped at: Completed 03-01-PLAN.md — Knowledge base data layer complete. Rooms table, seed trigger, CRUD Server Actions, agent room context integration. Ready for 03-02 (Knowledge Base UI).
 Resume file: None
