@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 3 of 8 (Knowledge Base and Onboarding)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-03-05 — Completed 03-01-PLAN.md (Rooms table, seed trigger, 6 CRUD Server Actions, agent room context integration)
+Last activity: 2026-03-05 — Completed 03-02-PLAN.md (Knowledge base editor UI: tabbed /knowledge page, FactList/FactForm, RoomList/RoomForm, URL-persisted tab state)
 
-Progress: [███████░░░] 35%
+Progress: [████████░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 13 min
-- Total execution time: 68 min
+- Total plans completed: 6
+- Average duration: 13.5 min
+- Total execution time: 81 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [███████░░░] 35%
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
-| 03-knowledge-base | 1 | 10 min | 10 min |
+| 03-knowledge-base | 2 | 23 min | 11.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 7 min, 19 min, 11 min, 11 min, 15 min
+- Last 5 plans: 19 min, 11 min, 11 min, 15 min, 13 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - amenities submitted as comma-separated string from form, split to TEXT[] in Server Action — avoids complex array field in FormData (Phase 3 Plan 1)
 - base_price_note as freeform text for agent display only — not structured pricing data; avoids premature booking engine assumptions (Phase 3 Plan 1)
 - loadRoomContext returns empty string on error — matches loadSemanticFacts pattern; agent falls back gracefully (Phase 3 Plan 1)
+- URL-persisted tab state (?tab=) prevents active tab reset when router.refresh() re-renders Server Component after CRUD operations (Phase 3 Plan 2)
+- FactList/RoomList manage their own edit dialog state locally — no global state needed; each list is self-contained (Phase 3 Plan 2)
+- react-hook-form useEffect reset() on prop change handles switching between edit targets without stale form values (Phase 3 Plan 2)
 
 ### Pending Todos
 
@@ -86,5 +89,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 03-01-PLAN.md — Knowledge base data layer complete. Rooms table, seed trigger, CRUD Server Actions, agent room context integration. Ready for 03-02 (Knowledge Base UI).
+Stopped at: Completed 03-02-PLAN.md — Knowledge base editor UI complete. Tabbed /knowledge page, FactList/FactForm, RoomList/RoomForm, URL-persisted tab state. Ready for 03-03 (Onboarding Wizard).
 Resume file: None
