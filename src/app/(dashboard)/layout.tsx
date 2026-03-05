@@ -112,6 +112,24 @@ export default async function DashboardLayout({
                 Knowledge
               </a>
               <a
+                href="/employees"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Employees
+              </a>
+              <a
+                href="/conversations"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Conversations
+              </a>
+              <a
+                href="/audit"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Audit Log
+              </a>
+              <a
                 href="/settings"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
