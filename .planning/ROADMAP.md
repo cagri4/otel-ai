@@ -119,12 +119,13 @@ Plans:
   2. Hotel owner can subscribe via iyzico (TR market) or Mollie (EU market) depending on their region
   3. Agent count is hard-capped by subscription tier — a Starter-plan hotel cannot activate more than 2 agents
   4. Hotel owner can upgrade or downgrade their plan without contacting support
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 06-01: iyzico integration — subscription checkout, webhook handler, plan state persistence
-- [ ] 06-02: Mollie integration — subscription checkout, webhook handler, EU market routing
-- [ ] 06-03: Plan enforcement and trial — agent count limits by tier, free trial logic, upgrade/downgrade flow
+- [ ] 06-01-PLAN.md — Billing foundation: subscriptions table, TypeScript types, plan constants, enforcement logic, trial status (Wave 1)
+- [ ] 06-02-PLAN.md — iyzico integration: client library, checkout form, webhook handler, upgrade endpoint (Wave 2)
+- [ ] 06-03-PLAN.md — Mollie integration: client library, first payment mandate, webhook handler, plan change (Wave 2)
+- [ ] 06-04-PLAN.md — Billing dashboard UI, plan enforcement in employee toggle, nav link (Wave 3)
 
 ### Phase 7: Booking AI
 **Goal**: Guests can inquire about room availability and pricing over WhatsApp and web chat, receiving accurate answers backed by real data and a soft upsell when appropriate
@@ -168,6 +169,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Knowledge Base and Onboarding | 3/3 | Complete    | 2026-03-05 |
 | 4. Guest-Facing Layer | 5/5 | Complete    | 2026-03-05 |
 | 5. Guest Experience AI and Owner Dashboard | 4/4 | Complete   | 2026-03-05 |
-| 6. Billing | 0/3 | Not started | - |
+| 6. Billing | 0/4 | Not started | - |
 | 7. Booking AI | 0/3 | Not started | - |
 | 8. Housekeeping Coordinator | 0/2 | Not started | - |
