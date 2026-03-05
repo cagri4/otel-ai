@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 6 of 8 (Billing) — COMPLETE
-Plan: 4 of 4 completed
-Status: Complete — Completed 06-04-PLAN.md
-Last activity: 2026-03-05 — Completed 06-04-PLAN.md (Billing dashboard UI with plan comparison grid, iyzico customer form, Mollie redirect, enforceAgentLimit in toggleAgent, Billing nav link)
+Phase: 7 of 8 (Booking AI) — IN PROGRESS
+Plan: 1 of 3 completed
+Status: In Progress — Completed 07-01-PLAN.md
+Last activity: 2026-03-05 — Completed 07-01-PLAN.md (reservations table, conversation_summaries table, real getAvailability/getRoomPricing/lookupGuestReservation tool implementations with hotel_id injection)
 
-Progress: [██████████████████████] 87%
+Progress: [████████████████████████] 91%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 18
-- Average duration: 12.2 min
-- Total execution time: 219 min
+- Total plans completed: 19
+- Average duration: 11.7 min
+- Total execution time: 223 min
 
 **By Phase:**
 
@@ -33,6 +33,7 @@ Progress: [██████████████████████] 8
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
 | 05-guest-experience | 4 of 4 | 54 min | 13.5 min |
 | 06-billing | 4 of 4 | 46 min | 11.5 min |
+| 07-booking-ai | 1 of 3 | 4 min | 4 min |
 
 **Recent Trend:**
 - Last 5 plans: 21 min, 12 min, 15 min, 4 min, 9 min
@@ -44,6 +45,7 @@ Progress: [██████████████████████] 8
 | Phase 06-billing P02 | 16 | 2 tasks | 8 files |
 | Phase 06-billing P03 | 17 | 2 tasks | 7 files |
 | Phase 06-billing P04 | 9 | 2 tasks | 5 files |
+| Phase 07-booking-ai P01 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -130,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 06-billing]: Mollie payment.get() overload void inference — cast via 'as unknown as Payment' to avoid TypeScript picking callback overload
 - [Phase 06-billing]: toggleAgent returns void (Server Action constraint) — enforcement errors communicated via redirect to /employees?error=X search param
 - [Phase 06-billing]: PLAN_ORDER typed as Array<Exclude<PlanName, 'trial'>> — getPlanPrice only accepts paid plans; narrowing the array type avoids TypeScript error without casting
+- [Phase 07-booking-ai]: hotel_id injected from ToolContext.hotelId in executor dispatch — never accepted from AI model input to prevent cross-hotel data leakage
+- [Phase 07-booking-ai]: Overlap detection: .lt(check_in_date, check_out).gt(check_out_date, check_in) — standard half-open interval, excludes back-to-back reservations
+- [Phase 07-booking-ai]: base_price_note returned as-is from getRoomPricing (freeform text, not computed price) — consistent with Phase 3 decision
 
 ### Pending Todos
 
@@ -142,5 +147,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-04-PLAN.md — Billing dashboard UI: /billing page (Server + Client Components), BillingClient with plan comparison grid (iyzico TRY/Mollie EUR prices), iyzico customer data form (TC identity number), Mollie checkout redirect, upgrade/downgrade API calls. enforceAgentLimit wired into toggleAgent with redirect-based error params. /employees error banners for limit_reached and trial_expired. Billing nav link added. Phase 6 billing COMPLETE.
+Stopped at: Completed 07-01-PLAN.md — reservations table (hotel_id/room_id FKs, status CHECK, check_dates constraint, RLS), conversation_summaries table for plan 07-03, seed_hotel_defaults extended with booking_ai agent, backfill for existing hotels, real getAvailability (overlap detection), getRoomPricing (base_price_note), lookupGuestReservation (name/phone), hotel_id injection in executor dispatch, Reservation/ConversationSummary TypeScript types.
 Resume file: None

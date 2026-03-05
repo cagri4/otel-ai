@@ -45,8 +45,8 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Booking AI (Role 2)
 
 - [ ] **BOOK-01**: Booking AI handles availability inquiries over WhatsApp and web chat
-- [ ] **BOOK-02**: Booking AI retrieves real-time room availability via tool call (never hallucinated)
-- [ ] **BOOK-03**: Booking AI provides accurate pricing from hotel knowledge base
+- [x] **BOOK-02**: Booking AI retrieves real-time room availability via tool call (never hallucinated)
+- [x] **BOOK-03**: Booking AI provides accurate pricing from hotel knowledge base
 - [ ] **BOOK-04**: Booking AI can soft-upsell room upgrades during inquiry
 - [ ] **BOOK-05**: Booking AI escalates complex/custom requests to hotel owner
 
@@ -222,8 +222,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | BILL-05 | Phase 6 | Complete |
 | BILL-06 | Phase 6 | Complete |
 | BOOK-01 | Phase 7 | Pending |
-| BOOK-02 | Phase 7 | Pending |
-| BOOK-03 | Phase 7 | Pending |
+| BOOK-02 | Phase 7 | Complete |
+| BOOK-03 | Phase 7 | Complete |
 | BOOK-04 | Phase 7 | Pending |
 | BOOK-05 | Phase 7 | Pending |
 | HSKP-01 | Phase 8 | Pending |
