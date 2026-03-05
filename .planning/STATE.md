@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 6 of 8 (Billing) — IN PROGRESS
-Plan: 2 of 4 completed
-Status: In Progress — Completed 06-02-PLAN.md
-Last activity: 2026-03-05 — Completed 06-02-PLAN.md (iyzico client library, iyzipay.d.ts type declarations, webhook handler, checkout/callback/upgrade API routes)
+Plan: 3 of 4 completed
+Status: In Progress — Completed 06-03-PLAN.md
+Last activity: 2026-03-05 — Completed 06-03-PLAN.md (Mollie EU billing: @mollie/api-client library, webhook handler, checkout, callback, and change-plan API routes)
 
 Progress: [█████████████████████] 84%
 
@@ -42,6 +42,7 @@ Progress: [█████████████████████] 84%
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
 | Phase 06-billing P01 | 4 | 2 tasks | 5 files |
 | Phase 06-billing P02 | 16 | 2 tasks | 8 files |
+| Phase 06-billing P03 | 17 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,9 @@ Recent decisions affecting current work:
 - [Phase 06-billing]: iyzipay library exposes subscription.upgrade directly — no raw fetch needed for upgrade endpoint
 - [Phase 06-billing]: iyzipay ships no TypeScript types — handwritten declarations in src/types/iyzipay.d.ts covering only used SDK surface
 - [Phase 06-billing]: Downgrade blocked (not auto-disabled) when enabled agents exceed new plan limit — consistent with research recommendation
+- [Phase 06-billing]: Mollie client uses createMollieClient() factory (not new Client()) — SDK v4 exports factory, not class
+- [Phase 06-billing]: validateMollieSignature returns true when MOLLIE_WEBHOOK_SECRET is unset — classic webhooks omit X-Mollie-Signature; security relies on API re-fetch model
+- [Phase 06-billing]: Mollie payment.get() overload void inference — cast via 'as unknown as Payment' to avoid TypeScript picking callback overload
 
 ### Pending Todos
 
@@ -135,5 +139,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-02-PLAN.md — iyzico client library (iyzico.ts, iyzipay.d.ts), POST /api/webhooks/iyzico (HMAC validation), POST /api/billing/iyzico/checkout, GET /api/billing/iyzico/callback, POST /api/billing/iyzico/upgrade (downgrade enforcement). Phase 6 plan 2 of 4 complete.
+Stopped at: Completed 06-03-PLAN.md — Mollie EU billing: @mollie/api-client library with createMollieCustomer, createMollieFirstPayment, createMollieSubscription, changeMolliePlan, validateMollieSignature. POST /api/webhooks/mollie (form-urlencoded, API re-fetch, mandate->subscription flow). POST /api/billing/mollie/checkout. GET /api/billing/mollie/callback. POST /api/billing/mollie/change-plan (downgrade guard). Phase 6 plan 3 of 4 complete.
 Resume file: None
