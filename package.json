@@ -17,6 +17,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@date-fns/tz": "^1.4.1",
     "@hookform/resolvers": "^5.2.2",
+    "@mollie/api-client": "^4.4.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "@upstash/ratelimit": "^2.0.8",
