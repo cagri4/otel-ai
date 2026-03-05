@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 6 — Billing
+**Current focus:** Phase 7 — Bookings
 
 ## Current Position
 
-Phase: 6 of 8 (Billing) — IN PROGRESS
-Plan: 3 of 4 completed
-Status: In Progress — Completed 06-03-PLAN.md
-Last activity: 2026-03-05 — Completed 06-03-PLAN.md (Mollie EU billing: @mollie/api-client library, webhook handler, checkout, callback, and change-plan API routes)
+Phase: 6 of 8 (Billing) — COMPLETE
+Plan: 4 of 4 completed
+Status: Complete — Completed 06-04-PLAN.md
+Last activity: 2026-03-05 — Completed 06-04-PLAN.md (Billing dashboard UI with plan comparison grid, iyzico customer form, Mollie redirect, enforceAgentLimit in toggleAgent, Billing nav link)
 
-Progress: [█████████████████████] 84%
+Progress: [██████████████████████] 87%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
-- Average duration: 12.4 min
-- Total execution time: 210 min
+- Total plans completed: 18
+- Average duration: 12.2 min
+- Total execution time: 219 min
 
 **By Phase:**
 
@@ -32,17 +32,18 @@ Progress: [█████████████████████] 84%
 | 03-knowledge-base | 3 | 30 min | 10 min |
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
 | 05-guest-experience | 4 of 4 | 54 min | 13.5 min |
-| 06-billing | 1 of 4 | 4 min | 4 min |
+| 06-billing | 4 of 4 | 46 min | 11.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 19 min, 21 min, 12 min, 15 min, 4 min
-- Trend: Stable (4 min unusually fast — foundation/types plan)
+- Last 5 plans: 21 min, 12 min, 15 min, 4 min, 9 min
+- Trend: Stable
 
 *Updated after each plan completion*
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
 | Phase 06-billing P01 | 4 | 2 tasks | 5 files |
 | Phase 06-billing P02 | 16 | 2 tasks | 8 files |
 | Phase 06-billing P03 | 17 | 2 tasks | 7 files |
+| Phase 06-billing P04 | 9 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -127,6 +128,8 @@ Recent decisions affecting current work:
 - [Phase 06-billing]: Mollie client uses createMollieClient() factory (not new Client()) — SDK v4 exports factory, not class
 - [Phase 06-billing]: validateMollieSignature returns true when MOLLIE_WEBHOOK_SECRET is unset — classic webhooks omit X-Mollie-Signature; security relies on API re-fetch model
 - [Phase 06-billing]: Mollie payment.get() overload void inference — cast via 'as unknown as Payment' to avoid TypeScript picking callback overload
+- [Phase 06-billing]: toggleAgent returns void (Server Action constraint) — enforcement errors communicated via redirect to /employees?error=X search param
+- [Phase 06-billing]: PLAN_ORDER typed as Array<Exclude<PlanName, 'trial'>> — getPlanPrice only accepts paid plans; narrowing the array type avoids TypeScript error without casting
 
 ### Pending Todos
 
@@ -139,5 +142,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-03-PLAN.md — Mollie EU billing: @mollie/api-client library with createMollieCustomer, createMollieFirstPayment, createMollieSubscription, changeMolliePlan, validateMollieSignature. POST /api/webhooks/mollie (form-urlencoded, API re-fetch, mandate->subscription flow). POST /api/billing/mollie/checkout. GET /api/billing/mollie/callback. POST /api/billing/mollie/change-plan (downgrade guard). Phase 6 plan 3 of 4 complete.
+Stopped at: Completed 06-04-PLAN.md — Billing dashboard UI: /billing page (Server + Client Components), BillingClient with plan comparison grid (iyzico TRY/Mollie EUR prices), iyzico customer data form (TC identity number), Mollie checkout redirect, upgrade/downgrade API calls. enforceAgentLimit wired into toggleAgent with redirect-based error params. /employees error banners for limit_reached and trial_expired. Billing nav link added. Phase 6 billing COMPLETE.
 Resume file: None

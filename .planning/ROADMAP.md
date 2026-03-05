@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Knowledge Base and Onboarding** - Hotel knowledge editor and guided setup to first working AI response (completed 2026-03-05)
 - [x] **Phase 4: Guest-Facing Layer** - WhatsApp integration, web chat widget, multi-language, rate limiting (completed 2026-03-05)
 - [x] **Phase 5: Guest Experience AI and Owner Dashboard** - Milestone-triggered guest messages, escalation, safety guardrails, dashboard (completed 2026-03-05)
-- [ ] **Phase 6: Billing** - iyzico (TR) and Mollie (EU) subscription billing with tiered plan enforcement
+- [x] **Phase 6: Billing** - iyzico (TR) and Mollie (EU) subscription billing with tiered plan enforcement (completed 2026-03-05)
 - [ ] **Phase 7: Booking AI** - Availability inquiry handling, tool-enforced pricing, upsell logic
 - [ ] **Phase 8: Housekeeping Coordinator** - Room status board, cleaning priority queue, task assignment
 
@@ -121,11 +121,11 @@ Plans:
   4. Hotel owner can upgrade or downgrade their plan without contacting support
 **Plans**: 4 plans
 
-Plans:
-- [ ] 06-01-PLAN.md — Billing foundation: subscriptions table, TypeScript types, plan constants, enforcement logic, trial status (Wave 1)
-- [ ] 06-02-PLAN.md — iyzico integration: client library, checkout form, webhook handler, upgrade endpoint (Wave 2)
-- [ ] 06-03-PLAN.md — Mollie integration: client library, first payment mandate, webhook handler, plan change (Wave 2)
-- [ ] 06-04-PLAN.md — Billing dashboard UI, plan enforcement in employee toggle, nav link (Wave 3)
+Plans: 4 of 4 complete
+- [x] 06-01-PLAN.md — Billing foundation: subscriptions table, TypeScript types, plan constants, enforcement logic, trial status (Wave 1)
+- [x] 06-02-PLAN.md — iyzico integration: client library, checkout form, webhook handler, upgrade endpoint (Wave 2)
+- [x] 06-03-PLAN.md — Mollie integration: client library, first payment mandate, webhook handler, plan change (Wave 2)
+- [x] 06-04-PLAN.md — Billing dashboard UI, plan enforcement in employee toggle, nav link (Wave 3)
 
 ### Phase 7: Booking AI
 **Goal**: Guests can inquire about room availability and pricing over WhatsApp and web chat, receiving accurate answers backed by real data and a soft upsell when appropriate
