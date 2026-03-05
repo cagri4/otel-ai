@@ -86,7 +86,7 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Security foundation: rate limiting, prompt injection protection, Phase 4 DB migration (Wave 1)
+- [x] 04-01-PLAN.md — Security foundation: rate limiting, prompt injection protection, Phase 4 DB migration (Wave 1) (completed 2026-03-05)
 - [ ] 04-02-PLAN.md — WhatsApp Business API gateway: Twilio webhook, hotel routing, conversation persistence (Wave 2)
 - [ ] 04-03-PLAN.md — Embeddable web chat widget: hotel token auth, Supabase Realtime delivery, branding (Wave 2)
 - [ ] 04-04-PLAN.md — Multi-language support: next-intl without URL routing, EN/TR dashboard, locale switcher (Wave 1)
@@ -166,7 +166,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Foundation | 3/3 | Complete    | 2026-03-03 |
 | 2. Agent Core | 4/4 | Complete    | 2026-03-05 |
 | 3. Knowledge Base and Onboarding | 3/3 | Complete    | 2026-03-05 |
-| 4. Guest-Facing Layer | 5/5 | Complete   | 2026-03-05 |
+| 4. Guest-Facing Layer | 5/5 | Complete    | 2026-03-05 |
 | 5. Guest Experience AI and Owner Dashboard | 0/4 | Not started | - |
 | 6. Billing | 0/3 | Not started | - |
 | 7. Booking AI | 0/3 | Not started | - |
