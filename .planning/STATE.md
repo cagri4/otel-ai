@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 7 of 8 (Booking AI) — IN PROGRESS
-Plan: 1 of 3 completed
-Status: In Progress — Completed 07-01-PLAN.md
-Last activity: 2026-03-05 — Completed 07-01-PLAN.md (reservations table, conversation_summaries table, real getAvailability/getRoomPricing/lookupGuestReservation tool implementations with hotel_id injection)
+Plan: 2 of 3 completed
+Status: In Progress — Completed 07-02-PLAN.md
+Last activity: 2026-03-05 — Completed 07-02-PLAN.md (BOOKING_AI enum, ROLE_REGISTRY entry with claude-opus-4-6/upsell prompt/escalation triggers, getToolsForRole routing, booking-specific escalation phrases, SSE stream booking_ai routing)
 
-Progress: [████████████████████████] 91%
+Progress: [████████████████████████] 93%
 
 ## Performance Metrics
 
@@ -33,7 +33,7 @@ Progress: [███████████████████████
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
 | 05-guest-experience | 4 of 4 | 54 min | 13.5 min |
 | 06-billing | 4 of 4 | 46 min | 11.5 min |
-| 07-booking-ai | 1 of 3 | 4 min | 4 min |
+| 07-booking-ai | 2 of 3 | 10 min | 5 min |
 
 **Recent Trend:**
 - Last 5 plans: 21 min, 12 min, 15 min, 4 min, 9 min
@@ -46,6 +46,7 @@ Progress: [███████████████████████
 | Phase 06-billing P03 | 17 | 2 tasks | 7 files |
 | Phase 06-billing P04 | 9 | 2 tasks | 5 files |
 | Phase 07-booking-ai P01 | 4 | 2 tasks | 6 files |
+| Phase 07-booking-ai P02 | 6 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -135,6 +136,9 @@ Recent decisions affecting current work:
 - [Phase 07-booking-ai]: hotel_id injected from ToolContext.hotelId in executor dispatch — never accepted from AI model input to prevent cross-hotel data leakage
 - [Phase 07-booking-ai]: Overlap detection: .lt(check_in_date, check_out).gt(check_out_date, check_in) — standard half-open interval, excludes back-to-back reservations
 - [Phase 07-booking-ai]: base_price_note returned as-is from getRoomPricing (freeform text, not computed price) — consistent with Phase 3 decision
+- [Phase 07-booking-ai]: BOOKING_AI gets 3 tools (availability, pricing, reservation lookup) — no delegate_task prevents circular delegation chains from non-FRONT_DESK roles
+- [Phase 07-booking-ai]: BOOKING_AI upsell instruction — offer upgrade once naturally then let guest respond (non-pressuring)
+- [Phase 07-booking-ai]: SSE role resolution ternary chain: guest_experience → GUEST_EXPERIENCE, booking_ai → BOOKING_AI, else → FRONT_DESK (backward compatible)
 
 ### Pending Todos
 
@@ -147,5 +151,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 07-01-PLAN.md — reservations table (hotel_id/room_id FKs, status CHECK, check_dates constraint, RLS), conversation_summaries table for plan 07-03, seed_hotel_defaults extended with booking_ai agent, backfill for existing hotels, real getAvailability (overlap detection), getRoomPricing (base_price_note), lookupGuestReservation (name/phone), hotel_id injection in executor dispatch, Reservation/ConversationSummary TypeScript types.
+Stopped at: Completed 07-02-PLAN.md — BOOKING_AI AgentRole enum value, ROLE_REGISTRY entry with claude-opus-4-6/upsell prompt/escalation triggers, getToolsForRole BOOKING_AI case (3 tools), booking-specific escalation phrases, SSE stream route mapping role=booking_ai to AgentRole.BOOKING_AI.
 Resume file: None

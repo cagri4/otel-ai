@@ -44,11 +44,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Booking AI (Role 2)
 
-- [ ] **BOOK-01**: Booking AI handles availability inquiries over WhatsApp and web chat
+- [x] **BOOK-01**: Booking AI handles availability inquiries over WhatsApp and web chat
 - [x] **BOOK-02**: Booking AI retrieves real-time room availability via tool call (never hallucinated)
 - [x] **BOOK-03**: Booking AI provides accurate pricing from hotel knowledge base
-- [ ] **BOOK-04**: Booking AI can soft-upsell room upgrades during inquiry
-- [ ] **BOOK-05**: Booking AI escalates complex/custom requests to hotel owner
+- [x] **BOOK-04**: Booking AI can soft-upsell room upgrades during inquiry
+- [x] **BOOK-05**: Booking AI escalates complex/custom requests to hotel owner
 
 ### Housekeeping Coordinator (Role 4)
 
@@ -221,11 +221,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | BILL-04 | Phase 6 | Complete |
 | BILL-05 | Phase 6 | Complete |
 | BILL-06 | Phase 6 | Complete |
-| BOOK-01 | Phase 7 | Pending |
+| BOOK-01 | Phase 7 | Complete |
 | BOOK-02 | Phase 7 | Complete |
 | BOOK-03 | Phase 7 | Complete |
-| BOOK-04 | Phase 7 | Pending |
-| BOOK-05 | Phase 7 | Pending |
+| BOOK-04 | Phase 7 | Complete |
+| BOOK-05 | Phase 7 | Complete |
 | HSKP-01 | Phase 8 | Pending |
 | HSKP-02 | Phase 8 | Pending |
 | HSKP-03 | Phase 8 | Pending |
