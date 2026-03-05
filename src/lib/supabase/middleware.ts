@@ -13,12 +13,36 @@
  * - NOT using @supabase/auth-helpers-nextjs (deprecated)
  *
  * Protected routes: everything except /login, /signup, /auth/*
+ *
+ * Public routes (no auth check): /api/widget/*, /api/whatsapp/*, /widget/*,
+ * /api/escalations/* — these are guest-facing endpoints where widget users and
+ * WhatsApp webhooks have no Supabase session.
  */
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 
+// Routes that should bypass Supabase auth entirely.
+// Widget guests and WhatsApp webhooks have no session — attempting auth would
+// redirect them to /login, which would break the guest experience.
+const PUBLIC_ROUTE_PREFIXES = [
+  '/api/widget',
+  '/api/whatsapp',
+  '/widget',
+  '/api/escalations',
+];
+
+function isPublicRoute(pathname: string): boolean {
+  return PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
 export async function updateSession(request: NextRequest) {
+  // Public routes bypass Supabase auth entirely — no session refresh, no redirect.
+  // Rate limiting for these routes is handled in the root middleware (src/middleware.ts).
+  if (isPublicRoute(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient<Database>(
