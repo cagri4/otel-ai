@@ -106,6 +106,10 @@ Recent decisions affecting current work:
 - [Phase 05-guest-experience]: Cron route returns 200 on fatal error — consistent with Twilio webhook pattern; Vercel cron single-attempt behavior; errors logged for debugging (Phase 5 Plan 2)
 - [Phase 05-guest-experience]: WhatsApp review_request falls back to email when TWILIO_TEMPLATE_SID_REVIEW_REQUEST unset — post-stay messages outside 24h free-form window; graceful degradation without silent failure (Phase 5 Plan 2)
 
+- [Phase 05-guest-experience]: Native HTML select for tone dropdown in /employees — shadcn Select not available; Tailwind-styled select matches existing input patterns (Phase 5 Plan 3)
+- [Phase 05-guest-experience]: Conversation grouping in JS for /conversations — PostgREST lacks GROUP BY; fetch 200 turns and reduce by conversation_id is practical for MVP scale (Phase 5 Plan 3)
+- [Phase 05-guest-experience]: Agent role derived from conversation_id pattern (contains guest_experience = GE, wa_* = WhatsApp FD, widget_* = Widget FD) — avoids cross-table join for display purposes (Phase 5 Plan 3)
+- [Phase 05-guest-experience]: ?role= URL param filter on /conversations — stateless Server Component; no client-side state needed (Phase 5 Plan 3)
 ### Pending Todos
 
 None yet.
