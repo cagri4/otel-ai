@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 4 of 8 (Guest-Facing Layer)
-Plan: 4 of 5 in current phase
+Plan: 5 of 5 in current phase (01 just completed — plans completed out of order: 04, 01; remaining: 02, 03, 05)
 Status: In Progress
-Last activity: 2026-03-05 — Completed 04-04-PLAN.md (next-intl v4.8.3, cookie-based locale, EN/TR message files, LocaleSwitcher component, force-dynamic dashboard layout fix)
+Last activity: 2026-03-05 — Completed 04-01-PLAN.md (Upstash rate limiting, prompt injection sanitizer, 0004_guest_facing.sql migration, middleware public route bypass)
 
 Progress: [██████████] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 13.3 min
-- Total execution time: 111 min
+- Total execution time: 139 min
 
 **By Phase:**
 
@@ -30,7 +30,7 @@ Progress: [██████████] 50%
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
-| 04-guest-facing-layer | 4 | 23 min (so far) | - |
+| 04-guest-facing-layer | 5 | 51 min (so far, 2 of 5 plans done) | - |
 
 **Recent Trend:**
 - Last 5 plans: 11 min, 15 min, 13 min, 7 min, 23 min
@@ -84,6 +84,9 @@ Recent decisions affecting current work:
 - Cookie-based locale (NEXT_LOCALE) without URL routing — no [locale] segment or createMiddleware needed for next-intl (Phase 4 Plan 4)
 - export const dynamic = force-dynamic required for dashboard layout — Supabase auth.getUser() needs real request context; static prerendering fails at build time (Phase 4 Plan 4)
 - LocaleSwitcher sets 1-year NEXT_LOCALE cookie + router.refresh() — re-renders Server Components with new locale without page reload (Phase 4 Plan 4)
+- request.ip not available on NextRequest in Next.js 16 — use x-forwarded-for header only for IP extraction on Vercel (Phase 4 Plan 1)
+- Graceful degradation for rate limiting — return success:true when UPSTASH_REDIS_REST_URL not set; prevents blocking all traffic if Redis is unavailable (Phase 4 Plan 1)
+- Public route bypass in updateSession() not middleware.ts — auth module handles its own bypass; rate limiter only does rate limiting (Phase 4 Plan 1)
 
 ### Pending Todos
 
@@ -97,5 +100,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 04-04-PLAN.md — next-intl i18n infrastructure: cookie-based locale, EN/TR message files, LocaleSwitcher, force-dynamic dashboard fix. Phase 4 Plan 4 of 5 complete.
+Stopped at: Completed 04-01-PLAN.md — Upstash rate limiting (IP+hotel), sanitizeGuestInput injection blocker, 0004_guest_facing.sql migration, middleware bypass for guest routes. Phase 4 Plans 01 and 04 complete (2 of 5); plans 02, 03, 05 remain.
 Resume file: None

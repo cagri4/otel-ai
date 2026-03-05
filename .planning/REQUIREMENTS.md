@@ -115,8 +115,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **SAFE-01**: All AI agent actions classified as OBSERVE / INFORM / ACT
 - [ ] **SAFE-02**: ACT-class actions require hotel owner confirmation
 - [ ] **SAFE-03**: All agent actions logged with audit trail
-- [ ] **SAFE-04**: Rate limiting per hotel and per guest IP
-- [ ] **SAFE-05**: Prompt injection protection on all guest-facing inputs
+- [x] **SAFE-04**: Rate limiting per hotel and per guest IP
+- [x] **SAFE-05**: Prompt injection protection on all guest-facing inputs
 
 ## v2 Requirements
 
@@ -200,8 +200,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | I18N-02 | Phase 4 | Complete |
 | I18N-03 | Phase 4 | Complete |
 | I18N-04 | Phase 4 | Complete |
-| SAFE-04 | Phase 4 | Pending |
-| SAFE-05 | Phase 4 | Pending |
+| SAFE-04 | Phase 4 | Complete |
+| SAFE-05 | Phase 4 | Complete |
 | GEXP-01 | Phase 5 | Pending |
 | GEXP-02 | Phase 5 | Pending |
 | GEXP-03 | Phase 5 | Pending |
