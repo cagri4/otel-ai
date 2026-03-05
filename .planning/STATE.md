@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 4 of 8 (Guest-Facing Layer)
-Plan: 5 of 5 in current phase (01 just completed — plans completed out of order: 04, 01; remaining: 02, 03, 05)
+Plan: 5 of 5 in current phase (02 just completed — plans completed out of order: 04, 01, 02; remaining: 03, 05)
 Status: In Progress
-Last activity: 2026-03-05 — Completed 04-01-PLAN.md (Upstash rate limiting, prompt injection sanitizer, 0004_guest_facing.sql migration, middleware public route bypass)
+Last activity: 2026-03-05 — Completed 04-02-PLAN.md (WhatsApp webhook, Twilio signature validation, hotel resolution, FRONT_DESK agent invocation, sendWhatsAppReply)
 
-Progress: [██████████] 50%
+Progress: [███████████] 55%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 13.3 min
-- Total execution time: 139 min
+- Total plans completed: 13
+- Average duration: 12.9 min
+- Total execution time: 158 min
 
 **By Phase:**
 
@@ -30,11 +30,11 @@ Progress: [██████████] 50%
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
-| 04-guest-facing-layer | 5 | 51 min (so far, 2 of 5 plans done) | - |
+| 04-guest-facing-layer | 5 | 70 min (so far, 3 of 5 plans done) | - |
 
 **Recent Trend:**
-- Last 5 plans: 11 min, 15 min, 13 min, 7 min, 23 min
-- Trend: Stable (23 min included Turbopack debugging)
+- Last 5 plans: 15 min, 13 min, 7 min, 23 min, 19 min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -87,6 +87,10 @@ Recent decisions affecting current work:
 - request.ip not available on NextRequest in Next.js 16 — use x-forwarded-for header only for IP extraction on Vercel (Phase 4 Plan 1)
 - Graceful degradation for rate limiting — return success:true when UPSTASH_REDIS_REST_URL not set; prevents blocking all traffic if Redis is unavailable (Phase 4 Plan 1)
 - Public route bypass in updateSession() not middleware.ts — auth module handles its own bypass; rate limiter only does rate limiting (Phase 4 Plan 1)
+- Twilio webhook always returns 200 — even on errors — to prevent retry storm; errors are caught and logged, not re-thrown (Phase 4 Plan 2)
+- Non-streaming invokeAgent for WhatsApp — channel requires complete message; onToken callback omitted (Phase 4 Plan 2)
+- Conversation ID wa_{hotelId}_{phone} pattern — persistent per guest phone across sessions; wa_ prefix distinguishes from widget_ channels (Phase 4 Plan 2)
+- TWILIO_WHATSAPP_NUMBER sandbox fallback — routes all sandbox traffic to first hotel for MVP testing without requiring hotel_whatsapp_numbers entry (Phase 4 Plan 2)
 
 ### Pending Todos
 
@@ -94,11 +98,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4: WhatsApp Business API gateway selection (Twilio vs MessageBird vs others) needs current pricing/SLA research
 - Phase 7: PostgreSQL atomic booking transactions and calendar sync options for boutique hotels without PMS need research
 
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 04-01-PLAN.md — Upstash rate limiting (IP+hotel), sanitizeGuestInput injection blocker, 0004_guest_facing.sql migration, middleware bypass for guest routes. Phase 4 Plans 01 and 04 complete (2 of 5); plans 02, 03, 05 remain.
+Stopped at: Completed 04-02-PLAN.md — Twilio WhatsApp webhook (signature validation, hotel resolution, FRONT_DESK agent, reply sender). Phase 4 Plans 01, 02, and 04 complete (3 of 5); plans 03, 05 remain.
 Resume file: None

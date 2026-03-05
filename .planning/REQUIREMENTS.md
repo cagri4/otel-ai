@@ -27,12 +27,12 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Front Desk AI (Role 1)
 
 - [x] **DESK-01**: User can chat with Front Desk AI from owner dashboard
-- [ ] **DESK-02**: Guests can chat with Front Desk AI via WhatsApp
+- [x] **DESK-02**: Guests can chat with Front Desk AI via WhatsApp
 - [ ] **DESK-03**: Guests can chat with Front Desk AI via embeddable web chat widget
 - [ ] **DESK-04**: Front Desk AI answers hotel FAQs using hotel knowledge base
 - [ ] **DESK-05**: Front Desk AI communicates in guest's language (EN, TR + 1 EU language minimum)
 - [ ] **DESK-06**: Front Desk AI escalates unhandled requests to hotel owner within 2 minutes
-- [ ] **DESK-07**: Front Desk AI maintains conversation context across multiple messages
+- [x] **DESK-07**: Front Desk AI maintains conversation context across multiple messages
 
 ### Guest Experience AI (Role 3)
 
@@ -82,10 +82,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### WhatsApp Integration
 
-- [ ] **WHAP-01**: WhatsApp Business API connection via gateway provider (Twilio/MessageBird)
-- [ ] **WHAP-02**: Incoming guest messages routed to correct AI employee based on context
-- [ ] **WHAP-03**: AI responses sent back to guest via WhatsApp
-- [ ] **WHAP-04**: Conversation history persisted and viewable in owner dashboard
+- [x] **WHAP-01**: WhatsApp Business API connection via gateway provider (Twilio/MessageBird)
+- [x] **WHAP-02**: Incoming guest messages routed to correct AI employee based on context
+- [x] **WHAP-03**: AI responses sent back to guest via WhatsApp
+- [x] **WHAP-04**: Conversation history persisted and viewable in owner dashboard
 
 ### Guest Web Chat
 
@@ -182,16 +182,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | ONBR-02 | Phase 3 | Complete |
 | ONBR-03 | Phase 3 | Complete |
 | ONBR-04 | Phase 3 | Complete |
-| DESK-02 | Phase 4 | Pending |
+| DESK-02 | Phase 4 | Complete |
 | DESK-03 | Phase 4 | Pending |
 | DESK-04 | Phase 4 | Pending |
 | DESK-05 | Phase 4 | Pending |
 | DESK-06 | Phase 4 | Pending |
-| DESK-07 | Phase 4 | Pending |
-| WHAP-01 | Phase 4 | Pending |
-| WHAP-02 | Phase 4 | Pending |
-| WHAP-03 | Phase 4 | Pending |
-| WHAP-04 | Phase 4 | Pending |
+| DESK-07 | Phase 4 | Complete |
+| WHAP-01 | Phase 4 | Complete |
+| WHAP-02 | Phase 4 | Complete |
+| WHAP-03 | Phase 4 | Complete |
+| WHAP-04 | Phase 4 | Complete |
 | CHAT-01 | Phase 4 | Pending |
 | CHAT-02 | Phase 4 | Pending |
 | CHAT-03 | Phase 4 | Pending |
