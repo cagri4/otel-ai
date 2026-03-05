@@ -1,0 +1,61 @@
+{
+  "Nav": {
+    "dashboard": "Dashboard",
+    "frontDesk": "Front Desk",
+    "knowledge": "Knowledge Base",
+    "settings": "Settings",
+    "signOut": "Sign Out"
+  },
+  "Dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome to OtelAI",
+    "onboardingBanner": "Complete your hotel setup to activate your AI assistant."
+  },
+  "FrontDesk": {
+    "title": "Front Desk AI",
+    "placeholder": "Type your message...",
+    "send": "Send"
+  },
+  "Knowledge": {
+    "title": "Knowledge Base",
+    "tabs": {
+      "facts": "Hotel Facts",
+      "rooms": "Rooms"
+    },
+    "addFact": "Add Fact",
+    "addRoom": "Add Room",
+    "editFact": "Edit Fact",
+    "editRoom": "Edit Room",
+    "deleteFact": "Delete Fact",
+    "deleteRoom": "Delete Room",
+    "category": "Category",
+    "save": "Save",
+    "cancel": "Cancel",
+    "noFacts": "No hotel facts yet. Add your first fact to get started.",
+    "noRooms": "No rooms added yet. Add your first room."
+  },
+  "Settings": {
+    "title": "Hotel Settings",
+    "hotelName": "Hotel Name",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "timezone": "Timezone",
+    "contactEmail": "Contact Email",
+    "contactPhone": "Contact Phone",
+    "save": "Save Changes",
+    "saved": "Settings saved successfully."
+  },
+  "Onboarding": {
+    "title": "Set up your hotel",
+    "step1": "Hotel Information",
+    "step2": "Talk to your AI",
+    "continue": "Continue",
+    "skip": "Skip for now"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "Something went wrong.",
+    "retry": "Try again"
+  }
+}

@@ -19,6 +19,11 @@ import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/sign-out-button'
 import type { Hotel } from '@/types/database'
 
+// Force dynamic rendering — this layout calls supabase.auth.getUser() which
+// requires real request context (cookies). Static prerendering at build time
+// has no session, causing Server Component render errors.
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {

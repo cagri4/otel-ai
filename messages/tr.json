@@ -1,0 +1,61 @@
+{
+  "Nav": {
+    "dashboard": "Kontrol Paneli",
+    "frontDesk": "On Buro",
+    "knowledge": "Bilgi Tabani",
+    "settings": "Ayarlar",
+    "signOut": "Cikis Yap"
+  },
+  "Dashboard": {
+    "title": "Kontrol Paneli",
+    "welcome": "OtelAI'ye hos geldiniz",
+    "onboardingBanner": "AI asistaninizi aktif etmek icin otel kurulumunuzu tamamlayin."
+  },
+  "FrontDesk": {
+    "title": "On Buro AI",
+    "placeholder": "Mesajinizi yazin...",
+    "send": "Gonder"
+  },
+  "Knowledge": {
+    "title": "Bilgi Tabani",
+    "tabs": {
+      "facts": "Otel Bilgileri",
+      "rooms": "Odalar"
+    },
+    "addFact": "Bilgi Ekle",
+    "addRoom": "Oda Ekle",
+    "editFact": "Bilgiyi Duzenle",
+    "editRoom": "Odayi Duzenle",
+    "deleteFact": "Bilgiyi Sil",
+    "deleteRoom": "Odayi Sil",
+    "category": "Kategori",
+    "save": "Kaydet",
+    "cancel": "Iptal",
+    "noFacts": "Henuz otel bilgisi yok. Ilk bilginizi ekleyerek baslayin.",
+    "noRooms": "Henuz oda eklenmedi. Ilk odanizi ekleyin."
+  },
+  "Settings": {
+    "title": "Otel Ayarlari",
+    "hotelName": "Otel Adi",
+    "address": "Adres",
+    "city": "Sehir",
+    "country": "Ulke",
+    "timezone": "Saat Dilimi",
+    "contactEmail": "Iletisim E-postasi",
+    "contactPhone": "Iletisim Telefonu",
+    "save": "Degisiklikleri Kaydet",
+    "saved": "Ayarlar basariyla kaydedildi."
+  },
+  "Onboarding": {
+    "title": "Otelinizi kurun",
+    "step1": "Otel Bilgileri",
+    "step2": "AI'nizla konusun",
+    "continue": "Devam",
+    "skip": "Simdilik atla"
+  },
+  "Common": {
+    "loading": "Yukleniyor...",
+    "error": "Bir seyler ters gitti.",
+    "retry": "Tekrar dene"
+  }
+}
