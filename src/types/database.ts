@@ -9,6 +9,7 @@
  *   supabase/migrations/0005_guest_experience.sql
  *   supabase/migrations/0006_billing.sql
  *   supabase/migrations/0007_booking_ai.sql
+ *   supabase/migrations/0008_housekeeping.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -310,6 +311,61 @@ export interface Subscription {
 }
 
 // =============================================================================
+// RoomHousekeepingStatus — Per-room cleaning status (added in 0008_housekeeping.sql)
+// Corresponds to: public.room_housekeeping_status table
+// One row per room — tracks current cleaning status (clean/dirty/inspected/out_of_order).
+// Updated by AI agent tools, cron jobs, or owner directly.
+// =============================================================================
+
+export type HousekeepingStatusValue = 'clean' | 'dirty' | 'inspected' | 'out_of_order';
+
+export interface RoomHousekeepingStatus {
+  id: string;                        // UUID primary key
+  hotel_id: string;                  // UUID — references public.hotels.id (NOT NULL)
+  room_id: string;                   // UUID — references public.rooms.id (NOT NULL)
+  status: HousekeepingStatusValue;   // Current cleaning status (NOT NULL, default 'dirty')
+  notes: string | null;              // Optional notes about the status
+  updated_by: string | null;         // Who last updated: 'agent' | 'cron' | 'owner'
+  updated_at: string;                // ISO 8601 UTC timestamp (timestamptz, NOT NULL)
+}
+
+// =============================================================================
+// HousekeepingQueueItem — Daily priority queue entry (added in 0008_housekeeping.sql)
+// Corresponds to: public.housekeeping_queue table
+// One row per room per date — priority-ordered cleaning tasks for the day.
+// Priority 1=checkout today (highest), 2=checkin today, 3=checkin tomorrow.
+// =============================================================================
+
+export interface HousekeepingQueueItem {
+  id: string;               // UUID primary key
+  hotel_id: string;         // UUID — references public.hotels.id (NOT NULL)
+  room_id: string;          // UUID — references public.rooms.id (NOT NULL)
+  queue_date: string;       // ISO 8601 date (DATE type, NOT NULL)
+  priority: number;         // 1=checkout today, 2=checkin today, 3=checkin tomorrow (NOT NULL)
+  reason: string;           // 'checkout_today' | 'checkin_today' | 'checkin_tomorrow' (NOT NULL)
+  assigned_to: string | null;   // Staff name or email (NULL until assigned)
+  assigned_at: string | null;   // ISO 8601 UTC timestamp (timestamptz, NULL until assigned)
+  completed_at: string | null;  // ISO 8601 UTC timestamp (timestamptz, NULL until completed)
+  created_at: string;       // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
+// HousekeepingStaff — Housekeeping staff directory (added in 0008_housekeeping.sql)
+// Corresponds to: public.housekeeping_staff table
+// Hotel's housekeeping staff for task assignment.
+// =============================================================================
+
+export interface HousekeepingStaff {
+  id: string;          // UUID primary key
+  hotel_id: string;    // UUID — references public.hotels.id (NOT NULL)
+  name: string;        // Staff member's display name (NOT NULL)
+  email: string;       // Staff member's email (NOT NULL, UNIQUE per hotel)
+  phone: string | null; // Optional phone number
+  is_active: boolean;  // Whether this staff member is active (NOT NULL, default true)
+  created_at: string;  // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
 // ActionClass — Audit classification for tool calls (used in audit.ts and agent_audit_log)
 // OBSERVE: read-only data queries (no side effects)
 // INFORM:  notifications and informational writes
@@ -502,6 +558,34 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<Subscription, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      room_housekeeping_status: {
+        Row: RoomHousekeepingStatus;
+        Insert: Omit<RoomHousekeepingStatus, 'id'> & {
+          id?: string;
+          status?: HousekeepingStatusValue;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<RoomHousekeepingStatus, 'id'>>;
+        Relationships: Relationship[];
+      };
+      housekeeping_queue: {
+        Row: HousekeepingQueueItem;
+        Insert: Omit<HousekeepingQueueItem, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<HousekeepingQueueItem, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      housekeeping_staff: {
+        Row: HousekeepingStaff;
+        Insert: Omit<HousekeepingStaff, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<HousekeepingStaff, 'id' | 'created_at'>>;
         Relationships: Relationship[];
       };
     };
