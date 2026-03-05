@@ -74,9 +74,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Owner Dashboard
 
-- [ ] **DASH-01**: Hotel owner can chat with each AI employee individually
+- [x] **DASH-01**: Hotel owner can chat with each AI employee individually
 - [x] **DASH-02**: Hotel owner can view all guest conversations per AI employee
-- [ ] **DASH-03**: Hotel owner receives escalation notifications (in-app + email)
+- [x] **DASH-03**: Hotel owner receives escalation notifications (in-app + email)
 - [x] **DASH-04**: Hotel owner can turn AI employees on/off
 - [x] **DASH-05**: Hotel owner can configure each AI employee's behavior/tone
 
@@ -210,9 +210,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | SAFE-01 | Phase 5 | Complete |
 | SAFE-02 | Phase 5 | Complete |
 | SAFE-03 | Phase 5 | Complete |
-| DASH-01 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
 | DASH-02 | Phase 5 | Complete |
-| DASH-03 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Complete |
 | DASH-04 | Phase 5 | Complete |
 | DASH-05 | Phase 5 | Complete |
 | BILL-01 | Phase 6 | Pending |

@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 5 — Booking Engine
+**Current focus:** Phase 6 — Booking Engine
 
 ## Current Position
 
-Phase: 5 of 8 (Guest Experience AI and Owner Dashboard) — IN PROGRESS
-Plan: 3 of 4 completed
-Status: In Progress — Completed 05-03-PLAN.md
-Last activity: 2026-03-05 — Completed 05-03-PLAN.md (Owner dashboard: /employees toggle+config, /conversations browser+drill-down, /audit log with OBSERVE/INFORM/ACT badges; nav links updated)
+Phase: 5 of 8 (Guest Experience AI and Owner Dashboard) — COMPLETE
+Plan: 4 of 4 completed
+Status: Complete — Completed 05-04-PLAN.md
+Last activity: 2026-03-05 — Completed 05-04-PLAN.md (Guest Experience AI chat page, EscalationNotificationProvider with Supabase Realtime toasts, sonner Toaster in dashboard layout, Guest Experience nav link; Phase 5 complete)
 
-Progress: [████████████████] 74%
+Progress: [████████████████████] 80%
 
 ## Performance Metrics
 
@@ -38,6 +38,7 @@ Progress: [████████████████] 74%
 - Trend: Stable
 
 *Updated after each plan completion*
+| Phase 05 P04 | 14 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,10 @@ Recent decisions affecting current work:
 - [Phase 05-guest-experience]: Conversation grouping in JS for /conversations — PostgREST lacks GROUP BY; fetch 200 turns and reduce by conversation_id is practical for MVP scale (Phase 5 Plan 3)
 - [Phase 05-guest-experience]: Agent role derived from conversation_id pattern (contains guest_experience = GE, wa_* = WhatsApp FD, widget_* = Widget FD) — avoids cross-table join for display purposes (Phase 5 Plan 3)
 - [Phase 05-guest-experience]: ?role= URL param filter on /conversations — stateless Server Component; no client-side state needed (Phase 5 Plan 3)
+- [Phase 05-guest-experience]: useChatStream accepts optional {conversationId, role} options — backward compatible; existing /desk page unchanged
+- [Phase 05-guest-experience]: API route role resolution: roleStr from body maps guest_experience -> GUEST_EXPERIENCE, anything else -> FRONT_DESK (safe default)
+- [Phase 05-guest-experience]: EscalationNotificationProvider: Supabase Realtime client-side postgres_changes subscription as provider component with 15s toast duration
+
 ### Pending Todos
 
 None yet.
@@ -121,5 +126,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 05-02-PLAN.md — Milestone trigger engine: vercel.json cron (06:00 UTC daily), CRON_SECRET-secured route at /api/cron/milestone-dispatch, milestoneDispatch.ts with per-hotel timezone-aware date matching, WhatsApp/email dispatch, custom template loading, sent flag guards. 2 of 4 Phase 5 plans complete.
+Stopped at: Completed 05-04-PLAN.md — Guest Experience AI chat page, EscalationNotificationProvider with Supabase Realtime toasts, sonner Toaster in dashboard layout, Guest Experience nav link. Phase 5 complete (4 of 4 plans).
 Resume file: None

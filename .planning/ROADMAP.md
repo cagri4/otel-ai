@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Agent Core** - Stateless agent orchestrator, memory system, and first AI employee (owner-facing) (completed 2026-03-05)
 - [x] **Phase 3: Knowledge Base and Onboarding** - Hotel knowledge editor and guided setup to first working AI response (completed 2026-03-05)
 - [x] **Phase 4: Guest-Facing Layer** - WhatsApp integration, web chat widget, multi-language, rate limiting (completed 2026-03-05)
-- [ ] **Phase 5: Guest Experience AI and Owner Dashboard** - Milestone-triggered guest messages, escalation, safety guardrails, dashboard
+- [x] **Phase 5: Guest Experience AI and Owner Dashboard** - Milestone-triggered guest messages, escalation, safety guardrails, dashboard (completed 2026-03-05)
 - [ ] **Phase 6: Billing** - iyzico (TR) and Mollie (EU) subscription billing with tiered plan enforcement
 - [ ] **Phase 7: Booking AI** - Availability inquiry handling, tool-enforced pricing, upsell logic
 - [ ] **Phase 8: Housekeeping Coordinator** - Room status board, cleaning priority queue, task assignment
@@ -167,7 +167,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Agent Core | 4/4 | Complete    | 2026-03-05 |
 | 3. Knowledge Base and Onboarding | 3/3 | Complete    | 2026-03-05 |
 | 4. Guest-Facing Layer | 5/5 | Complete    | 2026-03-05 |
-| 5. Guest Experience AI and Owner Dashboard | 3/4 | In Progress|  |
+| 5. Guest Experience AI and Owner Dashboard | 4/4 | Complete   | 2026-03-05 |
 | 6. Billing | 0/3 | Not started | - |
 | 7. Booking AI | 0/3 | Not started | - |
 | 8. Housekeeping Coordinator | 0/2 | Not started | - |
