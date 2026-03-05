@@ -1,11 +1,20 @@
 /**
  * Tool executor for the OtelAI agent system.
  *
- * Dispatches tool calls by name to their stub implementations.
+ * Dispatches tool calls by name to their real implementations.
  * Returns results as JSON strings (Anthropic tool_result content format).
  *
  * This is the runtime dispatch layer between invokeAgent() and the actual
- * tool implementations (currently stubs in stubs.ts, real DB queries in Phase 7).
+ * tool implementations. As of Phase 7 (07-01), all three booking tools use
+ * real Supabase queries instead of stubs:
+ * - get_room_availability → availability.ts (getAvailability)
+ * - get_room_pricing      → pricing.ts (getRoomPricing)
+ * - lookup_guest_reservation → stubs.ts (lookupGuestReservation, real query)
+ *
+ * CRITICAL — hotel_id injection: Every booking tool call injects hotel_id from
+ * ToolContext.hotelId into the tool input. Tools never trust hotel_id from the
+ * AI model's input block — this prevents cross-hotel data leakage (Pitfall 1
+ * from Phase 7 research).
  *
  * Error handling: If a tool throws, returns an error result object as JSON
  * rather than re-throwing. This allows Claude to handle tool failures gracefully
@@ -13,12 +22,16 @@
  *
  * Context parameter: executeTool() accepts a context object with hotelId and
  * fromRole. This is required by delegate_task to INSERT into agent_tasks with
- * the correct hotel isolation and originating role. Other tools ignore context.
+ * the correct hotel isolation and originating role. All booking tools use it
+ * for hotel_id injection.
  *
  * Source: .planning/phases/02-agent-core/02-02-PLAN.md, 02-03-PLAN.md
+ *         .planning/phases/07-booking-ai/07-01-PLAN.md
  */
 
-import { getAvailability, getRoomPricing, lookupGuestReservation } from './stubs';
+import { getAvailability } from './availability';
+import { getRoomPricing } from './pricing';
+import { lookupGuestReservation } from './stubs';
 import { delegateTask } from '../coordination';
 import { classifyAction, writeAuditLog } from '../audit';
 
@@ -52,9 +65,10 @@ const TOOL_DISPATCH: Record<
   string,
   (input: Record<string, unknown>, context: ToolContext) => Promise<Record<string, unknown>>
 > = {
-  get_room_availability: (input) => getAvailability(input),
-  get_room_pricing: (input) => getRoomPricing(input),
-  lookup_guest_reservation: (input) => lookupGuestReservation(input),
+  // Booking tools — hotel_id injected from ToolContext (CRITICAL: prevents cross-hotel data leakage)
+  get_room_availability:   (input, context) => getAvailability({ ...input, hotel_id: context.hotelId }),
+  get_room_pricing:        (input, context) => getRoomPricing({ ...input, hotel_id: context.hotelId }),
+  lookup_guest_reservation: (input, context) => lookupGuestReservation({ ...input, hotel_id: context.hotelId }),
   delegate_task: async (input, context) => {
     await delegateTask({
       hotelId: context.hotelId,

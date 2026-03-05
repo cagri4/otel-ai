@@ -8,6 +8,7 @@
  *   supabase/migrations/0004_guest_facing.sql
  *   supabase/migrations/0005_guest_experience.sql
  *   supabase/migrations/0006_billing.sql
+ *   supabase/migrations/0007_booking_ai.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -213,6 +214,43 @@ export interface Booking {
 }
 
 // =============================================================================
+// Reservation — AI-managed booking records (added in 0007_booking_ai.sql)
+// Corresponds to: public.reservations table
+// Used by get_room_availability and lookup_guest_reservation tools to answer
+// real-time availability and guest lookup queries (BOOK-02, BOOK-03).
+// =============================================================================
+
+export type ReservationStatus = 'pending' | 'confirmed' | 'cancelled';
+
+export interface Reservation {
+  id: string;              // UUID primary key
+  hotel_id: string;        // UUID — references public.hotels.id (NOT NULL)
+  room_id: string;         // UUID — references public.rooms.id (NOT NULL)
+  guest_name: string;      // Guest full name (NOT NULL)
+  guest_phone: string | null; // WhatsApp-formatted phone e.g. "+31612345678"
+  check_in_date: string;   // ISO 8601 date (DATE type, NOT NULL)
+  check_out_date: string;  // ISO 8601 date (DATE type, NOT NULL)
+  status: ReservationStatus; // 'pending' | 'confirmed' | 'cancelled' (NOT NULL, default 'confirmed')
+  notes: string | null;    // Optional booking notes
+  created_at: string;      // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
+// ConversationSummary — Rolling conversation summaries (added in 0007_booking_ai.sql)
+// Corresponds to: public.conversation_summaries table
+// Used by plan 07-03 (progressive summarization) to keep context within token limits.
+// One row per conversation_id — upserted by summarization job.
+// =============================================================================
+
+export interface ConversationSummary {
+  conversation_id: string; // Text PK — matches conversation_turn.conversation_id pattern
+  hotel_id: string;        // UUID — references public.hotels.id (NOT NULL)
+  summary: string;         // Compressed rolling summary of prior turns (NOT NULL)
+  turns_summarized: number; // Count of turns compressed into this summary (NOT NULL, default 0)
+  updated_at: string;      // ISO 8601 UTC timestamp (timestamptz, updated on each upsert)
+}
+
+// =============================================================================
 // MessageTemplate — Per-hotel per-milestone per-channel message templates
 // Corresponds to: public.message_templates table
 // Hotel owner configures these; cron uses them to send milestone messages.
@@ -410,6 +448,21 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Omit<Booking, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      reservations: {
+        Row: Reservation;
+        Insert: Omit<Reservation, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<Reservation, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      conversation_summaries: {
+        Row: ConversationSummary;
+        Insert: ConversationSummary;
+        Update: Partial<Omit<ConversationSummary, 'conversation_id'>>;
         Relationships: Relationship[];
       };
       message_templates: {
