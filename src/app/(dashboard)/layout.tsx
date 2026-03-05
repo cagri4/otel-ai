@@ -17,6 +17,7 @@ import type { ReactNode } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/sign-out-button'
+import { LocaleSwitcher } from '@/components/LocaleSwitcher'
 import type { Hotel } from '@/types/database'
 
 // Force dynamic rendering — this layout calls supabase.auth.getUser() which
@@ -118,7 +119,10 @@ export default async function DashboardLayout({
               </a>
             </nav>
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-2">
+            <LocaleSwitcher />
+            <SignOutButton />
+          </div>
         </div>
       </header>
 
