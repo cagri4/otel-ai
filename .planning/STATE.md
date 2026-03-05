@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 4 — Guest-Facing Layer
+**Current focus:** Phase 5 — Booking Engine
 
 ## Current Position
 
-Phase: 4 of 8 (Guest-Facing Layer)
-Plan: 5 of 5 in current phase (03 just completed — plans completed out of order: 04, 01, 02, 03; remaining: 05)
-Status: In Progress
-Last activity: 2026-03-05 — Completed 04-03-PLAN.md (service-role Supabase client, widget session API, widget message API with Realtime broadcast, ChatWidget component, /widget/[token] page)
+Phase: 4 of 8 (Guest-Facing Layer) — COMPLETE
+Plan: 5 of 5 completed (all plans done: 01, 02, 03, 04, 05)
+Status: Phase 4 Complete — Ready for Phase 5
+Last activity: 2026-03-05 — Completed 04-05-PLAN.md (escalation detection, /api/escalations email notification, invokeAgent escalation hook, agentFactory DESK-05 multilingual update)
 
-Progress: [████████████] 60%
+Progress: [██████████████] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14
+- Total plans completed: 15
 - Average duration: 12.9 min
-- Total execution time: 179 min
+- Total execution time: 191 min
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [████████████] 60%
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
-| 04-guest-facing-layer | 5 | 91 min (so far, 4 of 5 plans done) | - |
+| 04-guest-facing-layer | 5 | 103 min | 20.6 min |
 
 **Recent Trend:**
-- Last 5 plans: 13 min, 7 min, 23 min, 19 min, 21 min
+- Last 5 plans: 7 min, 23 min, 19 min, 21 min, 12 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -94,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 04-guest-facing-layer]: Service-role client in service.ts bypasses RLS for server-side ops where no user session exists (widget/WhatsApp) — token validation happens in code, not RLS (Phase 4 Plan 3)
 - [Phase 04-guest-facing-layer]: hotelId parsed server-side from conversationId (widget_{hotelId}_{uuid}) — never accepted from client body to prevent hotel spoofing (Phase 4 Plan 3)
 - [Phase 04-guest-facing-layer]: Supabase Realtime Broadcast used for AI response delivery to widget guests — agent runs to completion server-side then pushes to channel (Phase 4 Plan 3)
+- [Phase 04-guest-facing-layer]: detectAndInsertEscalation() called without await in handleEndTurn — fire-and-forget with .catch() at call site plus internal try/catch (double safety net) (Phase 4 Plan 5)
+- [Phase 04-guest-facing-layer]: EscalationChannel determined from conversationId prefix server-side (wa_ = whatsapp, else widget) — channel param ignored to prevent spoofing (Phase 4 Plan 5)
+- [Phase 04-guest-facing-layer]: DESK-05 multilingual update — agentFactory MULTILINGUAL SUPPORT block explicitly lists English, Turkish, Dutch, German, French (Phase 4 Plan 5)
 
 ### Pending Todos
 
@@ -106,5 +109,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 04-03-PLAN.md — Web chat widget (service-role client, session API, message API with Supabase Realtime Broadcast, ChatWidget component, /widget/[token] page). Phase 4 Plans 01, 02, 03, 04 complete (4 of 5); plan 05 remains.
+Stopped at: Completed 04-05-PLAN.md — Escalation notification system (detectAndInsertEscalation, /api/escalations Resend email, invokeAgent hook, agentFactory DESK-05 multilingual). Phase 4 complete (5/5 plans). Ready for Phase 5: Booking Engine.
 Resume file: None

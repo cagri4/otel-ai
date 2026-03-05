@@ -30,8 +30,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DESK-02**: Guests can chat with Front Desk AI via WhatsApp
 - [x] **DESK-03**: Guests can chat with Front Desk AI via embeddable web chat widget
 - [x] **DESK-04**: Front Desk AI answers hotel FAQs using hotel knowledge base
-- [ ] **DESK-05**: Front Desk AI communicates in guest's language (EN, TR + 1 EU language minimum)
-- [ ] **DESK-06**: Front Desk AI escalates unhandled requests to hotel owner within 2 minutes
+- [x] **DESK-05**: Front Desk AI communicates in guest's language (EN, TR + 1 EU language minimum)
+- [x] **DESK-06**: Front Desk AI escalates unhandled requests to hotel owner within 2 minutes
 - [x] **DESK-07**: Front Desk AI maintains conversation context across multiple messages
 
 ### Guest Experience AI (Role 3)
@@ -185,8 +185,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | DESK-02 | Phase 4 | Complete |
 | DESK-03 | Phase 4 | Complete |
 | DESK-04 | Phase 4 | Complete |
-| DESK-05 | Phase 4 | Pending |
-| DESK-06 | Phase 4 | Pending |
+| DESK-05 | Phase 4 | Complete |
+| DESK-06 | Phase 4 | Complete |
 | DESK-07 | Phase 4 | Complete |
 | WHAP-01 | Phase 4 | Complete |
 | WHAP-02 | Phase 4 | Complete |
