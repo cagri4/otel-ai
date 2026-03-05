@@ -151,11 +151,11 @@ Plans:
   1. Hotel owner can tell the Housekeeping Coordinator "room 12 is clean" and see the room status board update
   2. Every morning, a cleaning priority queue is automatically generated based on that day's checkouts and check-ins
   3. Hotel owner can assign a cleaning task to a staff member via the Housekeeping Coordinator, who sends a notification
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: Room status data model and Housekeeping Coordinator role — status board, chat-driven updates
-- [ ] 08-02: Daily priority queue generation — cron trigger, checkout/check-in date logic, task dispatch notifications
+- [ ] 08-01-PLAN.md — Room status DB tables, HOUSEKEEPING_COORDINATOR role, tools, SSE routing, dashboard page with live status board (Wave 1)
+- [ ] 08-02-PLAN.md — Daily priority queue cron, assign_cleaning_task tool with Resend email notification (Wave 2)
 
 ## Progress
 
