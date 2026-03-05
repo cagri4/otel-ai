@@ -171,7 +171,8 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
  * Returns the tool definitions for a given agent role.
  *
  * FRONT_DESK gets all four tools including delegate_task for cross-department delegation.
- * Future roles may have restricted tool sets (e.g., HOUSEKEEPER doesn't need pricing).
+ * BOOKING_AI gets the three booking tools (availability, pricing, reservation lookup) but not delegate_task.
+ * GUEST_EXPERIENCE gets no tools — generates messages from templates provided in system prompt.
  *
  * @param role - The agent role requesting tools
  * @returns Array of Anthropic.Messages.Tool definitions for the role
@@ -189,6 +190,15 @@ export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
     case AgentRole.GUEST_EXPERIENCE:
       // No tools needed — generates messages from templates/context provided in system prompt
       return [];
+    case AgentRole.BOOKING_AI:
+      // Booking-specific tools: availability, pricing, reservation lookup
+      // No delegate_task (prevents delegation chains from non-FRONT_DESK roles)
+      // No update_hotel_info (booking agents don't update hotel config)
+      return [
+        getAvailabilityTool,
+        getRoomPricingTool,
+        lookupGuestReservationTool,
+      ];
     default:
       // Non-FRONT_DESK roles get the three core tools but not delegate_task
       // (prevents housekeeping/concierge from creating circular delegations)
