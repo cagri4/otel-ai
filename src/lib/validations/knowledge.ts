@@ -50,7 +50,7 @@ export const roomSchema = z.object({
     .max(100, 'Room name must be 100 characters or fewer'),
   room_type: z.string().min(1, 'Room type required'),
   bed_type: z.string().optional(),
-  max_occupancy: z.coerce.number().int().min(1).max(20).optional(),
+  max_occupancy: z.number().int().min(1).max(20).optional(),
   description: z.string().max(1000, 'Description must be under 1000 characters').optional(),
   amenities: z.string().optional(), // comma-separated string, split in Server Action
   base_price_note: z
