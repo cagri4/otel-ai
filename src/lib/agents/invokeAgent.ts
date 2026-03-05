@@ -32,6 +32,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { agentFactory } from './agentFactory';
 import { assembleSystemPrompt } from './assembleContext';
 import { detectAndInsertEscalation } from './escalation';
@@ -85,6 +86,31 @@ async function invokeAgentInternal(
       'Agent tool recursion limit exceeded (max 5 rounds). ' +
         'This indicates an infinite tool loop in the agent response.',
     );
+  }
+
+  // -------------------------------------------------------------------------
+  // Step 0 (depth 0 only): Check is_enabled guard before proceeding
+  // Uses service client — invokeAgent may be called from contexts without user
+  // session (cron jobs, webhooks). maybeSingle() gracefully handles hotels
+  // created before Phase 5 migration (no agents row yet = treat as enabled).
+  // -------------------------------------------------------------------------
+  if (depth === 0) {
+    const { createServiceClient } = await import('@/lib/supabase/service');
+    const supabase = createServiceClient();
+    // Cast to SupabaseClient — same pattern as escalation.ts.
+    // The manual Database type does not thread through from() inference for new tables
+    // until generated types replace these manual definitions (per project decision in STATE.md).
+    const { data: agentConfig } = await (supabase as unknown as SupabaseClient)
+      .from('agents')
+      .select('is_enabled')
+      .eq('hotel_id', params.hotelId)
+      .eq('role', params.role)
+      .maybeSingle();
+
+    // If agent config exists and is explicitly disabled, return polite message
+    if (agentConfig && !(agentConfig as { is_enabled: boolean }).is_enabled) {
+      return 'This AI employee is currently offline. Please contact the hotel directly.';
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -217,7 +243,7 @@ async function handleToolUse(
       const resultContent = await executeTool(
         toolUseBlock.name,
         toolUseBlock.input as Record<string, unknown>,
-        { hotelId: params.hotelId, fromRole: params.role },
+        { hotelId: params.hotelId, fromRole: params.role, conversationId: params.conversationId },
       );
 
       // Persist each tool result with its correlation ID

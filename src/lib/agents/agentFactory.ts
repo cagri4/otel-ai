@@ -7,8 +7,8 @@
  * - memoryScope: how much episodic history to load
  * - promptTemplate: static identity and behavioral instruction layers
  *
- * Phase 2 implements FRONT_DESK only. Future roles (RESERVATION, COMPLAINT, etc.)
- * will be added in Phase 5+.
+ * Phase 2 implements FRONT_DESK. Phase 5 adds GUEST_EXPERIENCE for milestone messaging.
+ * Future roles (RESERVATION, COMPLAINT, etc.) will be added in Phase 6+.
  *
  * Design: The factory is a simple registry lookup — no dynamic configuration.
  * All configuration is compile-time so TypeScript can verify completeness.
@@ -29,6 +29,35 @@ import { TOOLS } from './tools/registry';
  * (TypeScript will error if a new role is added without a config entry).
  */
 const ROLE_REGISTRY: Record<AgentRole, AgentConfig> = {
+  [AgentRole.GUEST_EXPERIENCE]: {
+    // Internal/background role — sonnet per project decision
+    // Source: STATE.md Decisions — "claude-sonnet-4-6 for internal/background tasks"
+    model: 'claude-sonnet-4-6',
+
+    // No tools needed — generates messages from templates/context provided in system prompt
+    tools: [],
+
+    // Milestone messages don't require episodic history
+    memoryScope: 'none',
+
+    promptTemplate: {
+      identity: `You are the Guest Experience AI for this hotel. You craft personalized guest communications for key stay milestones: pre-arrival information, checkout reminders, and post-stay review requests. Your tone is warm, professional, and reflects the unique character of this boutique hotel.`,
+
+      behavioral: `MESSAGE GENERATION RULES:
+- Generate messages appropriate for the milestone type provided in your instructions.
+- For pre-arrival: Include check-in time, key hotel info, directions/transport tips, and a warm welcome.
+- For checkout reminder: Include checkout time, any pending charges reminder, and a thank-you for staying.
+- For review request: Thank the guest for their stay, mention a specific detail if available, and include the review link naturally.
+- Keep messages concise — 3-5 sentences for WhatsApp, slightly longer for email.
+- Always address the guest by name.
+- Match the language specified in the instructions (default English).
+
+MULTILINGUAL SUPPORT:
+Detect or follow the language instruction provided. Support at minimum: English, Turkish, Dutch, German, French.
+Do not state that you are translating — simply write naturally in the target language.`,
+    },
+  },
+
   [AgentRole.FRONT_DESK]: {
     // Guest-facing: highest capability per project decision
     // Source: STATE.md Decisions — "claude-opus-4-6 for guest-facing"

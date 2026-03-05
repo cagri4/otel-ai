@@ -186,6 +186,9 @@ export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
         updateHotelInfoTool,
         delegateTaskTool,
       ];
+    case AgentRole.GUEST_EXPERIENCE:
+      // No tools needed — generates messages from templates/context provided in system prompt
+      return [];
     default:
       // Non-FRONT_DESK roles get the three core tools but not delegate_task
       // (prevents housekeeping/concierge from creating circular delegations)

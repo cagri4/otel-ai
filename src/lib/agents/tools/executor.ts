@@ -20,6 +20,7 @@
 
 import { getAvailability, getRoomPricing, lookupGuestReservation } from './stubs';
 import { delegateTask } from '../coordination';
+import { classifyAction, writeAuditLog } from '../audit';
 
 // =============================================================================
 // Tool Context
@@ -28,12 +29,15 @@ import { delegateTask } from '../coordination';
 /**
  * Execution context passed to every tool invocation.
  * Required for tools that need hotel isolation or role information.
+ * conversationId is required for audit log correlation (Phase 5).
  */
 export interface ToolContext {
   /** UUID of the hotel — required for RLS-scoped DB operations */
   hotelId: string;
   /** Role of the invoking agent (e.g. 'FRONT_DESK') */
   fromRole: string;
+  /** Conversation identifier for audit log correlation */
+  conversationId: string;
 }
 
 // =============================================================================
@@ -141,6 +145,18 @@ export async function executeTool(
 
   try {
     const result = await handler(input, context);
+
+    // Fire-and-forget audit log write — never block tool response for logging
+    writeAuditLog({
+      hotelId: context.hotelId,
+      agentRole: context.fromRole,
+      conversationId: context.conversationId,
+      toolName: name,
+      actionClass: classifyAction(name),
+      inputJson: input,
+      resultJson: result,
+    }).catch((err) => console.error('[audit] Failed to write audit log:', err));
+
     return JSON.stringify(result);
   } catch (error) {
     // Return an error result to Claude rather than crashing invokeAgent()

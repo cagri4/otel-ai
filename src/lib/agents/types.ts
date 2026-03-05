@@ -1,7 +1,7 @@
 /**
  * Agent domain types for OtelAI multi-agent system.
  *
- * Phase 2 implements a single agent role (FRONT_DESK).
+ * Phase 2 implements FRONT_DESK. Phase 5 adds GUEST_EXPERIENCE.
  * Future phases will add specialized roles (RESERVATION, COMPLAINT, etc.).
  *
  * Design principles:
@@ -24,6 +24,7 @@ import type Anthropic from '@anthropic-ai/sdk';
  * Each role maps to a distinct Claude model configuration and prompt template.
  *
  * Phase 2 implements FRONT_DESK only.
+ * Phase 5 adds GUEST_EXPERIENCE (milestone messaging: pre-arrival, checkout, review request).
  * Future roles (commented as placeholders):
  *   - RESERVATION: Handles booking lookups and modifications
  *   - COMPLAINT: Handles guest complaints and escalations
@@ -32,7 +33,8 @@ import type Anthropic from '@anthropic-ai/sdk';
  */
 export enum AgentRole {
   FRONT_DESK = "front_desk",
-  // RESERVATION = "reservation",   // Phase 5
+  GUEST_EXPERIENCE = "guest_experience",
+  // RESERVATION = "reservation",   // Phase 6
   // COMPLAINT = "complaint",        // Phase 6
   // CONCIERGE = "concierge",        // Phase 7
   // HOUSEKEEPER = "housekeeper",    // Phase 7
