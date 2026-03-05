@@ -33,6 +33,15 @@ const ESCALATION_PHRASES = [
   'i am unable to assist',
   'i recommend contacting the hotel directly',
   'this is beyond what i can do',
+  // Booking-specific escalation triggers (Phase 7 — BOOKING_AI)
+  // These match the phrases used in BOOKING_AI behavioral prompt escalation triggers.
+  'group booking',
+  'corporate rate',
+  'special package',
+  'extended stay',
+  'negotiated rate',
+  'contract required',
+  'please contact reception directly for this',
 ] as const;
 
 // =============================================================================
