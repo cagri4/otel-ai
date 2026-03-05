@@ -9,10 +9,10 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 8 of 8 (Housekeeping Coordinator) — IN PROGRESS
-Plan: 1 of 1 completed
-Status: Completed — Plan 1 complete
-Last activity: 2026-03-05 — Completed 08-01-PLAN.md (HOUSEKEEPING_COORDINATOR agent with get_room_status and update_room_status tools, 5s-polling StatusBoard at /housekeeping)
+Phase: 8 of 8 (Housekeeping Coordinator) — COMPLETE
+Plan: 2 of 2 completed
+Status: All plans complete
+Last activity: 2026-03-05 — Completed 08-02-PLAN.md (housekeeping queue cron at 07:00 UTC, assign_cleaning_task tool with Resend email, HOUSEKEEPING_COORDINATOR upgraded to 3 tools)
 
 Progress: [████████████████████████████] 100%
 
@@ -51,6 +51,7 @@ Progress: [███████████████████████
 | Phase 06-billing P02 | 16 | 2 tasks | 8 files |
 | Phase 06-billing P01 | 4 | 2 tasks | 5 files |
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
+| Phase 08-housekeeping-coordinator P02 | 8 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -149,6 +150,8 @@ Recent decisions affecting current work:
 - [Phase 08-housekeeping-coordinator]: StatusBoard polls every 5 seconds via setInterval — simplest approach ensuring board reflects agent tool changes within one polling window
 - [Phase 08-housekeeping-coordinator]: StatusBoard extracts hotel_id from JWT access token payload via atob+JSON.parse — custom access token hook embeds hotel_id into JWT claims at login
 - [Phase 08-housekeeping-coordinator]: ILIKE partial match for room resolution in updateRoomStatus: zero matches = error, multiple = disambiguation candidates list, single = upsert
+- [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: Cron idempotency via upsert with ignoreDuplicates=true — postgrest-js insert() lacks onConflict option; upsert equivalent to INSERT ON CONFLICT DO NOTHING
+- [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: assignCleaningTask uses maybeSingle() for queue update — optional assignment works even without today's queue entry; Resend graceful fallback when RESEND_API_KEY unset
 
 ### Pending Todos
 
@@ -161,5 +164,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 08-01-PLAN.md — HOUSEKEEPING_COORDINATOR agent (get_room_status, update_room_status tools), 5s-polling StatusBoard, /housekeeping dashboard, seed_hotel_defaults extended with housekeeping_coordinator agent row
+Stopped at: Completed 08-02-PLAN.md — housekeeping queue cron (runHousekeepingQueue at 07:00 UTC), assign_cleaning_task tool with Resend email, HOUSEKEEPING_COORDINATOR upgraded to 3 tools. Phase 8 complete.
 Resume file: None

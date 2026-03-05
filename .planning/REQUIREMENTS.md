@@ -54,8 +54,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **HSKP-01**: Hotel owner can chat with Housekeeping Coordinator to manage room statuses
 - [x] **HSKP-02**: Housekeeping Coordinator maintains room status board (clean, dirty, inspected, out of order)
-- [ ] **HSKP-03**: Housekeeping Coordinator generates daily cleaning priority queue based on checkouts/check-ins
-- [ ] **HSKP-04**: Housekeeping Coordinator can assign tasks to housekeeping staff (via notification)
+- [x] **HSKP-03**: Housekeeping Coordinator generates daily cleaning priority queue based on checkouts/check-ins
+- [x] **HSKP-04**: Housekeeping Coordinator can assign tasks to housekeeping staff (via notification)
 
 ### Hotel Knowledge Base
 
@@ -228,8 +228,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | BOOK-05 | Phase 7 | Complete |
 | HSKP-01 | Phase 8 | Complete |
 | HSKP-02 | Phase 8 | Complete |
-| HSKP-03 | Phase 8 | Pending |
-| HSKP-04 | Phase 8 | Pending |
+| HSKP-03 | Phase 8 | Complete |
+| HSKP-04 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 69 total
