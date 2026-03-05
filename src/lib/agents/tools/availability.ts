@@ -52,7 +52,8 @@ export async function getAvailability(
     .eq('hotel_id', hotel_id)
     .neq('status', 'cancelled')
     .lt('check_in_date', check_out)
-    .gt('check_out_date', check_in);
+    .gt('check_out_date', check_in)
+    .returns<{ room_id: string }[]>();
 
   if (reservationError) {
     return { error: true, message: reservationError.message };
@@ -61,11 +62,12 @@ export async function getAvailability(
   const bookedRoomIds = (bookedReservations ?? []).map((r) => r.room_id as string);
 
   // Step 2: Query all rooms for this hotel, excluding booked ones.
+  type RoomRow = { id: string; name: string; room_type: string; bed_type: string; max_occupancy: number; base_price_note: string };
+
   let roomQuery = supabase
     .from('rooms')
     .select('id, name, room_type, bed_type, max_occupancy, base_price_note')
-    .eq('hotel_id', hotel_id)
-    .order('sort_order');
+    .eq('hotel_id', hotel_id);
 
   // Filter out booked rooms when there are any
   if (bookedRoomIds.length > 0) {
@@ -77,7 +79,9 @@ export async function getAvailability(
     roomQuery = roomQuery.eq('room_type', room_type);
   }
 
-  const { data: availableRooms, error: roomError } = await roomQuery;
+  const { data: availableRooms, error: roomError } = await roomQuery
+    .order('sort_order')
+    .returns<RoomRow[]>();
 
   if (roomError) {
     return { error: true, message: roomError.message };

@@ -45,18 +45,21 @@ export async function getRoomPricing(
 
   const supabase = createServiceClient();
 
+  type PriceRow = { name: string; room_type: string; base_price_note: string; bed_type: string; max_occupancy: number };
+
   let roomQuery = supabase
     .from('rooms')
     .select('name, room_type, base_price_note, bed_type, max_occupancy')
-    .eq('hotel_id', hotel_id)
-    .order('sort_order');
+    .eq('hotel_id', hotel_id);
 
   // Optional room_type filter
   if (room_type) {
     roomQuery = roomQuery.eq('room_type', room_type);
   }
 
-  const { data, error } = await roomQuery;
+  const { data, error } = await roomQuery
+    .order('sort_order')
+    .returns<PriceRow[]>();
 
   if (error) {
     return { error: true, message: error.message };
