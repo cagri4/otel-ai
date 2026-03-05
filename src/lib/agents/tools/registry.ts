@@ -98,6 +98,32 @@ const lookupGuestReservationTool: Anthropic.Messages.Tool = {
 };
 
 /**
+ * Updates hotel information based on owner-provided data during conversation.
+ * Used by FRONT_DESK for progressive onboarding — saving owner-provided facts
+ * (city, country, contact info) during the first conversation.
+ */
+const updateHotelInfoTool: Anthropic.Messages.Tool = {
+  name: 'update_hotel_info',
+  description:
+    'Save hotel information provided by the owner during conversation. Use this when the owner tells you their city, contact details, address, or other hotel facts. This helps build the hotel knowledge base from conversation.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      field: {
+        type: 'string',
+        enum: ['city', 'country', 'address', 'contact_email', 'contact_phone'],
+        description: 'Which hotel field to update',
+      },
+      value: {
+        type: 'string',
+        description: 'The new value for the field',
+      },
+    },
+    required: ['field', 'value'],
+  },
+};
+
+/**
  * Delegates a task to another AI employee via the async tasks queue.
  * Used by FRONT_DESK to hand off work to other departments without blocking.
  */
@@ -137,6 +163,7 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
   get_room_availability: getAvailabilityTool,
   get_room_pricing: getRoomPricingTool,
   lookup_guest_reservation: lookupGuestReservationTool,
+  update_hotel_info: updateHotelInfoTool,
   delegate_task: delegateTaskTool,
 };
 
@@ -156,6 +183,7 @@ export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
         getAvailabilityTool,
         getRoomPricingTool,
         lookupGuestReservationTool,
+        updateHotelInfoTool,
         delegateTaskTool,
       ];
     default:

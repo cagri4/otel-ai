@@ -66,6 +66,44 @@ const TOOL_DISPATCH: Record<
       message: 'Task has been delegated. The other employee will handle it.',
     };
   },
+
+  /**
+   * Progressive onboarding tool — saves owner-provided hotel info during conversation.
+   * Uses RLS-scoped server client (not service_role) consistent with project decision:
+   * "No service_role client in memory helpers — all queries respect RLS via anon key + session cookie."
+   */
+  update_hotel_info: async (input, context) => {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+
+    const allowedFields = ['city', 'country', 'address', 'contact_email', 'contact_phone'];
+    const field = input.field as string;
+    const value = input.value as string;
+
+    if (!allowedFields.includes(field)) {
+      return { error: true, message: `Field "${field}" is not updateable` };
+    }
+
+    if (!value || value.trim().length === 0) {
+      return { error: true, message: 'Value cannot be empty' };
+    }
+
+    // Update hotel — RLS enforces hotel_id scoping via session cookie
+    const { error } = await (supabase.from('hotels') as ReturnType<typeof supabase.from>)
+      .update({ [field]: value.trim(), updated_at: new Date().toISOString() } as Record<string, unknown>)
+      .eq('id', context.hotelId);
+
+    if (error) {
+      return { error: true, message: error.message };
+    }
+
+    return {
+      updated: true,
+      field,
+      value: value.trim(),
+      message: `Hotel ${field} updated to "${value.trim()}"`,
+    };
+  },
 };
 
 // =============================================================================

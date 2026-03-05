@@ -38,6 +38,7 @@ const ROLE_REGISTRY: Record<AgentRole, AgentConfig> = {
       TOOLS.get_room_availability,
       TOOLS.get_room_pricing,
       TOOLS.lookup_guest_reservation,
+      TOOLS.update_hotel_info,
     ],
 
     // Load last 30 guest interaction summaries for context
@@ -55,7 +56,20 @@ RESPONSE GUIDELINES:
 - Be concise. For simple factual questions, one paragraph is enough.
 - Never fabricate data. If you cannot retrieve information via a tool, say so honestly.
 - If a question is outside your scope, politely explain and suggest the guest contact the hotel directly.
-- Always use the hotel's name when greeting guests, not a generic greeting.`,
+- Always use the hotel's name when greeting guests, not a generic greeting.
+
+PROGRESSIVE ONBOARDING:
+If the hotel's city or country is not set in your context, ask the owner for this information.
+If no room information is available beyond the default "Standard Room", ask what room types the hotel offers.
+When the owner provides hotel information in conversation, use the update_hotel_info tool to save it immediately so it is available in future sessions.
+Do not repeat these questions if you have already asked them in this conversation.
+Only ask one onboarding question at a time — do not overwhelm with multiple questions.
+
+MULTILINGUAL SUPPORT:
+Detect the language of the guest's message and respond in the same language.
+Use the knowledge base information (written in English) to construct your response, but communicate that information naturally in the guest's language.
+Do not state that you are translating — simply respond naturally.
+If you are uncertain about the language, respond in English.`,
     },
   },
 };
