@@ -7,6 +7,7 @@
  *   supabase/migrations/0003_knowledge_base.sql
  *   supabase/migrations/0004_guest_facing.sql
  *   supabase/migrations/0005_guest_experience.sql
+ *   supabase/migrations/0006_billing.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -247,6 +248,30 @@ export interface Agent {
 }
 
 // =============================================================================
+// Subscription — Per-hotel billing state (added in 0006_billing.sql)
+// Corresponds to: public.subscriptions table
+// One row per hotel. Written by service_role (webhook handlers, seed trigger).
+// Hotel owner can read their own row via RLS (JWT hotel_id claim).
+// =============================================================================
+
+export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'paused';
+
+export type BillingProvider = 'iyzico' | 'mollie';
+
+export interface Subscription {
+  id: string;                              // UUID primary key
+  hotel_id: string;                        // UUID — references public.hotels.id (NOT NULL, UNIQUE)
+  plan_name: string;                       // CHECK: 'trial' | 'starter' | 'pro' | 'enterprise'
+  status: SubscriptionStatus;              // Current billing status (NOT NULL)
+  trial_ends_at: string | null;            // ISO 8601 UTC timestamp (timestamptz) — NULL when on paid plan
+  provider: BillingProvider | null;        // Payment provider — NULL during trial
+  provider_customer_id: string | null;     // Mollie: cst_xxx | iyzico: customerReferenceCode
+  provider_subscription_id: string | null; // Mollie: sub_xxx | iyzico: subscriptionReferenceCode
+  created_at: string;                      // ISO 8601 UTC timestamp (timestamptz)
+  updated_at: string;                      // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
+}
+
+// =============================================================================
 // ActionClass — Audit classification for tool calls (used in audit.ts and agent_audit_log)
 // OBSERVE: read-only data queries (no side effects)
 // INFORM:  notifications and informational writes
@@ -414,6 +439,16 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Omit<AgentAuditLog, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      subscriptions: {
+        Row: Subscription;
+        Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at'> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<Subscription, 'id' | 'created_at'>>;
         Relationships: Relationship[];
       };
     };
