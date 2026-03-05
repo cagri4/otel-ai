@@ -34,6 +34,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { MessageStream } from '@anthropic-ai/sdk/lib/MessageStream';
 import { agentFactory } from './agentFactory';
 import { assembleSystemPrompt } from './assembleContext';
+import { detectAndInsertEscalation } from './escalation';
 import { loadConversationTurns, persistTurn } from './memory';
 import { executeTool } from './tools/executor';
 import { getToolsForRole } from './tools/registry';
@@ -286,6 +287,23 @@ async function handleEndTurn(
 
   // Persist the final assistant response
   await persistTurn(params.conversationId, params.hotelId, 'assistant', fullText);
+
+  /**
+   * Fire-and-forget: escalation detection runs asynchronously after the agent
+   * response is persisted. The .catch() handles Promise rejection without blocking
+   * the return. The function itself has its own internal try/catch (double safety net).
+   */
+  detectAndInsertEscalation({
+    response: fullText,
+    userMessage: params.userMessage,
+    conversationId: params.conversationId,
+    hotelId: params.hotelId,
+    channel: params.conversationId.startsWith('wa_') ? 'whatsapp'
+           : params.conversationId.startsWith('widget_') ? 'widget'
+           : 'dashboard',
+  }).catch((err) => {
+    console.error('[escalation] detection failed:', err);
+  });
 
   return fullText;
 }

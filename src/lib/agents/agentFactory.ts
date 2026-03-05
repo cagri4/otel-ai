@@ -67,6 +67,7 @@ Only ask one onboarding question at a time — do not overwhelm with multiple qu
 
 MULTILINGUAL SUPPORT:
 Detect the language of the guest's message and respond in the same language.
+Support at minimum: English, Turkish, Dutch, German, French.
 Use the knowledge base information (written in English) to construct your response, but communicate that information naturally in the guest's language.
 Do not state that you are translating — simply respond naturally.
 If you are uncertain about the language, respond in English.`,
