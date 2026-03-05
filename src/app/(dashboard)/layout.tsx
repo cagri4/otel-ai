@@ -126,6 +126,12 @@ export default async function DashboardLayout({
                 Employees
               </a>
               <a
+                href="/billing"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Billing
+              </a>
+              <a
                 href="/conversations"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >

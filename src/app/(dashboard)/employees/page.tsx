@@ -16,7 +16,12 @@
  * SupabaseClient cast: same pattern as escalation.ts and audit.ts.
  * See STATE.md decision: "SupabaseClient cast for new tables".
  *
+ * Error banners from toggleAgent enforcement redirects:
+ *   ?error=limit_reached&maxAgents=N — agent limit exceeded for current plan
+ *   ?error=trial_expired             — free trial has ended
+ *
  * Source: .planning/phases/05-guest-experience-ai-and-owner-dashboard/05-03-PLAN.md
+ * Updated: .planning/phases/06-billing/06-04-PLAN.md
  */
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -56,7 +61,11 @@ const TONE_OPTIONS = [
 // Page
 // =============================================================================
 
-export default async function EmployeesPage() {
+interface EmployeesPageProps {
+  searchParams: Promise<{ error?: string; maxAgents?: string }>
+}
+
+export default async function EmployeesPage({ searchParams }: EmployeesPageProps) {
   const supabase = await createClient()
 
   const {
@@ -66,6 +75,11 @@ export default async function EmployeesPage() {
   if (!user) {
     redirect('/login')
   }
+
+  // Resolve search params for enforcement error banners
+  const params = await searchParams
+  const errorCode = params.error
+  const maxAgents = params.maxAgents
 
   // Fetch all agents for this hotel — RLS scopes to user's hotel_id from JWT.
   // SupabaseClient cast required for manually-typed tables in postgrest-js v12.
@@ -90,6 +104,29 @@ export default async function EmployeesPage() {
           Manage your AI staff — toggle them on/off and customize their behavior.
         </p>
       </div>
+
+      {/* Enforcement error banners from toggleAgent redirect */}
+      {errorCode === 'limit_reached' && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <strong>Agent limit reached.</strong>{' '}
+          {maxAgents
+            ? `Your plan allows ${maxAgents} agent${Number(maxAgents) !== 1 ? 's' : ''}.`
+            : 'You have reached your plan limit.'}{' '}
+          <a href="/billing" className="underline font-medium hover:text-red-900">
+            Upgrade your plan on the Billing page.
+          </a>
+        </div>
+      )}
+
+      {errorCode === 'trial_expired' && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <strong>Your free trial has ended.</strong>{' '}
+          <a href="/billing" className="underline font-medium hover:text-red-900">
+            Subscribe on the Billing page
+          </a>{' '}
+          to manage AI employees.
+        </div>
+      )}
 
       {agentList.length === 0 && (
         <Card>

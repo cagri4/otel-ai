@@ -12,11 +12,19 @@
  * SupabaseClient cast: same pattern as escalation.ts / audit.ts — avoids TypeScript
  * `never` inference for manually-typed tables in postgrest-js v12.
  *
+ * Enforcement: When enabling an agent, enforceAgentLimit is called to check the
+ * hotel's subscription plan limit. On violation, the action redirects to
+ * /employees?error=limit_reached or /employees?error=trial_expired instead of
+ * toggling. This keeps toggleAgent return type as Promise<void> (Server Action constraint).
+ *
  * Source: .planning/phases/05-guest-experience-ai-and-owner-dashboard/05-03-PLAN.md
+ * Updated: .planning/phases/06-billing/06-04-PLAN.md
  */
 
+import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { enforceAgentLimit } from '@/lib/billing/enforcement'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // =============================================================================
@@ -47,6 +55,36 @@ export async function toggleAgent(formData: FormData): Promise<void> {
 
   if (!agentId) {
     return
+  }
+
+  // -------------------------------------------------------------------------
+  // Enforcement gate — only when ENABLING an agent (toggling from disabled to enabled)
+  // -------------------------------------------------------------------------
+  if (!currentEnabled) {
+    // Fetch the agent row to get hotel_id — needed for plan enforcement.
+    // SupabaseClient cast required for manually-typed tables in postgrest-js v12.
+    const { data: agentRow } = await (supabase as unknown as SupabaseClient)
+      .from('agents')
+      .select('hotel_id')
+      .eq('id', agentId)
+      .single() as { data: { hotel_id: string } | null }
+
+    if (agentRow?.hotel_id) {
+      const enforcement = await enforceAgentLimit(agentRow.hotel_id)
+
+      if (!enforcement.allowed) {
+        // Redirect with error param — keeps toggleAgent return type as void.
+        // Employees page reads ?error= and shows appropriate banner.
+        if (enforcement.reason === 'trial_expired') {
+          redirect('/employees?error=trial_expired')
+        } else {
+          // limit_reached or subscription_canceled
+          redirect(
+            `/employees?error=limit_reached&maxAgents=${enforcement.maxAgents}`,
+          )
+        }
+      }
+    }
   }
 
   // SupabaseClient cast — manual Database types don't infer for agents table
