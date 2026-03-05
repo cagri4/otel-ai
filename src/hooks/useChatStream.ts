@@ -31,6 +31,22 @@ import type { ChatMessage } from '@/lib/agents/types';
 // Types
 // =============================================================================
 
+export interface UseChatStreamOptions {
+  /**
+   * Conversation ID suffix passed to the API endpoint.
+   * The server prepends hotel_id to form the full ID.
+   * Defaults to 'owner_chat' for the Front Desk AI.
+   * Use 'guest_experience_chat' for the Guest Experience AI.
+   */
+  conversationId?: string;
+  /**
+   * Agent role sent in the POST body.
+   * Defaults to 'front_desk' for backward compatibility.
+   * Use 'guest_experience' for the Guest Experience AI.
+   */
+  role?: string;
+}
+
 export interface UseChatStreamReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
@@ -42,7 +58,7 @@ export interface UseChatStreamReturn {
 // Hook
 // =============================================================================
 
-export function useChatStream(): UseChatStreamReturn {
+export function useChatStream(options?: UseChatStreamOptions): UseChatStreamReturn {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +66,9 @@ export function useChatStream(): UseChatStreamReturn {
   // AbortController ref — cancel in-flight SSE request on new send
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Stable conversation ID — server constructs full ID as `${hotelId}_owner_chat`
-  const conversationId = 'owner_chat';
+  // Stable conversation ID — server constructs full ID as `${hotelId}_${conversationId}`
+  const conversationId = options?.conversationId ?? 'owner_chat';
+  const role = options?.role ?? 'front_desk';
 
   // ---------------------------------------------------------------------------
   // loadHistory — fetches conversation turns from GET /api/agent/stream
@@ -131,7 +148,7 @@ export function useChatStream(): UseChatStreamReturn {
           const res = await fetch('/api/agent/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text.trim(), conversationId }),
+            body: JSON.stringify({ message: text.trim(), conversationId, role }),
             signal: controller.signal,
           });
 
@@ -213,7 +230,7 @@ export function useChatStream(): UseChatStreamReturn {
         }
       })();
     },
-    [isStreaming, conversationId],
+    [isStreaming, conversationId, role],
   );
 
   return { messages, isStreaming, error, sendMessage };

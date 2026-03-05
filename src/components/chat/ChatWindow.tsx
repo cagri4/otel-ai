@@ -21,12 +21,24 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useChatStream } from '@/hooks/useChatStream';
+import { useChatStream, type UseChatStreamOptions } from '@/hooks/useChatStream';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 
-export function ChatWindow() {
-  const { messages, isStreaming, error, sendMessage } = useChatStream();
+interface ChatWindowProps {
+  /**
+   * Options forwarded to useChatStream.
+   * If omitted, defaults to Front Desk AI (owner_chat / front_desk role).
+   */
+  streamOptions?: UseChatStreamOptions;
+  /**
+   * Placeholder text shown when no messages exist.
+   */
+  emptyStateText?: string;
+}
+
+export function ChatWindow({ streamOptions, emptyStateText }: ChatWindowProps = {}) {
+  const { messages, isStreaming, error, sendMessage } = useChatStream(streamOptions);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom whenever messages change or tokens arrive
@@ -47,7 +59,7 @@ export function ChatWindow() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && !isStreaming && (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            Start a conversation with your Front Desk AI
+            {emptyStateText ?? 'Start a conversation with your Front Desk AI'}
           </div>
         )}
 

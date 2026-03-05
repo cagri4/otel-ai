@@ -91,11 +91,13 @@ export async function POST(req: Request): Promise<Response> {
   // ---------------------------------------------------------------------------
   let message: string;
   let conversationId: string | undefined;
+  let roleStr: string | undefined;
 
   try {
     const body = await req.json();
     message = body.message;
     conversationId = body.conversationId;
+    roleStr = body.role;
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
@@ -109,6 +111,11 @@ export async function POST(req: Request): Promise<Response> {
       headers: { 'Content-Type': 'application/json' },
     });
   }
+
+  // Resolve role from request body — defaults to FRONT_DESK for backward compatibility.
+  // Accepts "guest_experience" to route to the Guest Experience AI.
+  const role =
+    roleStr === 'guest_experience' ? AgentRole.GUEST_EXPERIENCE : AgentRole.FRONT_DESK;
 
   // One persistent conversation per hotel owner if no conversationId provided
   const effectiveConversationId =
@@ -142,7 +149,7 @@ export async function POST(req: Request): Promise<Response> {
       // Awaiting inside start() would block the stream from being returned.
       // Tokens are pushed via onToken callback as they arrive from Claude.
       invokeAgent({
-        role: AgentRole.FRONT_DESK,
+        role,
         userMessage: message.trim(),
         conversationId: effectiveConversationId,
         hotelId: hotel.id,
