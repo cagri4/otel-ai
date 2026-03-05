@@ -5,6 +5,7 @@
  *   supabase/migrations/0001_foundation.sql
  *   supabase/migrations/0002_agent_core.sql
  *   supabase/migrations/0003_knowledge_base.sql
+ *   supabase/migrations/0004_guest_facing.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -18,6 +19,14 @@
 // Corresponds to: public.hotels table
 // =============================================================================
 
+// Widget appearance and behavior configuration stored as JSONB on hotels.widget_config
+export type WidgetConfig = {
+  primary_color?: string;    // Hex color e.g. "#1a73e8"
+  logo_url?: string;         // URL to hotel logo for widget header
+  welcome_message?: string;  // Initial greeting shown to guests
+  position?: 'bottom-right' | 'bottom-left'; // Widget floating button position
+};
+
 export interface Hotel {
   id: string;                   // UUID primary key
   name: string;                 // Hotel display name (NOT NULL)
@@ -28,6 +37,8 @@ export interface Hotel {
   contact_email: string | null; // Primary contact email
   contact_phone: string | null; // Primary contact phone
   onboarding_completed_at: string | null; // Set when hotel owner completes onboarding wizard (added in 0003)
+  widget_token: string;                   // Unique embed token for the chat widget (added in 0004)
+  widget_config: Record<string, unknown> | null; // JSONB widget appearance config (added in 0004)
   created_at: string;           // ISO 8601 UTC timestamp (timestamptz)
   updated_at: string;           // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
 }
@@ -143,6 +154,40 @@ export interface AgentTask {
 }
 
 // =============================================================================
+// Escalation — Human escalation requests (added in 0004_guest_facing.sql)
+// Corresponds to: public.escalations table
+// Records conversations where the AI could not resolve the guest's issue
+// and staff follow-up is required.
+// =============================================================================
+
+export type EscalationChannel = 'whatsapp' | 'widget';
+
+export interface Escalation {
+  id: string;               // UUID primary key
+  hotel_id: string;         // UUID — references public.hotels.id (NOT NULL)
+  conversation_id: string;  // Conversation identifier (NOT NULL)
+  channel: EscalationChannel; // Source channel: 'whatsapp' or 'widget' (NOT NULL)
+  guest_message: string;    // The guest message that triggered escalation (NOT NULL)
+  agent_response: string | null; // Last agent response before escalation (if any)
+  notified_at: string | null;    // When the hotel was notified (NULL until notification sent)
+  resolved_at: string | null;    // When the escalation was resolved by staff (NULL until resolved)
+  created_at: string;       // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
+// HotelWhatsAppNumber — Twilio phone number assignments (added in 0004_guest_facing.sql)
+// Corresponds to: public.hotel_whatsapp_numbers table
+// Maps inbound Twilio WhatsApp numbers to hotels for routing.
+// =============================================================================
+
+export interface HotelWhatsAppNumber {
+  id: string;             // UUID primary key
+  hotel_id: string;       // UUID — references public.hotels.id (NOT NULL)
+  twilio_number: string;  // Twilio phone number e.g. "+14155552671" (NOT NULL, UNIQUE)
+  created_at: string;     // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
 // Database wrapper type
 // Provides basic structure for Supabase client typing.
 // Replace with generated types (`supabase gen types typescript`) in a later phase.
@@ -161,10 +206,12 @@ export type Database = {
     Tables: {
       hotels: {
         Row: Hotel;
-        Insert: Omit<Hotel, 'id' | 'created_at' | 'updated_at'> & {
+        Insert: Omit<Hotel, 'id' | 'created_at' | 'updated_at' | 'widget_token' | 'widget_config'> & {
           id?: string;
           created_at?: string;
           updated_at?: string;
+          widget_token?: string;
+          widget_config?: Record<string, unknown> | null;
         };
         Update: Partial<Omit<Hotel, 'id' | 'created_at'>>;
         Relationships: Relationship[];
@@ -224,6 +271,24 @@ export type Database = {
           completed_at?: string | null;
         };
         Update: Partial<Omit<AgentTask, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      escalations: {
+        Row: Escalation;
+        Insert: Omit<Escalation, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<Escalation, 'id' | 'created_at'>>;
+        Relationships: Relationship[];
+      };
+      hotel_whatsapp_numbers: {
+        Row: HotelWhatsAppNumber;
+        Insert: Omit<HotelWhatsAppNumber, 'id' | 'created_at'> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<HotelWhatsAppNumber, 'id' | 'created_at'>>;
         Relationships: Relationship[];
       };
     };
