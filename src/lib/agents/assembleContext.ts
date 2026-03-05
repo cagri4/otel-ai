@@ -5,20 +5,23 @@
  * on every invocation (stateless constraint — no caching).
  *
  * Layer order (per research Pattern 2):
- *   1. <identity>     — Who the agent is (static per role)
+ *   1. <identity>      — Who the agent is (static per role)
  *   2. <hotel_context> — Live hotel data from DB (name, address, timezone, etc.)
- *   3. <memory>       — Semantic facts + episodic guest history from DB
- *   4. <instructions> — Behavioral rules and policies (static per role)
+ *   3. <memory>        — Conversation summary + semantic facts + episodic guest history
+ *                        Conversation summary appears FIRST to orient the model before
+ *                        reading the static hotel knowledge base.
+ *   4. <instructions>  — Behavioral rules and policies (static per role)
  *
  * IMPORTANT: Hotel query is NEVER cached. This function must query fresh data
  * on every call to respect the stateless invocation design constraint.
  *
  * Source: .planning/phases/02-agent-core/02-02-PLAN.md
+ *         .planning/phases/07-booking-ai/07-03-PLAN.md
  * Research reference: .planning/phases/02-agent-core/02-RESEARCH.md Pattern 2
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { loadSemanticFacts, loadEpisodicHistory, loadRoomContext } from './memory';
+import { loadSemanticFacts, loadEpisodicHistory, loadRoomContext, loadConversationSummary } from './memory';
 import type { AgentRole, AgentConfig } from './types';
 import type { Hotel } from '@/types/database';
 
@@ -41,7 +44,10 @@ interface AssembleSystemPromptParams {
  *
  * Layer 1 — Identity: Who the agent is (from config.promptTemplate.identity)
  * Layer 2 — Hotel Context: Live hotel data fetched fresh from DB
- * Layer 3 — Memory: Semantic facts + episodic history fetched fresh from DB
+ * Layer 3 — Memory: Conversation summary (first) + semantic facts + episodic history
+ *            Conversation summary is loaded in parallel with hotel data (zero serial latency).
+ *            It is injected as the FIRST memory entry so the model reads prior conversation
+ *            context before the static hotel knowledge base.
  * Layer 4 — Instructions: Behavioral rules (from config.promptTemplate.behavioral)
  *
  * NEVER cache the result of this function. The stateless invocation design
@@ -57,11 +63,13 @@ export async function assembleSystemPrompt(
 
   // Fetch hotel data and memory in parallel for performance.
   // IMPORTANT: No caching — fresh data every invocation.
-  const [hotel, semanticFacts, roomContext, episodicHistory] = await Promise.all([
+  // conversationSummary is loaded in parallel — no serial latency added.
+  const [hotel, semanticFacts, roomContext, episodicHistory, conversationSummary] = await Promise.all([
     fetchHotel(hotelId),
     loadSemanticFacts(hotelId),
     loadRoomContext(hotelId),
     loadEpisodicHistory(hotelId, config.memoryScope),
+    loadConversationSummary(params.conversationId),
   ]);
 
   // -------------------------------------------------------------------------
@@ -79,9 +87,14 @@ ${formatHotelContext(hotel)}
 </hotel_context>`;
 
   // -------------------------------------------------------------------------
-  // Layer 3: Memory (semantic facts + episodic history)
+  // Layer 3: Memory (conversation summary + semantic facts + episodic history)
+  // Summary comes FIRST: model needs conversation context before hotel knowledge.
   // -------------------------------------------------------------------------
   const memoryParts: string[] = [];
+
+  if (conversationSummary.trim()) {
+    memoryParts.push(`[Earlier conversation summary]:\n${conversationSummary}`);
+  }
 
   if (semanticFacts.trim()) {
     memoryParts.push(`Hotel Knowledge Base:\n${semanticFacts}`);
