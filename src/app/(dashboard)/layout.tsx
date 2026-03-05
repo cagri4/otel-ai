@@ -18,6 +18,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SignOutButton } from '@/components/dashboard/sign-out-button'
 import { LocaleSwitcher } from '@/components/LocaleSwitcher'
+import { EscalationNotificationProvider } from '@/components/dashboard/EscalationNotificationProvider'
+import { Toaster } from 'sonner'
 import type { Hotel } from '@/types/database'
 
 // Force dynamic rendering — this layout calls supabase.auth.getUser() which
@@ -106,6 +108,12 @@ export default async function DashboardLayout({
                 Front Desk
               </a>
               <a
+                href="/guest-experience"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Guest Experience
+              </a>
+              <a
                 href="/knowledge"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -144,8 +152,13 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      {/* Main content — wrapped with EscalationNotificationProvider for real-time toast alerts */}
+      <EscalationNotificationProvider hotelId={typedHotel.id}>
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      </EscalationNotificationProvider>
+
+      {/* Toaster — renders sonner toast notifications. Placed outside provider but inside layout. */}
+      <Toaster position="top-right" richColors />
     </div>
   )
 }

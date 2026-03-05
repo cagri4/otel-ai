@@ -34,6 +34,7 @@
     "react-select": "^5.10.2",
     "react-timezone-select": "^3.3.2",
     "resend": "^6.9.3",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "twilio": "^5.12.2",
     "zod": "^4.3.6"
