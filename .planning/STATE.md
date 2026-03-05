@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-02)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Phase 3 — Knowledge Base and Onboarding
+**Current focus:** Phase 4 — Guest-Facing Layer
 
 ## Current Position
 
-Phase: 3 of 8 (Knowledge Base and Onboarding)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-03-05 — Completed 03-03-PLAN.md (Onboarding wizard: /onboarding page, 2-step wizard, update_hotel_info agent tool, progressive onboarding + multilingual behavioral instructions)
+Phase: 4 of 8 (Guest-Facing Layer)
+Plan: 4 of 5 in current phase
+Status: In Progress
+Last activity: 2026-03-05 — Completed 04-04-PLAN.md (next-intl v4.8.3, cookie-based locale, EN/TR message files, LocaleSwitcher component, force-dynamic dashboard layout fix)
 
-Progress: [█████████░] 45%
+Progress: [██████████] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 12.6 min
-- Total execution time: 88 min
+- Total plans completed: 11
+- Average duration: 13.3 min
+- Total execution time: 111 min
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [█████████░] 45%
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
+| 04-guest-facing-layer | 4 | 23 min (so far) | - |
 
 **Recent Trend:**
-- Last 5 plans: 11 min, 11 min, 15 min, 13 min, 7 min
-- Trend: Stable
+- Last 5 plans: 11 min, 15 min, 13 min, 7 min, 23 min
+- Trend: Stable (23 min included Turbopack debugging)
 
 *Updated after each plan completion*
 
@@ -80,6 +81,9 @@ Recent decisions affecting current work:
 - Dashboard home page does /onboarding redirect; layout only shows banner — avoids redirect loop from layout for all dashboard routes (Phase 3 Plan 3)
 - update_hotel_info uses RLS-scoped server client — consistent with "no service_role in memory helpers" project decision (Phase 3 Plan 3)
 - Progress component created manually from radix-ui — shadcn CLI not used; follows existing component pattern (Phase 3 Plan 3)
+- Cookie-based locale (NEXT_LOCALE) without URL routing — no [locale] segment or createMiddleware needed for next-intl (Phase 4 Plan 4)
+- export const dynamic = force-dynamic required for dashboard layout — Supabase auth.getUser() needs real request context; static prerendering fails at build time (Phase 4 Plan 4)
+- LocaleSwitcher sets 1-year NEXT_LOCALE cookie + router.refresh() — re-renders Server Components with new locale without page reload (Phase 4 Plan 4)
 
 ### Pending Todos
 
@@ -93,5 +97,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 03-03-PLAN.md — Phase 3 complete. Onboarding wizard at /onboarding, update_hotel_info tool, progressive onboarding + multilingual agent instructions. Ready for Phase 4 (WhatsApp Integration).
+Stopped at: Completed 04-04-PLAN.md — next-intl i18n infrastructure: cookie-based locale, EN/TR message files, LocaleSwitcher, force-dynamic dashboard fix. Phase 4 Plan 4 of 5 complete.
 Resume file: None

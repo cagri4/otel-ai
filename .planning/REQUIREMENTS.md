@@ -105,10 +105,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Internationalization
 
-- [ ] **I18N-01**: Owner dashboard available in EN and TR
-- [ ] **I18N-02**: AI employees respond in guest's detected language
-- [ ] **I18N-03**: next-intl integration with Server Component support
-- [ ] **I18N-04**: Hotel knowledge base content servable in multiple languages
+- [x] **I18N-01**: Owner dashboard available in EN and TR
+- [x] **I18N-02**: AI employees respond in guest's detected language
+- [x] **I18N-03**: next-intl integration with Server Component support
+- [x] **I18N-04**: Hotel knowledge base content servable in multiple languages
 
 ### Escalation & Safety
 
@@ -196,10 +196,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | CHAT-02 | Phase 4 | Pending |
 | CHAT-03 | Phase 4 | Pending |
 | CHAT-04 | Phase 4 | Pending |
-| I18N-01 | Phase 4 | Pending |
-| I18N-02 | Phase 4 | Pending |
-| I18N-03 | Phase 4 | Pending |
-| I18N-04 | Phase 4 | Pending |
+| I18N-01 | Phase 4 | Complete |
+| I18N-02 | Phase 4 | Complete |
+| I18N-03 | Phase 4 | Complete |
+| I18N-04 | Phase 4 | Complete |
 | SAFE-04 | Phase 4 | Pending |
 | SAFE-05 | Phase 4 | Pending |
 | GEXP-01 | Phase 5 | Pending |
