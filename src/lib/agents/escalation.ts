@@ -42,6 +42,12 @@ const ESCALATION_PHRASES = [
   'negotiated rate',
   'contract required',
   'please contact reception directly for this',
+  // Housekeeping-specific escalation triggers (Phase 8 — HOUSEKEEPING_COORDINATOR)
+  // Situations beyond normal cleaning that require professional/maintenance attention.
+  'please contact a maintenance team directly for this',
+  'maintenance issue',
+  'plumbing problem',
+  'safety hazard',
 ] as const;
 
 // =============================================================================

@@ -26,18 +26,18 @@ import type Anthropic from '@anthropic-ai/sdk';
  * Phase 2 implements FRONT_DESK only.
  * Phase 5 adds GUEST_EXPERIENCE (milestone messaging: pre-arrival, checkout, review request).
  * Phase 7 adds BOOKING_AI (dedicated booking agent with upsell behavior and availability tools).
+ * Phase 8 adds HOUSEKEEPING_COORDINATOR (room status management via natural conversation).
  * Future roles (commented as placeholders):
  *   - COMPLAINT: Handles guest complaints and escalations
  *   - CONCIERGE: Handles local recommendations and activities
- *   - HOUSEKEEPER: Handles room status and maintenance requests
  */
 export enum AgentRole {
   FRONT_DESK = "front_desk",
   GUEST_EXPERIENCE = "guest_experience",
   BOOKING_AI = "booking_ai",
+  HOUSEKEEPING_COORDINATOR = "housekeeping_coordinator",
   // COMPLAINT = "complaint",        // Future
   // CONCIERGE = "concierge",        // Future
-  // HOUSEKEEPER = "housekeeper",    // Future
 }
 
 // =============================================================================

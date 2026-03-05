@@ -124,6 +124,52 @@ const updateHotelInfoTool: Anthropic.Messages.Tool = {
 };
 
 /**
+ * Retrieves current cleaning status of all rooms for the hotel.
+ * Used by HOUSEKEEPING_COORDINATOR before answering any room status questions.
+ * hotel_id is injected by executor.ts — NOT in the tool schema.
+ */
+const getRoomStatusTool: Anthropic.Messages.Tool = {
+  name: 'get_room_status',
+  description:
+    'Retrieve the current cleaning status of all rooms in the hotel. ALWAYS call this before answering any question about room statuses. Do not guess statuses from conversation history.',
+  input_schema: {
+    type: 'object',
+    properties: {},
+    required: [],
+  },
+};
+
+/**
+ * Updates the cleaning status of a specific hotel room.
+ * Used by HOUSEKEEPING_COORDINATOR when the owner reports a status change.
+ * hotel_id is injected by executor.ts — NOT in the tool schema.
+ */
+const updateRoomStatusTool: Anthropic.Messages.Tool = {
+  name: 'update_room_status',
+  description:
+    'Update the cleaning status of a hotel room. MUST be called when the owner reports a room status change. Resolve the room by name from the conversation.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      room_identifier: {
+        type: 'string',
+        description: 'Room name or number as the owner stated it (e.g. "Room 12", "Suite 3")',
+      },
+      new_status: {
+        type: 'string',
+        enum: ['clean', 'dirty', 'inspected', 'out_of_order'],
+        description: 'New cleaning status for the room',
+      },
+      notes: {
+        type: 'string',
+        description: 'Optional notes about the status change (e.g. reason for out_of_order)',
+      },
+    },
+    required: ['room_identifier', 'new_status'],
+  },
+};
+
+/**
  * Delegates a task to another AI employee via the async tasks queue.
  * Used by FRONT_DESK to hand off work to other departments without blocking.
  */
@@ -165,14 +211,17 @@ export const TOOLS: Record<string, Anthropic.Messages.Tool> = {
   lookup_guest_reservation: lookupGuestReservationTool,
   update_hotel_info: updateHotelInfoTool,
   delegate_task: delegateTaskTool,
+  get_room_status: getRoomStatusTool,
+  update_room_status: updateRoomStatusTool,
 };
 
 /**
  * Returns the tool definitions for a given agent role.
  *
- * FRONT_DESK gets all four tools including delegate_task for cross-department delegation.
+ * FRONT_DESK gets all core tools including delegate_task for cross-department delegation.
  * BOOKING_AI gets the three booking tools (availability, pricing, reservation lookup) but not delegate_task.
  * GUEST_EXPERIENCE gets no tools — generates messages from templates provided in system prompt.
+ * HOUSEKEEPING_COORDINATOR gets two housekeeping tools (get/update room status) — no delegate_task.
  *
  * @param role - The agent role requesting tools
  * @returns Array of Anthropic.Messages.Tool definitions for the role
@@ -199,9 +248,15 @@ export function getToolsForRole(role: AgentRole): Anthropic.Messages.Tool[] {
         getRoomPricingTool,
         lookupGuestReservationTool,
       ];
+    case AgentRole.HOUSEKEEPING_COORDINATOR:
+      // Housekeeping-specific tools: read and update room cleaning status
+      // No delegate_task (prevents circular delegation chains from non-FRONT_DESK roles)
+      return [
+        getRoomStatusTool,
+        updateRoomStatusTool,
+      ];
     default:
-      // Non-FRONT_DESK roles get the three core tools but not delegate_task
-      // (prevents housekeeping/concierge from creating circular delegations)
-      return [getAvailabilityTool, getRoomPricingTool, lookupGuestReservationTool];
+      // Fallback: unregistered roles get no tools
+      return [];
   }
 }

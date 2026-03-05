@@ -32,6 +32,7 @@
 import { getAvailability } from './availability';
 import { getRoomPricing } from './pricing';
 import { lookupGuestReservation } from './stubs';
+import { getRoomStatus, updateRoomStatus } from './housekeeping';
 import { delegateTask } from '../coordination';
 import { classifyAction, writeAuditLog } from '../audit';
 
@@ -69,6 +70,9 @@ const TOOL_DISPATCH: Record<
   get_room_availability:   (input, context) => getAvailability({ ...input, hotel_id: context.hotelId }),
   get_room_pricing:        (input, context) => getRoomPricing({ ...input, hotel_id: context.hotelId }),
   lookup_guest_reservation: (input, context) => lookupGuestReservation({ ...input, hotel_id: context.hotelId }),
+  // Housekeeping tools — hotel_id injected from ToolContext (same security pattern as booking tools)
+  get_room_status:         (_input, context) => getRoomStatus({ hotel_id: context.hotelId }),
+  update_room_status:      (input, context) => updateRoomStatus({ ...input as { room_identifier: string; new_status: 'clean' | 'dirty' | 'inspected' | 'out_of_order'; notes?: string }, hotel_id: context.hotelId }),
   delegate_task: async (input, context) => {
     await delegateTask({
       hotelId: context.hotelId,

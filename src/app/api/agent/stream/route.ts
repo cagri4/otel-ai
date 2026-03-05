@@ -115,12 +115,15 @@ export async function POST(req: Request): Promise<Response> {
   // Resolve role from request body — defaults to FRONT_DESK for backward compatibility.
   // Accepts "guest_experience" to route to the Guest Experience AI.
   // Accepts "booking_ai" to route to the Booking AI (Phase 7).
+  // Accepts "housekeeping_coordinator" to route to the Housekeeping Coordinator (Phase 8).
   const role =
     roleStr === 'guest_experience'
       ? AgentRole.GUEST_EXPERIENCE
       : roleStr === 'booking_ai'
         ? AgentRole.BOOKING_AI
-        : AgentRole.FRONT_DESK;
+        : roleStr === 'housekeeping_coordinator'
+          ? AgentRole.HOUSEKEEPING_COORDINATOR
+          : AgentRole.FRONT_DESK;
 
   // One persistent conversation per hotel owner if no conversationId provided
   const effectiveConversationId =
