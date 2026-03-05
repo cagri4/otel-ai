@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 3 of 8 (Knowledge Base and Onboarding)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-03-05 — Completed 03-02-PLAN.md (Knowledge base editor UI: tabbed /knowledge page, FactList/FactForm, RoomList/RoomForm, URL-persisted tab state)
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-03-05 — Completed 03-03-PLAN.md (Onboarding wizard: /onboarding page, 2-step wizard, update_hotel_info agent tool, progressive onboarding + multilingual behavioral instructions)
 
-Progress: [████████░░] 40%
+Progress: [█████████░] 45%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 13.5 min
-- Total execution time: 81 min
+- Total plans completed: 7
+- Average duration: 12.6 min
+- Total execution time: 88 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [████████░░] 40%
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
 | 02-agent-core | 4 | 56 min | 14 min |
-| 03-knowledge-base | 2 | 23 min | 11.5 min |
+| 03-knowledge-base | 3 | 30 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 19 min, 11 min, 11 min, 15 min, 13 min
+- Last 5 plans: 11 min, 11 min, 15 min, 13 min, 7 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -76,6 +76,10 @@ Recent decisions affecting current work:
 - URL-persisted tab state (?tab=) prevents active tab reset when router.refresh() re-renders Server Component after CRUD operations (Phase 3 Plan 2)
 - FactList/RoomList manage their own edit dialog state locally — no global state needed; each list is self-contained (Phase 3 Plan 2)
 - react-hook-form useEffect reset() on prop change handles switching between edit targets without stale form values (Phase 3 Plan 2)
+- Wizard step completion triggers onboarding_completed_at when city is provided — city is minimum signal that setup is meaningful (Phase 3 Plan 3)
+- Dashboard home page does /onboarding redirect; layout only shows banner — avoids redirect loop from layout for all dashboard routes (Phase 3 Plan 3)
+- update_hotel_info uses RLS-scoped server client — consistent with "no service_role in memory helpers" project decision (Phase 3 Plan 3)
+- Progress component created manually from radix-ui — shadcn CLI not used; follows existing component pattern (Phase 3 Plan 3)
 
 ### Pending Todos
 
@@ -89,5 +93,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 03-02-PLAN.md — Knowledge base editor UI complete. Tabbed /knowledge page, FactList/FactForm, RoomList/RoomForm, URL-persisted tab state. Ready for 03-03 (Onboarding Wizard).
+Stopped at: Completed 03-03-PLAN.md — Phase 3 complete. Onboarding wizard at /onboarding, update_hotel_info tool, progressive onboarding + multilingual agent instructions. Ready for Phase 4 (WhatsApp Integration).
 Resume file: None

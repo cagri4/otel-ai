@@ -63,13 +63,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **KNOW-02**: Hotel owner can add/edit room information (types, pricing, amenities, photos description)
 - [x] **KNOW-03**: Hotel owner can add/edit local recommendations (restaurants, attractions, transport)
 - [x] **KNOW-04**: Knowledge base feeds all AI employees as shared hotel context
-- [ ] **KNOW-05**: Knowledge base supports multi-language content (or auto-translation)
+- [x] **KNOW-05**: Knowledge base supports multi-language content (or auto-translation)
 
 ### Onboarding
 
-- [ ] **ONBR-01**: New hotel owner reaches first working AI response in under 5 minutes
-- [ ] **ONBR-02**: Onboarding wizard collects minimum info (hotel name, city, contact) then starts AI
-- [ ] **ONBR-03**: Progressive onboarding — AI employees ask for missing info during first "shift"
+- [x] **ONBR-01**: New hotel owner reaches first working AI response in under 5 minutes
+- [x] **ONBR-02**: Onboarding wizard collects minimum info (hotel name, city, contact) then starts AI
+- [x] **ONBR-03**: Progressive onboarding — AI employees ask for missing info during first "shift"
 - [x] **ONBR-04**: Pre-populated boutique hotel defaults (check-in 3pm, checkout 11am, standard policies)
 
 ### Owner Dashboard
@@ -177,10 +177,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | KNOW-02 | Phase 3 | Complete |
 | KNOW-03 | Phase 3 | Complete |
 | KNOW-04 | Phase 3 | Complete |
-| KNOW-05 | Phase 3 | Pending |
-| ONBR-01 | Phase 3 | Pending |
-| ONBR-02 | Phase 3 | Pending |
-| ONBR-03 | Phase 3 | Pending |
+| KNOW-05 | Phase 3 | Complete |
+| ONBR-01 | Phase 3 | Complete |
+| ONBR-02 | Phase 3 | Complete |
+| ONBR-03 | Phase 3 | Complete |
 | ONBR-04 | Phase 3 | Complete |
 | DESK-02 | Phase 4 | Pending |
 | DESK-03 | Phase 4 | Pending |
