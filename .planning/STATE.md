@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 ## Current Position
 
 Phase: 6 of 8 (Billing) — IN PROGRESS
-Plan: 1 of 4 completed
-Status: In Progress — Completed 06-01-PLAN.md
-Last activity: 2026-03-05 — Completed 06-01-PLAN.md (subscriptions table migration, TypeScript types, PLAN_LIMITS, enforceAgentLimit, getSubscriptionStatus)
+Plan: 2 of 4 completed
+Status: In Progress — Completed 06-02-PLAN.md
+Last activity: 2026-03-05 — Completed 06-02-PLAN.md (iyzico client library, iyzipay.d.ts type declarations, webhook handler, checkout/callback/upgrade API routes)
 
 Progress: [█████████████████████] 84%
 
@@ -41,6 +41,7 @@ Progress: [█████████████████████] 84%
 *Updated after each plan completion*
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
 | Phase 06-billing P01 | 4 | 2 tasks | 5 files |
+| Phase 06-billing P02 | 16 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -119,6 +120,9 @@ Recent decisions affecting current work:
 - [Phase 06-billing]: SubscriptionInfo named instead of SubscriptionStatus in trialStatus.ts to avoid clash with DB type
 - [Phase 06-billing]: enforceAgentLimit uses service_role client — hotel_id already validated by session in calling server action
 - [Phase 06-billing]: getProviderForHotel uses toUpperCase() for case-insensitive TR comparison
+- [Phase 06-billing]: iyzipay library exposes subscription.upgrade directly — no raw fetch needed for upgrade endpoint
+- [Phase 06-billing]: iyzipay ships no TypeScript types — handwritten declarations in src/types/iyzipay.d.ts covering only used SDK surface
+- [Phase 06-billing]: Downgrade blocked (not auto-disabled) when enabled agents exceed new plan limit — consistent with research recommendation
 
 ### Pending Todos
 
@@ -131,5 +135,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 06-01-PLAN.md — subscriptions table migration (0006_billing.sql), TypeScript Subscription types, plans.ts (PLAN_LIMITS/getProviderForHotel), enforcement.ts (enforceAgentLimit), trialStatus.ts (getSubscriptionStatus). Phase 6 plan 1 of 4 complete.
+Stopped at: Completed 06-02-PLAN.md — iyzico client library (iyzico.ts, iyzipay.d.ts), POST /api/webhooks/iyzico (HMAC validation), POST /api/billing/iyzico/checkout, GET /api/billing/iyzico/callback, POST /api/billing/iyzico/upgrade (downgrade enforcement). Phase 6 plan 2 of 4 complete.
 Resume file: None
