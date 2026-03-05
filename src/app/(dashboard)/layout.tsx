@@ -61,8 +61,20 @@ export default async function DashboardLayout({
     )
   }
 
+  const typedHotel = hotel as Hotel
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Onboarding banner — shown on non-root routes when setup is incomplete */}
+      {!typedHotel.onboarding_completed_at && (
+        <div className="bg-primary text-primary-foreground px-4 py-3 text-center text-sm">
+          <a href="/onboarding" className="underline font-medium">
+            Complete your hotel setup
+          </a>{' '}
+          to get the most out of your AI staff.
+        </div>
+      )}
+
       {/* Top header */}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">

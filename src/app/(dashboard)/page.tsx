@@ -30,6 +30,11 @@ export default async function DashboardPage() {
     .select('*')
     .single<Hotel>()
 
+  // Redirect new users to onboarding wizard if setup is not completed
+  if (hotel && !hotel.onboarding_completed_at) {
+    redirect('/onboarding')
+  }
+
   return (
     <div className="space-y-8">
       {/* Welcome heading */}
