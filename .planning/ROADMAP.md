@@ -83,14 +83,14 @@ Plans:
   3. The AI detects and responds in the guest's language (EN, TR, and at least one EU language)
   4. An unhandled guest request triggers an escalation notification to the hotel owner within 2 minutes
   5. Rate limiting prevents a single IP or hotel from flooding the system; prompt injection attempts from guest input are blocked
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 04-01: WhatsApp Business API gateway integration — webhook handler, message routing, conversation persistence
-- [ ] 04-02: Embeddable web chat widget — hotel token auth, Supabase Realtime delivery, branding config
-- [ ] 04-03: Multi-language support — next-intl integration, owner dashboard EN/TR, AI language detection
-- [ ] 04-04: Security layer — rate limiting per IP and per hotel, prompt injection protection on guest inputs
-- [ ] 04-05: Escalation notification system — unresolved request detection, 2-minute owner alert via in-app and email
+- [ ] 04-01-PLAN.md — Security foundation: rate limiting, prompt injection protection, Phase 4 DB migration (Wave 1)
+- [ ] 04-02-PLAN.md — WhatsApp Business API gateway: Twilio webhook, hotel routing, conversation persistence (Wave 2)
+- [ ] 04-03-PLAN.md — Embeddable web chat widget: hotel token auth, Supabase Realtime delivery, branding (Wave 2)
+- [ ] 04-04-PLAN.md — Multi-language support: next-intl without URL routing, EN/TR dashboard, locale switcher (Wave 1)
+- [ ] 04-05-PLAN.md — Escalation notification system: detection in invokeAgent, email via Resend (Wave 3)
 
 ### Phase 5: Guest Experience AI and Owner Dashboard
 **Goal**: Guests automatically receive the right message at the right moment (pre-arrival, checkout, review request), hotel owners have a complete dashboard to monitor conversations and manage AI employees, and all agent actions are classified and logged
