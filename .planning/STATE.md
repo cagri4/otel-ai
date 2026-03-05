@@ -11,27 +11,27 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 Phase: 2 of 8 (Agent Core)
 Plan: 4 of 4 in current phase
-Status: In progress
-Last activity: 2026-03-03 — Completed 02-03-PLAN.md (Agent coordination: coordination.ts with 5 lifecycle functions, delegate_task tool wired to FRONT_DESK)
+Status: Complete
+Last activity: 2026-03-05 — Completed 02-04-PLAN.md (SSE streaming endpoint + Front Desk chat UI at /desk — Phase 2 complete)
 
-Progress: [█████░░░░░] 25%
+Progress: [██████░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 12.5 min
-- Total execution time: 53 min
+- Total plans completed: 5
+- Average duration: 13 min
+- Total execution time: 68 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 2 | 23 min | 11.5 min |
-| 02-agent-core | 3 | 41 min | 13.7 min |
+| 02-agent-core | 4 | 56 min | 14 min |
 
 **Recent Trend:**
-- Last 5 plans: 16 min, 7 min, 19 min, 11 min, 11 min
+- Last 5 plans: 7 min, 19 min, 11 min, 11 min, 15 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -64,6 +64,10 @@ Recent decisions affecting current work:
 - AgentRole enum imported as value (not type) in registry.ts — TypeScript enum used in switch case must be imported as runtime value (Phase 2 Plan 3)
 - delegate_task tool FRONT_DESK only — prevents circular delegation chains from non-front-desk roles (Phase 2 Plan 3)
 - ToolContext always threaded through executeTool — future-proofs executor for hotel-scoped tools without signature changes (Phase 2 Plan 3)
+- Node.js runtime (not Edge) on /api/agent/stream — supabase/ssr cookie auth breaks in Edge runtime (Phase 2 Plan 4)
+- Fire-and-forget invokeAgent() in ReadableStream.start() — awaiting buffers full response before first SSE byte reaches client (Phase 2 Plan 4)
+- Default conversationId is hotelId_owner_chat — one persistent conversation per hotel owner per research recommendation (Phase 2 Plan 4)
+- Client-side chunked SSE buffer in useChatStream — ReadableStream reader returns arbitrary byte chunks; buffer until \\n\\n delimiter (Phase 2 Plan 4)
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-03
-Stopped at: Completed 02-03-PLAN.md — Agent coordination helpers (coordination.ts, delegate_task tool, ToolContext threading)
+Last session: 2026-03-05
+Stopped at: Completed 02-04-PLAN.md — Phase 2 complete. SSE streaming + Front Desk chat UI at /desk. Ready for Phase 3 (Guest Communications).
 Resume file: None

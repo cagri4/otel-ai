@@ -21,12 +21,12 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **AGENT-03**: Agent Factory with Role Registry — central registry maps role enum to prompt template, allowed tools, memory scope
 - [x] **AGENT-04**: Three-tier memory system (semantic hotel facts, episodic guest history, working conversation turns)
 - [x] **AGENT-05**: Tool-first policy enforced — agents cannot answer availability/price questions without successful tool call
-- [ ] **AGENT-06**: Streaming response (SSE) for all chat interactions — typing indicator on message send
+- [x] **AGENT-06**: Streaming response (SSE) for all chat interactions — typing indicator on message send
 - [x] **AGENT-07**: Agent-to-agent coordination via async tasks table (no synchronous inter-agent calls)
 
 ### Front Desk AI (Role 1)
 
-- [ ] **DESK-01**: User can chat with Front Desk AI from owner dashboard
+- [x] **DESK-01**: User can chat with Front Desk AI from owner dashboard
 - [ ] **DESK-02**: Guests can chat with Front Desk AI via WhatsApp
 - [ ] **DESK-03**: Guests can chat with Front Desk AI via embeddable web chat widget
 - [ ] **DESK-04**: Front Desk AI answers hotel FAQs using hotel knowledge base
@@ -170,9 +170,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | AGENT-03 | Phase 2 | Complete |
 | AGENT-04 | Phase 2 | Complete |
 | AGENT-05 | Phase 2 | Complete |
-| AGENT-06 | Phase 2 | Pending |
+| AGENT-06 | Phase 2 | Complete |
 | AGENT-07 | Phase 2 | Complete |
-| DESK-01 | Phase 2 | Pending |
+| DESK-01 | Phase 2 | Complete |
 | KNOW-01 | Phase 3 | Pending |
 | KNOW-02 | Phase 3 | Pending |
 | KNOW-03 | Phase 3 | Pending |
