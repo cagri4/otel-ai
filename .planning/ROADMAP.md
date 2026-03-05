@@ -136,12 +136,12 @@ Plans: 4 of 4 complete
   2. Booking AI states room prices only after retrieving them from the hotel knowledge base via tool call
   3. A guest in a standard room inquiry is offered an upgrade option naturally within the conversation
   4. A guest with a complex or custom request (e.g., group booking, special rate) is escalated to the hotel owner
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: Availability lookup tool — transactional room availability query, atomic read, hotel_id scoped
-- [ ] 07-02: Booking AI role — availability handling, pricing retrieval, upsell logic, complex-request escalation
-- [ ] 07-03: Rolling context management — last N turns raw, older turns compressed into structured summary
+- [ ] 07-01-PLAN.md — Reservations table, conversation_summaries table, real tool implementations replacing stubs (Wave 1)
+- [ ] 07-02-PLAN.md — BOOKING_AI role: factory config, upsell prompt, escalation phrases, SSE routing (Wave 2)
+- [ ] 07-03-PLAN.md — Rolling context management: last 10 turns raw, older turns summarized via Claude (Wave 2)
 
 ### Phase 8: Housekeeping Coordinator
 **Goal**: Hotel owner can manage room cleaning status through a conversation with the Housekeeping Coordinator AI, which maintains a live room status board and generates a daily priority queue
