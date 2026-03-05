@@ -39,7 +39,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **GEXP-01**: Guest Experience AI sends pre-arrival info package (D-1 before check-in)
 - [ ] **GEXP-02**: Guest Experience AI sends checkout reminder (morning of checkout day)
 - [ ] **GEXP-03**: Guest Experience AI sends post-stay review request (24h after checkout)
-- [ ] **GEXP-04**: Guest Experience AI messages are milestone-triggered (automated based on booking dates)
+- [x] **GEXP-04**: Guest Experience AI messages are milestone-triggered (automated based on booking dates)
 - [ ] **GEXP-05**: Hotel owner can customize message templates for each milestone
 
 ### Booking AI (Role 2)
@@ -77,8 +77,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DASH-01**: Hotel owner can chat with each AI employee individually
 - [ ] **DASH-02**: Hotel owner can view all guest conversations per AI employee
 - [ ] **DASH-03**: Hotel owner receives escalation notifications (in-app + email)
-- [ ] **DASH-04**: Hotel owner can turn AI employees on/off
-- [ ] **DASH-05**: Hotel owner can configure each AI employee's behavior/tone
+- [x] **DASH-04**: Hotel owner can turn AI employees on/off
+- [x] **DASH-05**: Hotel owner can configure each AI employee's behavior/tone
 
 ### WhatsApp Integration
 
@@ -112,9 +112,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Escalation & Safety
 
-- [ ] **SAFE-01**: All AI agent actions classified as OBSERVE / INFORM / ACT
-- [ ] **SAFE-02**: ACT-class actions require hotel owner confirmation
-- [ ] **SAFE-03**: All agent actions logged with audit trail
+- [x] **SAFE-01**: All AI agent actions classified as OBSERVE / INFORM / ACT
+- [x] **SAFE-02**: ACT-class actions require hotel owner confirmation
+- [x] **SAFE-03**: All agent actions logged with audit trail
 - [x] **SAFE-04**: Rate limiting per hotel and per guest IP
 - [x] **SAFE-05**: Prompt injection protection on all guest-facing inputs
 
@@ -205,16 +205,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | GEXP-01 | Phase 5 | Pending |
 | GEXP-02 | Phase 5 | Pending |
 | GEXP-03 | Phase 5 | Pending |
-| GEXP-04 | Phase 5 | Pending |
+| GEXP-04 | Phase 5 | Complete |
 | GEXP-05 | Phase 5 | Pending |
-| SAFE-01 | Phase 5 | Pending |
-| SAFE-02 | Phase 5 | Pending |
-| SAFE-03 | Phase 5 | Pending |
+| SAFE-01 | Phase 5 | Complete |
+| SAFE-02 | Phase 5 | Complete |
+| SAFE-03 | Phase 5 | Complete |
 | DASH-01 | Phase 5 | Pending |
 | DASH-02 | Phase 5 | Pending |
 | DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
-| DASH-05 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Complete |
+| DASH-05 | Phase 5 | Complete |
 | BILL-01 | Phase 6 | Pending |
 | BILL-02 | Phase 6 | Pending |
 | BILL-03 | Phase 6 | Pending |

@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-03-02)
 
 ## Current Position
 
-Phase: 4 of 8 (Guest-Facing Layer) — COMPLETE
-Plan: 5 of 5 completed (all plans done: 01, 02, 03, 04, 05)
-Status: Phase 4 Complete — Ready for Phase 5
-Last activity: 2026-03-05 — Completed 04-05-PLAN.md (escalation detection, /api/escalations email notification, invokeAgent escalation hook, agentFactory DESK-05 multilingual update)
+Phase: 5 of 8 (Guest Experience AI and Owner Dashboard) — IN PROGRESS
+Plan: 1 of 4 completed
+Status: In Progress — Completed 05-01-PLAN.md
+Last activity: 2026-03-05 — Completed 05-01-PLAN.md (Phase 5 foundation: bookings, message_templates, agents, agent_audit_log tables; GUEST_EXPERIENCE role; audit module; is_enabled guard)
 
-Progress: [██████████████] 65%
+Progress: [████████████████] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
+- Total plans completed: 16
 - Average duration: 12.9 min
-- Total execution time: 191 min
+- Total execution time: 206 min
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [██████████████] 65%
 | 02-agent-core | 4 | 56 min | 14 min |
 | 03-knowledge-base | 3 | 30 min | 10 min |
 | 04-guest-facing-layer | 5 | 103 min | 20.6 min |
+| 05-guest-experience | 1 of 4 | 15 min | 15 min |
 
 **Recent Trend:**
-- Last 5 plans: 7 min, 23 min, 19 min, 21 min, 12 min
+- Last 5 plans: 23 min, 19 min, 21 min, 12 min, 15 min
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -97,6 +98,10 @@ Recent decisions affecting current work:
 - [Phase 04-guest-facing-layer]: detectAndInsertEscalation() called without await in handleEndTurn — fire-and-forget with .catch() at call site plus internal try/catch (double safety net) (Phase 4 Plan 5)
 - [Phase 04-guest-facing-layer]: EscalationChannel determined from conversationId prefix server-side (wa_ = whatsapp, else widget) — channel param ignored to prevent spoofing (Phase 4 Plan 5)
 - [Phase 04-guest-facing-layer]: DESK-05 multilingual update — agentFactory MULTILINGUAL SUPPORT block explicitly lists English, Turkish, Dutch, German, French (Phase 4 Plan 5)
+- [Phase 05-guest-experience]: SupabaseClient cast for new tables — (supabase as unknown as SupabaseClient).from() avoids TypeScript never inference for manually-typed tables in postgrest-js v12; same pattern as escalation.ts (Phase 5 Plan 1)
+- [Phase 05-guest-experience]: Conservative ACT default in classifyAction — unknown/future tools default to ACT to prevent false permission assumptions; owner confirmation gate deferred until first ACT tool exists (Phase 5 Plan 1)
+- [Phase 05-guest-experience]: is_enabled guard uses .maybeSingle() not .single() — graceful fallback for hotels created before Phase 5 migration (no agents row = treat as enabled) (Phase 5 Plan 1)
+- [Phase 05-guest-experience]: seed_hotel_defaults extended via CREATE OR REPLACE FUNCTION in 0005 migration — inserts front_desk and guest_experience agent rows atomically on hotel creation (Phase 5 Plan 1)
 
 ### Pending Todos
 
@@ -109,5 +114,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 04-05-PLAN.md — Escalation notification system (detectAndInsertEscalation, /api/escalations Resend email, invokeAgent hook, agentFactory DESK-05 multilingual). Phase 4 complete (5/5 plans). Ready for Phase 5: Booking Engine.
+Stopped at: Completed 05-01-PLAN.md — Phase 5 foundation: 4 new tables (bookings, message_templates, agents, agent_audit_log), GUEST_EXPERIENCE role, audit module (classifyAction/writeAuditLog), is_enabled guard in invokeAgent. 1 of 4 Phase 5 plans complete.
 Resume file: None
