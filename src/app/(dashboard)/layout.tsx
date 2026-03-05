@@ -88,6 +88,12 @@ export default async function DashboardLayout({
                 Front Desk
               </a>
               <a
+                href="/knowledge"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Knowledge
+              </a>
+              <a
                 href="/settings"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
