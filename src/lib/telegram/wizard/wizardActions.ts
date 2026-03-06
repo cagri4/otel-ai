@@ -345,10 +345,12 @@ async function completeWizard(
 ): Promise<void> {
   const supabase = createServiceClient() as unknown as SupabaseClient;
 
-  // Mark onboarding as complete
+  // Mark onboarding as complete and persist the owner's Telegram chat_id.
+  // The chat_id is needed by the trial notification cron (Plan 02) to send
+  // countdown messages directly to the hotel owner via Telegram.
   const { error: updateError } = await supabase
     .from('hotels')
-    .update({ onboarding_completed_at: new Date().toISOString() })
+    .update({ onboarding_completed_at: new Date().toISOString(), owner_telegram_chat_id: chatId })
     .eq('id', state.hotelId);
 
   if (updateError) {
