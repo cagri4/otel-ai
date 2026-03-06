@@ -248,7 +248,7 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 6. Billing | 2/4 | In Progress|  |
 | 7. Booking AI | 3/3 | Complete    | 2026-03-05 |
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
-| 9. Telegram Infrastructure | 2/2 | Complete   | 2026-03-06 |
+| 9. Telegram Infrastructure | 2/2 | Complete    | 2026-03-06 |
 | 10. Super Admin Panel and Employee Bots | 0/TBD | Not started | - |
 | 11. Setup Wizard Bot | 0/TBD | Not started | - |
 | 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |
