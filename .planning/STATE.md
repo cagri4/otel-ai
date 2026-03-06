@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 10 Plan 1 complete
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 10 Plan 2 complete
 
 ## Current Position
 
 Phase: 10 (Super Admin Panel and Employee Bots) — In progress
-Plan: 1 complete (10-01-PLAN.md done)
-Status: Plan 1 complete — admin SQL migration, adminCreateHotel Server Action, provisionBots Server Action
-Last activity: 2026-03-06 — Phase 10 Plan 1 executed (admin backend foundation)
+Plan: 2 complete (10-02-PLAN.md done)
+Status: Plan 2 complete — admin panel UI (layout guard, hotel list, create form, hotel detail, bot provisioning form, deep link)
+Last activity: 2026-03-06 — Phase 10 Plan 2 executed (admin panel UI)
 
 ```
 v2.0 Progress: [>         ] 12%
 Phase 9:  [==] Complete (2/2 plans complete)
-Phase 10: [>] In progress (1/3 plans complete)
+Phase 10: [=>] In progress (2/3 plans complete)
 Phase 11: [ ] Not started
 Phase 12: [ ] Not started
 Phase 13: [ ] Not started
@@ -62,6 +62,7 @@ Phase 13: [ ] Not started
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
 | Phase 08-housekeeping-coordinator P02 | 8 | 2 tasks | 7 files |
 | Phase 10-super-admin-panel-and-employee-bots P01 | 14 | 2 tasks | 3 files |
+| Phase 10-super-admin-panel-and-employee-bots P02 | 8 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -178,6 +179,9 @@ Recent decisions affecting current work:
 - [Phase 10-super-admin-panel-and-employee-bots]: trigger timing fallback queries profiles table — auth.admin.createUser may return before handle_new_user writes hotel_id to app_metadata; profiles row is always present after trigger runs
 - [Phase 10-super-admin-panel-and-employee-bots]: adminCreateHotel upserts onboarding_completed_at immediately — admin-created hotels skip onboarding wizard; hotel owner onboarded via Telegram Setup Wizard (Phase 11)
 - [Phase 10-super-admin-panel-and-employee-bots]: provisionBotForRole uses upsert with onConflict hotel_id,role — handles token rotation without UNIQUE constraint violation; setWebhook call overwrites existing registration
+- [Phase 10-super-admin-panel-and-employee-bots]: Client Component split for admin forms — (admin)/admin/[hotelId]/page.tsx stays Server Component for DB queries; BotProvisionForm and DeepLinkCopy extracted to separate Client Component files
+- [Phase 10-super-admin-panel-and-employee-bots]: useTransition for Server Action call in BotProvisionForm — startTransition(async () => await provisionAllBots()) enables isPending for loading state with explicit result and token-clearing control
+- [Phase 10-super-admin-panel-and-employee-bots]: searchParams and params as Promise in Next.js 15+ Server Components — await required before destructuring in dynamic route and search param pages
 
 ### v2.0 Context
 
@@ -208,5 +212,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 10-01-PLAN.md — delete_vault_secret SQL function, adminCreateHotel Server Action, provisionBots Server Action with Vault + setWebhook + orphan cleanup
+Stopped at: Completed 10-02-PLAN.md — admin layout guard, hotel list with status badges, create hotel form, hotel detail with bot provisioning form and Setup Wizard deep link
 Resume file: None

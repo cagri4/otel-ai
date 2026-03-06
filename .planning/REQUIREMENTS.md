@@ -135,7 +135,7 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 - [x] **SADM-01**: Super admin panel — hotel list with status, create new hotel
 - [x] **SADM-02**: Bot token entry per hotel (pasted from BotFather)
 - [x] **SADM-03**: Automatic `setWebhook` registration when bot token is saved
-- [ ] **SADM-04**: Telegram deep link generation (`t.me/SetupWizardBot?start={hotelId}`)
+- [x] **SADM-04**: Telegram deep link generation (`t.me/SetupWizardBot?start={hotelId}`)
 
 ### Telegram Onboarding
 
@@ -291,7 +291,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SADM-01 | Phase 10 | Complete |
 | SADM-02 | Phase 10 | Complete |
 | SADM-03 | Phase 10 | Complete |
-| SADM-04 | Phase 10 | Pending |
+| SADM-04 | Phase 10 | Complete |
 | EBOT-01 | Phase 10 | Complete |
 | EBOT-02 | Phase 10 | Complete |
 | EBOT-03 | Phase 10 | Complete |
