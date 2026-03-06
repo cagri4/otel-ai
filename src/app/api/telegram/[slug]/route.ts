@@ -39,6 +39,7 @@ import { AgentRole } from '@/lib/agents/types';
 import { sanitizeGuestInput } from '@/lib/security/sanitizeGuestInput';
 import { checkHotelRateLimit } from '@/lib/security/rateLimiter';
 import { createServiceClient } from '@/lib/supabase/service';
+import { handleTrialCallback } from '@/lib/telegram/trialCallback';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -83,12 +84,36 @@ export async function POST(
   }
 
   // -------------------------------------------------------------------------
-  // Step 4: Parse body and extract message
-  // Non-text updates (photos, stickers, etc.) are discarded silently.
-  // Return 200 — Telegram would retry if we returned 4xx.
+  // Step 4: Parse body and route by update type
+  //
+  // Three update types are handled:
+  // 1. message.text          → existing AI agent flow (unchanged)
+  // 2. callback_query.data starting with "trial_" → trial selection handler
+  // 3. Everything else       → discard silently (photos, stickers, etc.)
+  //
+  // Return 200 on all paths — Telegram would retry if we returned 4xx.
   // -------------------------------------------------------------------------
   const body = (await req.json()) as TelegramUpdate;
   const message = body.message;
+  const callbackQuery = body.callback_query;
+
+  // --- Route: trial callback_query (inline keyboard) ---
+  // Check for callback_query with trial_ prefix BEFORE the message check.
+  // This allows the same employee bot to handle both guest messages and owner
+  // trial selection callbacks.
+  if (callbackQuery?.data?.startsWith('trial_')) {
+    after(async () => {
+      try {
+        await handleTrialCallback(callbackQuery, botRow);
+      } catch (error) {
+        console.error('[Telegram] Trial callback error:', error);
+      }
+    });
+    return new Response('', { status: 200 });
+  }
+
+  // --- Route: text message → AI agent ---
+  // Non-text updates (photos, stickers, non-trial callbacks, etc.) are discarded silently.
   if (!message?.text || !message?.chat?.id) {
     return new Response('', { status: 200 });
   }
