@@ -108,7 +108,7 @@ export async function provisionBotForRole(params: {
         url: webhookUrl,
         secret_token: webhookSecret,
         drop_pending_updates: true,
-        allowed_updates: ['message'],
+        allowed_updates: ['message', 'callback_query'],
       }),
     },
   );
