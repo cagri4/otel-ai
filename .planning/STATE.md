@@ -5,22 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 13 complete
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 14 complete
 
 ## Current Position
 
-Phase: 13 (Proactive Messaging and Dashboard Readonly) — Complete
-Plan: 2 complete (13-01-PLAN.md + 13-02-PLAN.md done)
-Status: Phase 13 complete — Morning briefing cron (morningBriefing.ts, 4 role builders, vercel.json 08:00 UTC), Telegram-first dashboard banner (WDSH-01)
-Last activity: 2026-03-06 — Phase 13 Plan 1 executed (morningBriefing.ts, morning-briefing/route.ts, vercel.json)
+Phase: 14 (Fix callback_query Delivery) — Complete
+Plan: 1 complete (14-01-PLAN.md done)
+Status: Phase 14 complete — Fixed allowed_updates in provisionBots.ts (added callback_query), admin re-provision endpoint for existing bots
+Last activity: 2026-03-06 — Phase 14 Plan 1 executed (provisionBots.ts fix, reprovision-employee-webhooks/route.ts)
 
 ```
-v2.0 Progress: [====>     ] 29%
+v2.0 Progress: [====>     ] 31%
 Phase 9:  [==] Complete (2/2 plans complete)
 Phase 10: [===] Complete (3/3 plans complete)
 Phase 11: [==] Complete (2/2 plans complete)
 Phase 12: [===] Complete (3/3 plans complete)
 Phase 13: [==] Complete (2/2 plans complete)
+Phase 14: [=] Complete (1/1 plans complete)
 ```
 
 ## Performance Metrics
@@ -68,6 +69,7 @@ Phase 13: [==] Complete (2/2 plans complete)
 | Phase Phase 12-billing-model-migration P02 P02 | 4 | 2 tasks | 3 files |
 | Phase 13-proactive-messaging-dashboard-readonly P02 | 5 | 1 tasks | 1 files |
 | Phase 13 P01 | 3 | 2 tasks | 3 files |
+| Phase 14-fix-callback-query-delivery P01 | 2 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -206,6 +208,9 @@ Recent decisions affecting current work:
 - [Phase 13]: Telegram-first banner is purely informational (no disabled writes) — WDSH-01 "readonly optional view" means Telegram is primary channel, not that dashboard features must be blocked; blue-50/blue-700 used for informational tone vs bg-primary for action-required onboarding banner
 - [Phase 13]: Morning briefing sends from each active bot role (not just front_desk) — hotel owner gets distinct message from each AI employee deployed
 - [Phase 13]: ROLE_BRIEFING_BUILDERS dispatch map for per-role morning briefing — O(1) lookup, unknown roles logged and skipped without crashing loop
+- [Phase 14]: Re-provision endpoint omits drop_pending_updates — preserves real pending guest messages on existing bots
+- [Phase 14]: Re-provision queries ALL hotel_bots rows (no is_active filter) — inactive bots updated so reactivation works correctly
+- [Phase 14]: Sequential bot iteration in re-provision loop — no Promise.all to respect Telegram API rate limits at scale
 
 ### v2.0 Context
 
@@ -236,5 +241,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 13-02-PLAN.md — Telegram-first informational banner in dashboard layout (owner_telegram_chat_id conditional)
+Stopped at: Completed 14-01-PLAN.md — add callback_query to employee bot allowed_updates, admin re-provision endpoint
 Resume file: None
