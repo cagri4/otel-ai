@@ -243,7 +243,11 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Hotel owner can still access the existing web dashboard — all conversation history and hotel configuration visible, no data removed
   2. Each active employee bot sends a morning briefing to the hotel owner — delivered without triggering Telegram rate limits even when multiple hotels receive briefings simultaneously
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Morning briefing cron: per-role daily summaries from each active bot, rate-limited sends (Wave 1)
+- [ ] 13-02-PLAN.md — Dashboard Telegram-first informational banner for WDSH-01 (Wave 1)
 
 ## Progress
 
