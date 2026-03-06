@@ -198,7 +198,11 @@ Plans:
   2. Super admin can create a new hotel account and provision all four employee bots by entering BotFather tokens — webhook registration happens automatically on save
   3. Super admin can generate a Setup Wizard deep link for any hotel with one click
   4. Hotel owner messaging the Front Desk bot gets a Front Desk AI response; messaging the Booking bot gets a Booking AI response — each bot routes to the correct agent role
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — SQL migration (delete_vault_secret), createHotel + provisionBots Server Actions (Wave 1)
+- [ ] 10-02-PLAN.md — Admin layout guard, hotel list page, hotel detail with bot provisioning form + deep link (Wave 2)
 
 ### Phase 11: Setup Wizard Bot
 **Goal**: Hotel owner receives a deep link, opens the Setup Wizard bot in Telegram, completes conversational onboarding, and sees all four employee bots activate with a 14-day trial — with wizard state persisted so drop-off does not restart from zero
@@ -249,7 +253,7 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 7. Booking AI | 3/3 | Complete    | 2026-03-05 |
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
 | 9. Telegram Infrastructure | 2/2 | Complete    | 2026-03-06 |
-| 10. Super Admin Panel and Employee Bots | 0/TBD | Not started | - |
+| 10. Super Admin Panel and Employee Bots | 0/2 | Not started | - |
 | 11. Setup Wizard Bot | 0/TBD | Not started | - |
 | 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |
 | 13. Proactive Messaging and Dashboard Readonly | 0/TBD | Not started | - |
