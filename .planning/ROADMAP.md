@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 10: Super Admin Panel and Employee Bots** - Admin UI for hotel creation and bot provisioning, all four AI employee Telegram bots active (completed 2026-03-06)
 - [x] **Phase 11: Setup Wizard Bot** - Conversational Telegram onboarding from deep link to all employee bots active with 14-day trial (completed 2026-03-06)
 - [x] **Phase 12: Billing Model Migration and Trial-End Flow** - Per-employee pricing, trial countdown notifications, trial-end selection flow, payment link (completed 2026-03-06)
-- [ ] **Phase 13: Proactive Messaging and Dashboard Readonly** - Morning briefings, rate-limited send queue, web dashboard readonly mode
+- [x] **Phase 13: Proactive Messaging and Dashboard Readonly** - Morning briefings, rate-limited send queue, web dashboard readonly mode (completed 2026-03-06)
 
 ## Phase Details
 
@@ -269,4 +269,4 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 10. Super Admin Panel and Employee Bots | 2/2 | Complete    | 2026-03-06 |
 | 11. Setup Wizard Bot | 2/2 | Complete    | 2026-03-06 |
 | 12. Billing Model Migration and Trial-End Flow | 3/3 | Complete    | 2026-03-06 |
-| 13. Proactive Messaging and Dashboard Readonly | 1/2 | In Progress|  |
+| 13. Proactive Messaging and Dashboard Readonly | 2/2 | Complete   | 2026-03-06 |
