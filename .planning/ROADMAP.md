@@ -183,7 +183,11 @@ Plans:
   3. Bot tokens are stored encrypted via Supabase Vault — plaintext tokens never appear in DB query logs or API responses
   4. A webhook request with a missing or incorrect X-Telegram-Bot-Api-Secret-Token header is rejected with no agent invocation
   5. AI responses sent to Telegram are correctly formatted — no unescaped characters cause silent sendMessage failures
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — DB migration (hotel_bots table, Vault functions), TypeScript types, resolveBot, escalation channel extension (Wave 1)
+- [ ] 09-02-PLAN.md — Telegram webhook handler, MarkdownV2 escaping, sendReply with fallback (Wave 2)
 
 ### Phase 10: Super Admin Panel and Employee Bots
 **Goal**: Super admin can create a hotel account, provision all four employee bots by pasting BotFather tokens, trigger automatic webhook registration, and generate a Setup Wizard deep link — and each employee bot responds as the correct AI role
@@ -244,7 +248,7 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 6. Billing | 2/4 | In Progress|  |
 | 7. Booking AI | 3/3 | Complete    | 2026-03-05 |
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
-| 9. Telegram Infrastructure | 0/TBD | Not started | - |
+| 9. Telegram Infrastructure | 0/2 | Not started | - |
 | 10. Super Admin Panel and Employee Bots | 0/TBD | Not started | - |
 | 11. Setup Wizard Bot | 0/TBD | Not started | - |
 | 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |
