@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 12 (Billing Model Migration and Trial End Flow) — In progress
-Plan: 1 complete (12-01-PLAN.md done)
-Status: Phase 12 Plan 1 complete — billing v2 migration, per-employee pricing constants, owner chat_id persistence, trial selection Redis state + keyboard builder
-Last activity: 2026-03-06 — Phase 12 Plan 1 executed (DB migration, EMPLOYEE_ROLE_PRICES, trialSelection.ts, trialKeyboard.ts)
+Plan: 2 complete (12-02-PLAN.md done)
+Status: Phase 12 Plan 2 complete — trial countdown notification cron (days 7/12/13/14 via Telegram), idempotent boolean guards, day-14 selection keyboard trigger, Vercel cron at 9 AM UTC
+Last activity: 2026-03-06 — Phase 12 Plan 2 executed (trialNotification.ts, /api/cron/trial-notification route, vercel.json updated)
 
 ```
 v2.0 Progress: [===>      ] 20%
 Phase 9:  [==] Complete (2/2 plans complete)
 Phase 10: [===] Complete (3/3 plans complete)
 Phase 11: [==] Complete (2/2 plans complete)
-Phase 12: [=  ] In progress (1/3 plans complete)
+Phase 12: [== ] In progress (2/3 plans complete)
 Phase 13: [ ] Not started
 ```
 
@@ -65,6 +65,7 @@ Phase 13: [ ] Not started
 | Phase 10-super-admin-panel-and-employee-bots P02 | 8 | 2 tasks | 5 files |
 | Phase 11 P02 | 2 | 2 tasks | 2 files |
 | Phase 12-billing-model-migration P01 | 7 | 3 tasks | 6 files |
+| Phase Phase 12-billing-model-migration P02 P02 | 4 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -195,6 +196,7 @@ Recent decisions affecting current work:
 - [Phase 12]: All roles selected by default in sendTrialSelectionKeyboard — owner deselects, not selects
 - [Phase 12]: trialSelect:{chatId} key with 1-hour TTL — selection is transient, shorter than wizard 7-day TTL
 - [Phase 12]: enforcement.ts left unchanged — tier-based enforceAgentLimit coexists with per-employee model until fully wired in later phase
+- [Phase 12]: else-if chaining ordered most-recent-first in trial notification cron — prevents batch catch-up sends when hotel crosses multiple thresholds before first check
 
 ### v2.0 Context
 
@@ -225,5 +227,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 12-01-PLAN.md — DB migration (0011_billing_v2.sql), EMPLOYEE_ROLE_PRICES, owner chat_id persistence, trialSelection.ts + trialKeyboard.ts
+Stopped at: Completed 12-02-PLAN.md — trial countdown notification cron (trialNotification.ts), /api/cron/trial-notification route, vercel.json updated with 9 AM UTC schedule
 Resume file: None

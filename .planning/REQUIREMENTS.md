@@ -157,7 +157,7 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 - [x] **PRIC-01**: Per-employee pricing — each agent role has its own monthly price
 - [x] **PRIC-02**: 14-day trial with all employees active
-- [ ] **PRIC-03**: Trial-end notification via Telegram with employee selection prompt
+- [x] **PRIC-03**: Trial-end notification via Telegram with employee selection prompt
 - [ ] **PRIC-04**: Selected employees' prices sum to monthly subscription amount
 - [ ] **PRIC-05**: Payment via existing iyzico (TR) / Mollie (EU) web checkout link
 
@@ -302,7 +302,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | ONBT-04 | Phase 11 | Complete |
 | PRIC-01 | Phase 12 | Complete |
 | PRIC-02 | Phase 12 | Complete |
-| PRIC-03 | Phase 12 | Pending |
+| PRIC-03 | Phase 12 | Complete |
 | PRIC-04 | Phase 12 | Pending |
 | PRIC-05 | Phase 12 | Pending |
 | WDSH-01 | Phase 13 | Pending |
