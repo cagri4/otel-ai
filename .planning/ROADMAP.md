@@ -213,7 +213,11 @@ Plans:
   2. If the owner closes Telegram and returns hours later, the wizard resumes from exactly where they stopped — no data re-entry required
   3. On wizard completion, all four employee bots activate and the owner receives direct Telegram links to each one
   4. The 14-day trial starts automatically on wizard completion — no admin action required
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 11-01-PLAN.md — Wizard state machine: Telegram type extensions, Redis state persistence, 5-step conversational flow, completion with bot links (Wave 1)
+- [ ] 11-02-PLAN.md — Wizard webhook handler and admin webhook registration endpoint (Wave 2)
 
 ### Phase 12: Billing Model Migration and Trial-End Flow
 **Goal**: Per-employee pricing replaces tier-based billing — hotel owners are notified of trial expiry via Telegram, select which employees to keep, and complete payment through the existing web checkout
@@ -254,6 +258,6 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
 | 9. Telegram Infrastructure | 2/2 | Complete    | 2026-03-06 |
 | 10. Super Admin Panel and Employee Bots | 2/2 | Complete    | 2026-03-06 |
-| 11. Setup Wizard Bot | 0/TBD | Not started | - |
+| 11. Setup Wizard Bot | 0/2 | Not started | - |
 | 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |
 | 13. Proactive Messaging and Dashboard Readonly | 0/TBD | Not started | - |
