@@ -83,6 +83,14 @@ export default async function DashboardLayout({
         </div>
       )}
 
+      {/* Telegram-first banner — shown when hotel has completed Telegram onboarding */}
+      {typedHotel.owner_telegram_chat_id && (
+        <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 text-center text-sm text-blue-700">
+          Your primary interface is now Telegram. This dashboard shows your conversation
+          history and hotel configuration as a readonly view.
+        </div>
+      )}
+
       {/* Top header */}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
