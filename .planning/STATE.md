@@ -5,18 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 9 Plan 1 complete
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 9 Plan 2 complete
 
 ## Current Position
 
 Phase: 9 (Telegram Infrastructure) — In progress
-Plan: 1 complete (09-01-PLAN.md done)
-Status: Plan 1 complete — hotel_bots table, Vault functions, resolveBot, EscalationChannel extended
-Last activity: 2026-03-06 — Phase 9 Plan 1 executed (Telegram DB foundation)
+Plan: 2 complete (09-02-PLAN.md done)
+Status: Plan 2 complete — Telegram webhook handler, MarkdownV2 escaping, sendReply, after() async pattern
+Last activity: 2026-03-06 — Phase 9 Plan 2 executed (Telegram webhook handler)
 
 ```
-v2.0 Progress: [>         ] 5%
-Phase 9:  [>] In progress (1/4 plans complete)
+v2.0 Progress: [>         ] 10%
+Phase 9:  [=>] In progress (2/4 plans complete)
 Phase 10: [ ] Not started
 Phase 11: [ ] Not started
 Phase 12: [ ] Not started
@@ -49,6 +49,7 @@ Phase 13: [ ] Not started
 
 *Updated after each plan completion*
 
+| Phase 09-telegram-infrastructure P02 | 16 | 2 tasks | 4 files |
 | Phase 09-telegram-infrastructure P01 | 4 | 2 tasks | 5 files |
 | Phase 08-housekeeping-coordinator P01 | 13 | 2 tasks | 11 files |
 | Phase 07-booking-ai P03 | 10 | 2 tasks | 2 files |
@@ -161,6 +162,11 @@ Recent decisions affecting current work:
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: Cron idempotency via upsert with ignoreDuplicates=true — postgrest-js insert() lacks onConflict option; upsert equivalent to INSERT ON CONFLICT DO NOTHING
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: assignCleaningTask uses maybeSingle() for queue update — optional assignment works even without today's queue entry; Resend graceful fallback when RESEND_API_KEY unset
 
+- [Phase 09-telegram-infrastructure]: after() from next/server wraps invokeAgent() in webhook handler — returns HTTP 200 before agent completes, preventing Telegram retry storms
+- [Phase 09-telegram-infrastructure]: Bot token Vault decryption inside after() callback — plaintext token only in memory during post-response window
+- [Phase 09-telegram-infrastructure]: Non-text Telegram updates (photos, stickers) return 200 silently — handler only processes message.text
+- [Phase 09-telegram-infrastructure]: Unknown slug and rate-limited requests return 200 (not 404/429) — prevents Telegram retry amplification
+- [Phase 09-telegram-infrastructure]: MarkdownV2 primary format with plaintext fallback on HTTP 400 — ensures guests always receive a reply
 - [Phase 09-telegram-infrastructure]: webhook_path_slug is a random UUID (not bot token) as webhook URL path segment — prevents token exposure in URLs/logs/caches
 - [Phase 09-telegram-infrastructure]: No FK constraint from vault_secret_id to vault.secrets — Supabase Vault schema is internal and not addressable via pg_catalog
 - [Phase 09-telegram-infrastructure]: get_bot_token() SECURITY DEFINER with REVOKE from PUBLIC/anon/authenticated, GRANT to service_role only — plaintext token never accessible to frontend
@@ -197,5 +203,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 09-01-PLAN.md — hotel_bots table, Vault functions, resolveBot, EscalationChannel extended to 'telegram'
+Stopped at: Completed 09-02-PLAN.md — Telegram webhook handler, MarkdownV2 escaping, sendReply with plaintext fallback, after() async pattern
 Resume file: None

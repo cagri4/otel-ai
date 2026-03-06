@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 ### v2.0 — Agent-Native SaaS (Phases 9-13)
 
-- [ ] **Phase 9: Telegram Infrastructure** - Webhook handler, hotel_bots table, bot token security, MarkdownV2/HTML formatting
+- [x] **Phase 9: Telegram Infrastructure** - Webhook handler, hotel_bots table, bot token security, MarkdownV2/HTML formatting (completed 2026-03-06)
 - [ ] **Phase 10: Super Admin Panel and Employee Bots** - Admin UI for hotel creation and bot provisioning, all four AI employee Telegram bots active
 - [ ] **Phase 11: Setup Wizard Bot** - Conversational Telegram onboarding from deep link to all employee bots active with 14-day trial
 - [ ] **Phase 12: Billing Model Migration and Trial-End Flow** - Per-employee pricing, trial countdown notifications, trial-end selection flow, payment link
@@ -248,7 +248,7 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 6. Billing | 2/4 | In Progress|  |
 | 7. Booking AI | 3/3 | Complete    | 2026-03-05 |
 | 8. Housekeeping Coordinator | 2/2 | Complete    | 2026-03-05 |
-| 9. Telegram Infrastructure | 1/2 | In Progress|  |
+| 9. Telegram Infrastructure | 2/2 | Complete   | 2026-03-06 |
 | 10. Super Admin Panel and Employee Bots | 0/TBD | Not started | - |
 | 11. Setup Wizard Bot | 0/TBD | Not started | - |
 | 12. Billing Model Migration and Trial-End Flow | 0/TBD | Not started | - |

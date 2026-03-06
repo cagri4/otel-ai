@@ -124,9 +124,9 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 ### Telegram Infrastructure
 
-- [ ] **TGIF-01**: Telegram Bot API webhook handler (`/api/telegram/[botToken]`) — per-bot endpoint with dynamic routing
-- [ ] **TGIF-02**: `X-Telegram-Bot-Api-Secret-Token` validation on every webhook request
-- [ ] **TGIF-03**: Webhook handler returns 200 immediately — agent invocation runs async (no Telegram retry storms)
+- [x] **TGIF-01**: Telegram Bot API webhook handler (`/api/telegram/[botToken]`) — per-bot endpoint with dynamic routing
+- [x] **TGIF-02**: `X-Telegram-Bot-Api-Secret-Token` validation on every webhook request
+- [x] **TGIF-03**: Webhook handler returns 200 immediately — agent invocation runs async (no Telegram retry storms)
 - [x] **TGIF-04**: Bot tokens encrypted at rest via Supabase Vault
 - [x] **TGIF-05**: `hotel_bots` table (hotel_id, role, bot_token, bot_username, is_active) with RLS
 
@@ -151,7 +151,7 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 - [ ] **EBOT-03**: Housekeeping Coordinator as separate Telegram bot for hotel owner
 - [ ] **EBOT-04**: Guest Experience AI as separate Telegram bot for hotel owner
 - [x] **EBOT-05**: Existing `invokeAgent()` pipeline handles Telegram channel (non-streaming)
-- [ ] **EBOT-06**: MarkdownV2 formatted responses (Telegram-compatible output)
+- [x] **EBOT-06**: MarkdownV2 formatted responses (Telegram-compatible output)
 
 ### Pricing & Trial
 
@@ -281,13 +281,13 @@ Deferred to future release. Tracked but not in current roadmap.
 | HSKP-02 | Phase 8 | Complete |
 | HSKP-03 | Phase 8 | Complete |
 | HSKP-04 | Phase 8 | Complete |
-| TGIF-01 | Phase 9 | Pending |
-| TGIF-02 | Phase 9 | Pending |
-| TGIF-03 | Phase 9 | Pending |
+| TGIF-01 | Phase 9 | Complete |
+| TGIF-02 | Phase 9 | Complete |
+| TGIF-03 | Phase 9 | Complete |
 | TGIF-04 | Phase 9 | Complete |
 | TGIF-05 | Phase 9 | Complete |
 | EBOT-05 | Phase 9 | Complete |
-| EBOT-06 | Phase 9 | Pending |
+| EBOT-06 | Phase 9 | Complete |
 | SADM-01 | Phase 10 | Pending |
 | SADM-02 | Phase 10 | Pending |
 | SADM-03 | Phase 10 | Pending |
