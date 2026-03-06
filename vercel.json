@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/housekeeping-queue",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/trial-notification",
+      "schedule": "0 9 * * *"
     }
   ]
 }
