@@ -5,18 +5,18 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Roadmap created, ready for Phase 9 planning
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 9 Plan 1 complete
 
 ## Current Position
 
-Phase: 9 (Telegram Infrastructure) — Not started
-Plan: —
-Status: Roadmap created — awaiting plan-phase
-Last activity: 2026-03-06 — v2.0 roadmap created (phases 9-13)
+Phase: 9 (Telegram Infrastructure) — In progress
+Plan: 1 complete (09-01-PLAN.md done)
+Status: Plan 1 complete — hotel_bots table, Vault functions, resolveBot, EscalationChannel extended
+Last activity: 2026-03-06 — Phase 9 Plan 1 executed (Telegram DB foundation)
 
 ```
-v2.0 Progress: [          ] 0%
-Phase 9:  [ ] Not started
+v2.0 Progress: [>         ] 5%
+Phase 9:  [>] In progress (1/4 plans complete)
 Phase 10: [ ] Not started
 Phase 11: [ ] Not started
 Phase 12: [ ] Not started
@@ -26,8 +26,8 @@ Phase 13: [ ] Not started
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
-- Average duration: 11.7 min
+- Total plans completed: 21
+- Average duration: 11.5 min
 - Total execution time: 236 min
 
 **By Phase:**
@@ -49,6 +49,7 @@ Phase 13: [ ] Not started
 
 *Updated after each plan completion*
 
+| Phase 09-telegram-infrastructure P01 | 4 | 2 tasks | 5 files |
 | Phase 08-housekeeping-coordinator P01 | 13 | 2 tasks | 11 files |
 | Phase 07-booking-ai P03 | 10 | 2 tasks | 2 files |
 | Phase 07-booking-ai P02 | 6 | 2 tasks | 5 files |
@@ -160,6 +161,13 @@ Recent decisions affecting current work:
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: Cron idempotency via upsert with ignoreDuplicates=true — postgrest-js insert() lacks onConflict option; upsert equivalent to INSERT ON CONFLICT DO NOTHING
 - [Phase 08-housekeeping-coordinator]: [Phase 08-housekeeping-coordinator]: assignCleaningTask uses maybeSingle() for queue update — optional assignment works even without today's queue entry; Resend graceful fallback when RESEND_API_KEY unset
 
+- [Phase 09-telegram-infrastructure]: webhook_path_slug is a random UUID (not bot token) as webhook URL path segment — prevents token exposure in URLs/logs/caches
+- [Phase 09-telegram-infrastructure]: No FK constraint from vault_secret_id to vault.secrets — Supabase Vault schema is internal and not addressable via pg_catalog
+- [Phase 09-telegram-infrastructure]: get_bot_token() SECURITY DEFINER with REVOKE from PUBLIC/anon/authenticated, GRANT to service_role only — plaintext token never accessible to frontend
+- [Phase 09-telegram-infrastructure]: Vault cleanup trigger deletes vault secret on hotel_bots DELETE — prevents orphaned secrets accumulating
+- [Phase 09-telegram-infrastructure]: detectAndInsertEscalation() channel param type changed from hardcoded union to EscalationChannel — stays in sync with DB constraint automatically
+- [Phase 09-telegram-infrastructure]: invokeAgent.ts handleEndTurn fallback changed from 'dashboard' (invalid) to 'widget' — DB CHECK only allows whatsapp|widget|telegram
+
 ### v2.0 Context
 
 - grammy@1.41.1 chosen over Telegraf — TypeScript-native, webhook-first, Vercel serverless compatible, cleaner multi-bot support
@@ -189,5 +197,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: v2.0 roadmap created — phases 9-13 defined. Ready for /gsd:plan-phase 9
+Stopped at: Completed 09-01-PLAN.md — hotel_bots table, Vault functions, resolveBot, EscalationChannel extended to 'telegram'
 Resume file: None
