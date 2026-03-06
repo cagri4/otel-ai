@@ -32,6 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 11: Setup Wizard Bot** - Conversational Telegram onboarding from deep link to all employee bots active with 14-day trial (completed 2026-03-06)
 - [x] **Phase 12: Billing Model Migration and Trial-End Flow** - Per-employee pricing, trial countdown notifications, trial-end selection flow, payment link (completed 2026-03-06)
 - [x] **Phase 13: Proactive Messaging and Dashboard Readonly** - Morning briefings, rate-limited send queue, web dashboard readonly mode (completed 2026-03-06)
+- [ ] **Phase 14: Fix Callback Query Delivery for Trial Selection** - Add callback_query to employee bot allowed_updates, re-provision existing bots (Gap Closure)
 
 ## Phase Details
 
@@ -249,6 +250,20 @@ Plans:
 - [ ] 13-01-PLAN.md — Morning briefing cron: per-role daily summaries from each active bot, rate-limited sends (Wave 1)
 - [ ] 13-02-PLAN.md — Dashboard Telegram-first informational banner for WDSH-01 (Wave 1)
 
+### Phase 14: Fix Callback Query Delivery for Trial Selection
+**Goal**: Trial-end inline keyboard buttons reach the server and the full trial selection → payment → deactivation flow works end-to-end
+**Depends on**: Phase 12
+**Requirements**: PRIC-03, PRIC-04, PRIC-05
+**Gap Closure**: Closes gaps from v2.0 audit (callback_query delivery)
+**Success Criteria** (what must be TRUE):
+  1. Employee bot webhooks are registered with `allowed_updates: ['message', 'callback_query']`
+  2. Owner tapping a trial selection inline keyboard button triggers `handleTrialCallback` — no silent drop
+  3. After selection and payment, unselected bots stop responding and selected bots continue
+**Plans**: TBD
+
+Plans:
+- [ ] 14-01-PLAN.md — Fix allowed_updates and add admin re-provision mechanism (Wave 1)
+
 ## Progress
 
 **Execution Order:**
@@ -270,3 +285,4 @@ v2.0 phases execute in numeric order: 9 -> 10 -> 11 -> 12 -> 13 (Phase 13 can st
 | 11. Setup Wizard Bot | 2/2 | Complete    | 2026-03-06 |
 | 12. Billing Model Migration and Trial-End Flow | 3/3 | Complete    | 2026-03-06 |
 | 13. Proactive Messaging and Dashboard Readonly | 2/2 | Complete    | 2026-03-06 |
+| 14. Fix Callback Query Delivery | 0/1 | Pending | |
