@@ -229,7 +229,12 @@ Plans:
   3. At trial end, the hotel owner receives an inline keyboard showing each employee with usage stats and price — they select which to keep and confirm
   4. After selection, the owner receives a payment link to the existing iyzico (TR) or Mollie (EU) web checkout with the correct total amount
   5. Unselected employees' bots stop responding immediately after selection; selected employees' bots continue uninterrupted after payment
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — DB migration (owner chat_id, notification tracking), per-employee pricing constants, wizard chat_id persistence (Wave 1)
+- [ ] 12-02-PLAN.md — Trial countdown cron notifications at days 7, 12, 13, 14 via Telegram (Wave 2)
+- [ ] 12-03-PLAN.md — Trial-end employee selection keyboard, callback handler, payment link generation, bot deactivation (Wave 2)
 
 ### Phase 13: Proactive Messaging and Dashboard Readonly
 **Goal**: Active employee bots send morning briefings to hotel owners, the Telegram send queue is rate-limited to prevent 429 errors at scale, and the existing web dashboard remains accessible in readonly mode
