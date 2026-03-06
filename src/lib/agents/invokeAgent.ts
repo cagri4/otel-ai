@@ -325,8 +325,9 @@ async function handleEndTurn(
     conversationId: params.conversationId,
     hotelId: params.hotelId,
     channel: params.conversationId.startsWith('wa_') ? 'whatsapp'
+           : params.conversationId.startsWith('tg_') ? 'telegram'
            : params.conversationId.startsWith('widget_') ? 'widget'
-           : 'dashboard',
+           : 'widget',
   }).catch((err) => {
     console.error('[escalation] detection failed:', err);
   });

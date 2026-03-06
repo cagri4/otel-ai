@@ -10,6 +10,7 @@
  *   supabase/migrations/0006_billing.sql
  *   supabase/migrations/0007_booking_ai.sql
  *   supabase/migrations/0008_housekeeping.sql
+ *   supabase/migrations/0009_telegram.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -164,7 +165,7 @@ export interface AgentTask {
 // and staff follow-up is required.
 // =============================================================================
 
-export type EscalationChannel = 'whatsapp' | 'widget';
+export type EscalationChannel = 'whatsapp' | 'widget' | 'telegram';
 
 export interface Escalation {
   id: string;               // UUID primary key
@@ -363,6 +364,23 @@ export interface HousekeepingStaff {
   phone: string | null; // Optional phone number
   is_active: boolean;  // Whether this staff member is active (NOT NULL, default true)
   created_at: string;  // ISO 8601 UTC timestamp (timestamptz)
+}
+
+// =============================================================================
+// Hotel Bots (Telegram)
+// Corresponds to: public.hotel_bots table
+// =============================================================================
+
+export interface HotelBot {
+  id: string;
+  hotel_id: string;
+  role: string;              // AgentRole enum value as text
+  vault_secret_id: string;   // UUID reference to vault.secrets (NOT plaintext token)
+  bot_username: string;      // e.g. "@HotelFrontDeskBot"
+  webhook_secret: string;    // For X-Telegram-Bot-Api-Secret-Token validation
+  webhook_path_slug: string; // Random UUID used as webhook URL path
+  is_active: boolean;
+  created_at: string;        // ISO timestamp
 }
 
 // =============================================================================

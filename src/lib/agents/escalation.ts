@@ -72,14 +72,18 @@ export async function detectAndInsertEscalation(params: {
   userMessage: string;
   conversationId: string;
   hotelId: string;
-  channel: 'whatsapp' | 'widget' | 'dashboard';
+  channel: EscalationChannel;
 }): Promise<void> {
   const { response, userMessage, conversationId, hotelId } = params;
 
-  // Determine channel from conversationId prefix for consistency
+  // Determine channel from conversationId prefix for consistency.
+  // Server-side detection prevents spoofing: channel param is ignored here.
+  // wa_ = WhatsApp, tg_ = Telegram, default = widget.
   const channel: EscalationChannel = conversationId.startsWith('wa_')
     ? 'whatsapp'
-    : 'widget';
+    : conversationId.startsWith('tg_')
+      ? 'telegram'
+      : 'widget';
 
   // Check if agent response contains any known fallback phrase
   const lowerResponse = response.toLowerCase();
