@@ -139,10 +139,10 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 ### Telegram Onboarding
 
-- [ ] **ONBT-01**: Setup Wizard as separate Telegram bot — activates via deep link
-- [ ] **ONBT-02**: Conversational info collection (hotel name, address, rooms, check-in/out times)
-- [ ] **ONBT-03**: Team introduction — presents each employee bot with direct link
-- [ ] **ONBT-04**: Setup completion activates all employee bots with 14-day trial
+- [x] **ONBT-01**: Setup Wizard as separate Telegram bot — activates via deep link
+- [x] **ONBT-02**: Conversational info collection (hotel name, address, rooms, check-in/out times)
+- [x] **ONBT-03**: Team introduction — presents each employee bot with direct link
+- [x] **ONBT-04**: Setup completion activates all employee bots with 14-day trial
 
 ### Employee Bots
 
@@ -296,10 +296,10 @@ Deferred to future release. Tracked but not in current roadmap.
 | EBOT-02 | Phase 10 | Complete |
 | EBOT-03 | Phase 10 | Complete |
 | EBOT-04 | Phase 10 | Complete |
-| ONBT-01 | Phase 11 | Pending |
-| ONBT-02 | Phase 11 | Pending |
-| ONBT-03 | Phase 11 | Pending |
-| ONBT-04 | Phase 11 | Pending |
+| ONBT-01 | Phase 11 | Complete |
+| ONBT-02 | Phase 11 | Complete |
+| ONBT-03 | Phase 11 | Complete |
+| ONBT-04 | Phase 11 | Complete |
 | PRIC-01 | Phase 12 | Pending |
 | PRIC-02 | Phase 12 | Pending |
 | PRIC-03 | Phase 12 | Pending |

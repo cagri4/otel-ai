@@ -5,20 +5,20 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 10 Plan 2 complete
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 11 Plan 1 complete
 
 ## Current Position
 
-Phase: 10 (Super Admin Panel and Employee Bots) — In progress
-Plan: 2 complete (10-02-PLAN.md done)
-Status: Plan 2 complete — admin panel UI (layout guard, hotel list, create form, hotel detail, bot provisioning form, deep link)
-Last activity: 2026-03-06 — Phase 10 Plan 2 executed (admin panel UI)
+Phase: 11 (Setup Wizard Bot) — In progress
+Plan: 1 complete (11-01-PLAN.md done)
+Status: Plan 1 complete — wizard state machine, Redis session CRUD, step transitions with incremental DB writes, inline keyboard confirmation, completion with bot links
+Last activity: 2026-03-06 — Phase 11 Plan 1 executed (wizard state machine and action handlers)
 
 ```
-v2.0 Progress: [>         ] 12%
+v2.0 Progress: [=>        ] 14%
 Phase 9:  [==] Complete (2/2 plans complete)
-Phase 10: [=>] In progress (2/3 plans complete)
-Phase 11: [ ] Not started
+Phase 10: [==] Complete (3/3 plans complete)
+Phase 11: [=>] In progress (1/2 plans complete)
 Phase 12: [ ] Not started
 Phase 13: [ ] Not started
 ```
@@ -182,6 +182,10 @@ Recent decisions affecting current work:
 - [Phase 10-super-admin-panel-and-employee-bots]: Client Component split for admin forms — (admin)/admin/[hotelId]/page.tsx stays Server Component for DB queries; BotProvisionForm and DeepLinkCopy extracted to separate Client Component files
 - [Phase 10-super-admin-panel-and-employee-bots]: useTransition for Server Action call in BotProvisionForm — startTransition(async () => await provisionAllBots()) enables isPending for loading state with explicit result and token-clearing control
 - [Phase 10-super-admin-panel-and-employee-bots]: searchParams and params as Promise in Next.js 15+ Server Components — await required before destructuring in dynamic route and search param pages
+- [Phase 11-setup-wizard-bot]: sanitizeGuestInput applied at handleWizardMessage entry before advanceWizard — double sanitization layer at actions + steps boundary
+- [Phase 11-setup-wizard-bot]: completeWizard skips subscriptions table — trial created by seed_hotel_defaults at hotel creation (Phase 10 Pitfall 4)
+- [Phase 11-setup-wizard-bot]: answerCallbackQuery fired unconditionally first in handleWizardCallback — dismisses loading spinner before any async DB operations
+- [Phase 11-setup-wizard-bot]: upsertHotelFact logs errors without throwing — wizard should not stall on non-critical hotel_facts write failure
 
 ### v2.0 Context
 
@@ -212,5 +216,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 10-02-PLAN.md — admin layout guard, hotel list with status badges, create hotel form, hotel detail with bot provisioning form and Setup Wizard deep link
+Stopped at: Completed 11-01-PLAN.md — wizard state machine (wizardState.ts, wizardSteps.ts, wizardActions.ts), TelegramCallbackQuery type extension
 Resume file: None
