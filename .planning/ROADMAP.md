@@ -259,10 +259,10 @@ Plans:
   1. Employee bot webhooks are registered with `allowed_updates: ['message', 'callback_query']`
   2. Owner tapping a trial selection inline keyboard button triggers `handleTrialCallback` — no silent drop
   3. After selection and payment, unselected bots stop responding and selected bots continue
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 14-01-PLAN.md — Fix allowed_updates and add admin re-provision mechanism (Wave 1)
+- [ ] 14-01-PLAN.md — Fix allowed_updates in provisionBots.ts and create admin re-provision endpoint (Wave 1)
 
 ## Progress
 
