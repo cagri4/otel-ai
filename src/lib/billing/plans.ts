@@ -46,3 +46,37 @@ export const PLAN_PRICES: Record<Exclude<PlanName, 'trial'>, { try: number; eur:
 export function getProviderForHotel(country: string | null): 'iyzico' | 'mollie' {
   return country?.toUpperCase() === 'TR' ? 'iyzico' : 'mollie';
 }
+
+// =============================================================================
+// Per-employee pricing (Phase 12 — billing model migration)
+// Replaces flat tier pricing for new subscriptions.
+// TRY prices for iyzico (TR market); EUR prices for Mollie (EU market).
+// shortCode: 2-letter code used in Telegram callback_data (64-byte limit).
+// =============================================================================
+
+export type EmployeeRoleKey =
+  | 'front_desk'
+  | 'booking_ai'
+  | 'guest_experience'
+  | 'housekeeping_coordinator';
+
+export const EMPLOYEE_ROLE_PRICES: Record<
+  EmployeeRoleKey,
+  { try: number; eur: number; displayName: string; shortCode: string }
+> = {
+  front_desk:               { try: 149, eur: 15, displayName: 'Front Desk',       shortCode: 'fd' },
+  booking_ai:               { try: 149, eur: 15, displayName: 'Booking AI',       shortCode: 'bk' },
+  guest_experience:         { try: 99,  eur: 10, displayName: 'Guest Experience', shortCode: 'ge' },
+  housekeeping_coordinator: { try: 99,  eur: 10, displayName: 'Housekeeping',     shortCode: 'hk' },
+};
+
+/**
+ * Calculate total monthly cost for a set of employee roles.
+ *
+ * @param roles    - Array of EmployeeRoleKey values representing selected employees
+ * @param currency - 'try' for Turkish Lira (iyzico), 'eur' for Euro (Mollie)
+ * @returns Total monthly cost in the specified currency
+ */
+export function calculateMonthlyTotal(roles: EmployeeRoleKey[], currency: 'try' | 'eur'): number {
+  return roles.reduce((total, role) => total + EMPLOYEE_ROLE_PRICES[role][currency], 0);
+}

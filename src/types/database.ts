@@ -11,6 +11,7 @@
  *   supabase/migrations/0007_booking_ai.sql
  *   supabase/migrations/0008_housekeeping.sql
  *   supabase/migrations/0009_telegram.sql
+ *   supabase/migrations/0011_billing_v2.sql
  *
  * Column naming: snake_case in database, snake_case in TypeScript
  * (matching what Supabase client returns from queries).
@@ -44,6 +45,7 @@ export interface Hotel {
   onboarding_completed_at: string | null; // Set when hotel owner completes onboarding wizard (added in 0003)
   widget_token: string;                   // Unique embed token for the chat widget (added in 0004)
   widget_config: Record<string, unknown> | null; // JSONB widget appearance config (added in 0004)
+  owner_telegram_chat_id: number | null;  // Telegram chat_id of the hotel owner (added in 0011)
   created_at: string;           // ISO 8601 UTC timestamp (timestamptz)
   updated_at: string;           // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
 }
@@ -307,6 +309,10 @@ export interface Subscription {
   provider: BillingProvider | null;        // Payment provider — NULL during trial
   provider_customer_id: string | null;     // Mollie: cst_xxx | iyzico: customerReferenceCode
   provider_subscription_id: string | null; // Mollie: sub_xxx | iyzico: subscriptionReferenceCode
+  trial_notified_day_7: boolean;           // Idempotency guard — Day 7 countdown notification sent (added in 0011)
+  trial_notified_day_12: boolean;          // Idempotency guard — Day 12 countdown notification sent (added in 0011)
+  trial_notified_day_13: boolean;          // Idempotency guard — Day 13 countdown notification sent (added in 0011)
+  trial_notified_day_14: boolean;          // Idempotency guard — Day 14 countdown notification sent (added in 0011)
   created_at: string;                      // ISO 8601 UTC timestamp (timestamptz)
   updated_at: string;                      // ISO 8601 UTC timestamp (timestamptz, auto-updated by trigger)
 }
@@ -430,12 +436,13 @@ export type Database = {
     Tables: {
       hotels: {
         Row: Hotel;
-        Insert: Omit<Hotel, 'id' | 'created_at' | 'updated_at' | 'widget_token' | 'widget_config'> & {
+        Insert: Omit<Hotel, 'id' | 'created_at' | 'updated_at' | 'widget_token' | 'widget_config' | 'owner_telegram_chat_id'> & {
           id?: string;
           created_at?: string;
           updated_at?: string;
           widget_token?: string;
           widget_config?: Record<string, unknown> | null;
+          owner_telegram_chat_id?: number | null;
         };
         Update: Partial<Omit<Hotel, 'id' | 'created_at'>>;
         Relationships: Relationship[];
@@ -570,10 +577,14 @@ export type Database = {
       };
       subscriptions: {
         Row: Subscription;
-        Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at'> & {
+        Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at' | 'trial_notified_day_7' | 'trial_notified_day_12' | 'trial_notified_day_13' | 'trial_notified_day_14'> & {
           id?: string;
           created_at?: string;
           updated_at?: string;
+          trial_notified_day_7?: boolean;
+          trial_notified_day_12?: boolean;
+          trial_notified_day_13?: boolean;
+          trial_notified_day_14?: boolean;
         };
         Update: Partial<Omit<Subscription, 'id' | 'created_at'>>;
         Relationships: Relationship[];
