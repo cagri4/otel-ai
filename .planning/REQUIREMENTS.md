@@ -132,9 +132,9 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 ### Super Admin
 
-- [ ] **SADM-01**: Super admin panel — hotel list with status, create new hotel
-- [ ] **SADM-02**: Bot token entry per hotel (pasted from BotFather)
-- [ ] **SADM-03**: Automatic `setWebhook` registration when bot token is saved
+- [x] **SADM-01**: Super admin panel — hotel list with status, create new hotel
+- [x] **SADM-02**: Bot token entry per hotel (pasted from BotFather)
+- [x] **SADM-03**: Automatic `setWebhook` registration when bot token is saved
 - [ ] **SADM-04**: Telegram deep link generation (`t.me/SetupWizardBot?start={hotelId}`)
 
 ### Telegram Onboarding
@@ -146,10 +146,10 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 ### Employee Bots
 
-- [ ] **EBOT-01**: Front Desk AI as separate Telegram bot for hotel owner
-- [ ] **EBOT-02**: Booking AI as separate Telegram bot for hotel owner
-- [ ] **EBOT-03**: Housekeeping Coordinator as separate Telegram bot for hotel owner
-- [ ] **EBOT-04**: Guest Experience AI as separate Telegram bot for hotel owner
+- [x] **EBOT-01**: Front Desk AI as separate Telegram bot for hotel owner
+- [x] **EBOT-02**: Booking AI as separate Telegram bot for hotel owner
+- [x] **EBOT-03**: Housekeeping Coordinator as separate Telegram bot for hotel owner
+- [x] **EBOT-04**: Guest Experience AI as separate Telegram bot for hotel owner
 - [x] **EBOT-05**: Existing `invokeAgent()` pipeline handles Telegram channel (non-streaming)
 - [x] **EBOT-06**: MarkdownV2 formatted responses (Telegram-compatible output)
 
@@ -288,14 +288,14 @@ Deferred to future release. Tracked but not in current roadmap.
 | TGIF-05 | Phase 9 | Complete |
 | EBOT-05 | Phase 9 | Complete |
 | EBOT-06 | Phase 9 | Complete |
-| SADM-01 | Phase 10 | Pending |
-| SADM-02 | Phase 10 | Pending |
-| SADM-03 | Phase 10 | Pending |
+| SADM-01 | Phase 10 | Complete |
+| SADM-02 | Phase 10 | Complete |
+| SADM-03 | Phase 10 | Complete |
 | SADM-04 | Phase 10 | Pending |
-| EBOT-01 | Phase 10 | Pending |
-| EBOT-02 | Phase 10 | Pending |
-| EBOT-03 | Phase 10 | Pending |
-| EBOT-04 | Phase 10 | Pending |
+| EBOT-01 | Phase 10 | Complete |
+| EBOT-02 | Phase 10 | Complete |
+| EBOT-03 | Phase 10 | Complete |
+| EBOT-04 | Phase 10 | Complete |
 | ONBT-01 | Phase 11 | Pending |
 | ONBT-02 | Phase 11 | Pending |
 | ONBT-03 | Phase 11 | Pending |

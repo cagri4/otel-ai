@@ -5,19 +5,19 @@
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Boutique hotel owners with limited staff can run professional-level operations by deploying AI virtual employees that handle guest communication, bookings, and back-office tasks around the clock.
-**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 9 Plan 2 complete
+**Current focus:** Milestone v2.0 — Agent-Native SaaS (Telegram-first) — Phase 10 Plan 1 complete
 
 ## Current Position
 
-Phase: 9 (Telegram Infrastructure) — In progress
-Plan: 2 complete (09-02-PLAN.md done)
-Status: Plan 2 complete — Telegram webhook handler, MarkdownV2 escaping, sendReply, after() async pattern
-Last activity: 2026-03-06 — Phase 9 Plan 2 executed (Telegram webhook handler)
+Phase: 10 (Super Admin Panel and Employee Bots) — In progress
+Plan: 1 complete (10-01-PLAN.md done)
+Status: Plan 1 complete — admin SQL migration, adminCreateHotel Server Action, provisionBots Server Action
+Last activity: 2026-03-06 — Phase 10 Plan 1 executed (admin backend foundation)
 
 ```
-v2.0 Progress: [>         ] 10%
-Phase 9:  [=>] In progress (2/4 plans complete)
-Phase 10: [ ] Not started
+v2.0 Progress: [>         ] 12%
+Phase 9:  [==] Complete (2/2 plans complete)
+Phase 10: [>] In progress (1/3 plans complete)
 Phase 11: [ ] Not started
 Phase 12: [ ] Not started
 Phase 13: [ ] Not started
@@ -61,6 +61,7 @@ Phase 13: [ ] Not started
 | Phase 06-billing P01 | 4 | 2 tasks | 5 files |
 | Phase 05 P04 | 14 | 2 tasks | 7 files |
 | Phase 08-housekeeping-coordinator P02 | 8 | 2 tasks | 7 files |
+| Phase 10-super-admin-panel-and-employee-bots P01 | 14 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,10 @@ Recent decisions affecting current work:
 - [Phase 09-telegram-infrastructure]: Vault cleanup trigger deletes vault secret on hotel_bots DELETE — prevents orphaned secrets accumulating
 - [Phase 09-telegram-infrastructure]: detectAndInsertEscalation() channel param type changed from hardcoded union to EscalationChannel — stays in sync with DB constraint automatically
 - [Phase 09-telegram-infrastructure]: invokeAgent.ts handleEndTurn fallback changed from 'dashboard' (invalid) to 'widget' — DB CHECK only allows whatsapp|widget|telegram
+- [Phase 10-super-admin-panel-and-employee-bots]: void async IIFE for Vault cleanup fire-and-forget — PostgrestFilterBuilder has no .catch(); wraps await rpc() in IIFE for semantically identical fire-and-forget with error logging
+- [Phase 10-super-admin-panel-and-employee-bots]: trigger timing fallback queries profiles table — auth.admin.createUser may return before handle_new_user writes hotel_id to app_metadata; profiles row is always present after trigger runs
+- [Phase 10-super-admin-panel-and-employee-bots]: adminCreateHotel upserts onboarding_completed_at immediately — admin-created hotels skip onboarding wizard; hotel owner onboarded via Telegram Setup Wizard (Phase 11)
+- [Phase 10-super-admin-panel-and-employee-bots]: provisionBotForRole uses upsert with onConflict hotel_id,role — handles token rotation without UNIQUE constraint violation; setWebhook call overwrites existing registration
 
 ### v2.0 Context
 
@@ -203,5 +208,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 09-02-PLAN.md — Telegram webhook handler, MarkdownV2 escaping, sendReply with plaintext fallback, after() async pattern
+Stopped at: Completed 10-01-PLAN.md — delete_vault_secret SQL function, adminCreateHotel Server Action, provisionBots Server Action with Vault + setWebhook + orphan cleanup
 Resume file: None
