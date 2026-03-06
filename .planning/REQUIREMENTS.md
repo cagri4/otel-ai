@@ -163,7 +163,7 @@ Requirements for agent-native SaaS milestone. Each maps to roadmap phases 9+.
 
 ### Web Dashboard
 
-- [ ] **WDSH-01**: Existing dashboard remains accessible as readonly optional view
+- [x] **WDSH-01**: Existing dashboard remains accessible as readonly optional view
 
 ## v3 Requirements
 
@@ -305,7 +305,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | PRIC-03 | Phase 12 | Complete |
 | PRIC-04 | Phase 12 | Complete |
 | PRIC-05 | Phase 12 | Complete |
-| WDSH-01 | Phase 13 | Pending |
+| WDSH-01 | Phase 13 | Complete |
 
 **Coverage:**
 - v1 requirements: 69 total

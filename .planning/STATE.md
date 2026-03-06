@@ -9,18 +9,18 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 
 ## Current Position
 
-Phase: 12 (Billing Model Migration and Trial End Flow) — Complete
-Plan: 3 complete (12-03-PLAN.md done)
-Status: Phase 12 complete — trial callback handler (toggle/select-all/confirm), Mollie payment links, iyzico web dashboard redirect, unselected bot deactivation, webhook extended for callback_query routing
-Last activity: 2026-03-06 — Phase 12 Plan 3 executed (trialCallback.ts, [slug]/route.ts extended)
+Phase: 13 (Proactive Messaging and Dashboard Readonly) — In Progress
+Plan: 2 complete (13-02-PLAN.md done)
+Status: Phase 13 Plan 2 complete — Telegram-first informational banner added to dashboard layout for onboarded hotels (WDSH-01 satisfied)
+Last activity: 2026-03-06 — Phase 13 Plan 2 executed (src/app/(dashboard)/layout.tsx)
 
 ```
-v2.0 Progress: [====>     ] 27%
+v2.0 Progress: [====>     ] 29%
 Phase 9:  [==] Complete (2/2 plans complete)
 Phase 10: [===] Complete (3/3 plans complete)
 Phase 11: [==] Complete (2/2 plans complete)
 Phase 12: [===] Complete (3/3 plans complete)
-Phase 13: [ ] Not started
+Phase 13: [==] In Progress (2/? plans complete)
 ```
 
 ## Performance Metrics
@@ -66,6 +66,7 @@ Phase 13: [ ] Not started
 | Phase 11 P02 | 2 | 2 tasks | 2 files |
 | Phase 12-billing-model-migration P01 | 7 | 3 tasks | 6 files |
 | Phase Phase 12-billing-model-migration P02 P02 | 4 | 2 tasks | 3 files |
+| Phase 13-proactive-messaging-dashboard-readonly P02 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -201,6 +202,7 @@ Recent decisions affecting current work:
 - [Phase 12]: Mollie paymentLinks.create() + getPaymentUrl() helper — avoids _links access on Seal type which strips _links from PaymentLink
 - [Phase 12]: iyzico confirm redirects to /billing?action=subscribe — Turkish national ID required by iyzico Checkout Form, cannot be collected via Telegram
 - [Phase 12]: Unselected bots deactivated before payment link generation — ensures bots stop immediately regardless of payment status
+- [Phase 13]: Telegram-first banner is purely informational (no disabled writes) — WDSH-01 "readonly optional view" means Telegram is primary channel, not that dashboard features must be blocked; blue-50/blue-700 used for informational tone vs bg-primary for action-required onboarding banner
 
 ### v2.0 Context
 
@@ -231,5 +233,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-03-06
-Stopped at: Completed 12-03-PLAN.md — trialCallback.ts (toggle/select-all/confirm), [slug]/route.ts extended for callback_query routing
+Stopped at: Completed 13-02-PLAN.md — Telegram-first informational banner in dashboard layout (owner_telegram_chat_id conditional)
 Resume file: None
