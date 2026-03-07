@@ -20,14 +20,26 @@ import { createHmac, timingSafeEqual } from 'crypto';
  * Uses sandbox URI in non-production environments.
  * Initialized once at module load time — safe for Next.js serverless.
  */
-export const iyzipayClient = new Iyzipay({
-  apiKey: process.env.IYZIPAY_API_KEY!,
-  secretKey: process.env.IYZIPAY_SECRET_KEY!,
-  uri:
-    process.env.NODE_ENV === 'production'
-      ? 'https://api.iyzipay.com'
-      : 'https://sandbox-api.iyzipay.com',
-});
+let _iyzipayClient: Iyzipay | null = null;
+
+export function getIyzipayClient(): Iyzipay {
+  if (!_iyzipayClient) {
+    const apiKey = process.env.IYZIPAY_API_KEY;
+    const secretKey = process.env.IYZIPAY_SECRET_KEY;
+    if (!apiKey || !secretKey) {
+      throw new Error('IYZIPAY_API_KEY and IYZIPAY_SECRET_KEY must be set');
+    }
+    _iyzipayClient = new Iyzipay({
+      apiKey,
+      secretKey,
+      uri:
+        process.env.NODE_ENV === 'production'
+          ? 'https://api.iyzipay.com'
+          : 'https://sandbox-api.iyzipay.com',
+    });
+  }
+  return _iyzipayClient;
+}
 
 // ---------------------------------------------------------------------------
 // Plan reference code mapping
@@ -98,7 +110,7 @@ export function initSubscriptionCheckoutForm(
   params: InitCheckoutFormParams,
 ): Promise<CheckoutFormResult> {
   return new Promise((resolve, reject) => {
-    iyzipayClient.subscriptionCheckoutForm.initialize(
+    getIyzipayClient().subscriptionCheckoutForm.initialize(
       {
         locale: 'tr',
         pricingPlanReferenceCode: params.pricingPlanReferenceCode,
@@ -146,7 +158,7 @@ export function upgradeIyzicoSubscription(
   params: UpgradeSubscriptionParams,
 ): Promise<UpgradeSubscriptionResult> {
   return new Promise((resolve, reject) => {
-    iyzipayClient.subscription.upgrade(
+    getIyzipayClient().subscription.upgrade(
       {
         locale: 'tr',
         subscriptionReferenceCode: params.subscriptionReferenceCode,

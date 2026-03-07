@@ -15,21 +15,26 @@ import { createMollieClient, SequenceType } from '@mollie/api-client';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 // ---------------------------------------------------------------------------
-// Client singleton
+// Client singleton (lazy — avoids build crash when MOLLIE_API_KEY is unset)
 // ---------------------------------------------------------------------------
 
-/**
- * Mollie API client singleton.
- *
- * Test mode is controlled by the API key prefix:
- * - test_xxx → test mode (sandbox)
- * - live_xxx → production mode
- *
- * In non-production environments, MOLLIE_API_KEY should be a test_ prefixed key.
- * The client is initialized once at module load — safe for Next.js serverless.
- */
-export const mollieClient = createMollieClient({
-  apiKey: process.env.MOLLIE_API_KEY!,
+type MollieClient = ReturnType<typeof createMollieClient>;
+let _mollieClient: MollieClient | null = null;
+
+export function getMollieClient(): MollieClient {
+  if (!_mollieClient) {
+    const apiKey = process.env.MOLLIE_API_KEY;
+    if (!apiKey) throw new Error('MOLLIE_API_KEY must be set');
+    _mollieClient = createMollieClient({ apiKey });
+  }
+  return _mollieClient;
+}
+
+/** @deprecated Use getMollieClient() — kept for existing imports */
+export const mollieClient = new Proxy({} as MollieClient, {
+  get(_target, prop) {
+    return (getMollieClient() as Record<string | symbol, unknown>)[prop];
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -47,7 +52,7 @@ export interface CreateMollieCustomerParams {
  * Returns the customer object including the `id` (cst_xxx).
  */
 export async function createMollieCustomer(params: CreateMollieCustomerParams) {
-  return mollieClient.customers.create({
+  return getMollieClient().customers.create({
     name: params.name,
     email: params.email,
     metadata: params.metadata as Record<string, unknown>,
@@ -77,7 +82,7 @@ export interface CreateMollieFirstPaymentParams {
  * The webhook handler then creates the subscription using the mandate.
  */
 export async function createMollieFirstPayment(params: CreateMollieFirstPaymentParams) {
-  return mollieClient.payments.create({
+  return getMollieClient().payments.create({
     amount: { currency: 'EUR', value: '0.01' },
     customerId: params.customerId,
     sequenceType: SequenceType.first,
@@ -112,7 +117,7 @@ export interface CreateMollieSubscriptionParams {
  * mandateId: the mandate established by the first payment.
  */
 export async function createMollieSubscription(params: CreateMollieSubscriptionParams) {
-  return mollieClient.customerSubscriptions.create({
+  return getMollieClient().customerSubscriptions.create({
     customerId: params.customerId,
     amount: { currency: 'EUR', value: params.amountEur },
     interval: '1 month',
@@ -150,8 +155,10 @@ export interface ChangeMolliePlanParams {
  * Returns the new subscription object.
  */
 export async function changeMolliePlan(params: ChangeMolliePlanParams) {
+  const client = getMollieClient();
+
   // Step 1: Cancel the current subscription
-  await mollieClient.customerSubscriptions.cancel(params.currentSubscriptionId, {
+  await client.customerSubscriptions.cancel(params.currentSubscriptionId, {
     customerId: params.customerId,
   });
 
@@ -162,7 +169,7 @@ export async function changeMolliePlan(params: ChangeMolliePlanParams) {
   const startDate = nextMonth.toISOString().slice(0, 10);
 
   // Step 3: Create new subscription with same mandate
-  return mollieClient.customerSubscriptions.create({
+  return client.customerSubscriptions.create({
     customerId: params.customerId,
     amount: { currency: 'EUR', value: params.newAmountEur },
     interval: '1 month',
